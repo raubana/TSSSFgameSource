@@ -14,7 +14,6 @@ def check_variable_name_is_legal(name):
 		if not ch.isalnum() and ch != "_":
 			raise SyntaxError("A variable can't have the character '" + ch + "'")
 
-
 def break_apart_line(line):
 	parts = line.split("=")
 	if len(parts) != 2:
@@ -32,7 +31,6 @@ class Deck(object):
 	def draw_card(self):
 		if len(self.cards) == 0: return None
 		return self.cards.pop(0)
-
 
 	def remove_card(self, card):
 		if card in self.cards:
@@ -59,7 +57,7 @@ class MasterDeck(object):
 			for f in files:
 				if f.endswith(".tsssf"):
 					print("loading '" + f + "'")
-					pc_f = open("cards/" + f)
+					pc_f = open("cards/" + f, "rb")
 					org_pc = pc_f.read()
 					self.pc_cards.append(org_pc)
 					pc_f.close()
