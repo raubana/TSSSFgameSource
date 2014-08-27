@@ -26,7 +26,7 @@ while running:
 		else:
 			if e.type == KEYDOWN:
 				if e.key == K_SPACE:
-					client.send("THIS IS A MESSAGE FROM THE SERVER!!")
+					server.send("THIS IS A MESSAGE FROM THE SERVER!!")
 
 	pygame.display.flip()
 	clock.tick(12)

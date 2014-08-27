@@ -16,7 +16,7 @@ while running:
 	events = pygame.event.get()
 
 	if len(client.received_messages[client]) > 0:
-		message = client.received_messages[client].pop(0)
+		message = client.received_messages.pop(0)
 		print "SERVER '"+client+"' SAYS: '"+message+"'"
 
 	for e in events:
