@@ -25,7 +25,7 @@ while running:
 
 	if len(client.received_messages) > 0:
 		message = client.received_messages.pop(0)
-		if message.beginswith("CARD:"):
+		if message.startswith("CARD:"):
 			print "RECEIVED CARD FROM THE SERVER!"
 			message = message[len("CARD:"):]
 			f = open_pickledcard(io.BytesIO(message))
