@@ -6,7 +6,7 @@ import time
 import sys
 
 BUFFERSIZE = 4096
-ESCAPE_CHARACTER = chr(4)
+ESCAPE_CHARACTER = chr(0)
 
 
 def get_this_computers_external_address():
@@ -177,7 +177,7 @@ class Client(object):
 				print "-recv: "+recv
 				message += recv
 				if message[-1] == ESCAPE_CHARACTER:
-					self.received_messages.append(message[-1])
+					self.received_messages.append(message[:-1])
 					message = ""
 
 	def send(self, message):
