@@ -61,7 +61,7 @@ class Server(object):
 				self.clients[str(address)] = clientsocket
 				self.client_listen_threads[str(address)] = thread.start_new_thread(self.listen, tuple([str(address)]))
 				self.client_transmit_threads[str(address)] = thread.start_new_thread(self.transmit, tuple([str(address)]))
-				self.recieved_messages[str(address)] = []
+				self.received_messages[str(address)] = []
 				self.messages_to_send[str(address)] = []
 
 	def transmit(self, address):
@@ -96,7 +96,7 @@ class Server(object):
 				clientsocket.shutdown(socket.SHUT_RDWR)
 				clientsocket.close()
 				del self.clients[address]
-				del self.recieved_messages[str(address)]
+				del self.received_messages[str(address)]
 				del self.messages_to_send[str(address)]
 				del clientsocket
 				print "-LISTEN THREAD FOR '"+address+"' EXITING..."
