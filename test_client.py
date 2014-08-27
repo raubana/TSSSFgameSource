@@ -15,9 +15,9 @@ running = True
 while running:
 	events = pygame.event.get()
 
-	if len(client.received_messages[client]) > 0:
+	if len(client.received_messages) > 0:
 		message = client.received_messages.pop(0)
-		print "SERVER '"+client+"' SAYS: '"+message+"'"
+		print "SERVER SAYS: '"+message+"'"
 
 	for e in events:
 		if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE:

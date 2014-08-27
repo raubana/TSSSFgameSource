@@ -6,6 +6,10 @@ import libs.netcom as netcom
 
 ##########
 
+print "THIS SERVER'S EXTERNAL IP IS: "
+print netcom.get_this_computers_external_address()
+print
+
 server = netcom.Server(netcom.gethostname(), 27015)
 
 screen = pygame.display.set_mode((800,600))

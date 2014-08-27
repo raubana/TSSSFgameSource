@@ -26,6 +26,7 @@ def gethostname():#a simple wrapper function
 
 class Server(object):
 	def __init__(self, host, port):
+		print "-Starting server..."
 		self.buffersize = BUFFERSIZE
 
 		self.serversocket = socket.socket(
@@ -41,6 +42,8 @@ class Server(object):
 
 		self.received_messages = {}
 		self.messages_to_send = {}
+
+		print "-Server running."
 
 	def accept(self):
 		while True:
@@ -132,9 +135,11 @@ class Client(object):
 	def __init__(self, host, port):
 		self.buffersize = BUFFERSIZE
 
+		print "-Connecting..."
 		self.serversocket = socket.socket(
 			socket.AF_INET, socket.SOCK_STREAM)
 		self.serversocket.connect((host, port))
+		print "-Connected."
 
 		self.listen_thread = thread.start_new_thread(self.listen, tuple())
 		self.transmit_thread = thread.start_new_thread(self.transmit, tuple())
