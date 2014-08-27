@@ -22,6 +22,10 @@ while running:
 	for e in events:
 		if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE:
 			running = False
+		else:
+			if e.type == KEYDOWN:
+				if e.key == K_SPACE:
+					client.send("THIS IS A MESSAGE FROM THE CLIENT!!")
 
 	pygame.display.flip()
 	clock.tick(12)
