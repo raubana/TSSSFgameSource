@@ -72,16 +72,17 @@ class Server(object):
 				print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
 				thread.exit()
 			else:
-				if len(self.messages_to_send[address]) > 0:
-					message = self.messages_to_send[address].pop(0) + ESCAPE_CHARACTER
-					try:
+				try:
+					if len(self.messages_to_send[address]) > 0:
+						message = self.messages_to_send[address].pop(0) + ESCAPE_CHARACTER
+
 						while len(message) > 0:
 							sent = clientsocket.send(message)
 							message = message[sent:]
-					except:
-						print "-Failed to transmit message to",address
-						print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
-						thread.exit()
+				except:
+					print "-Failed to transmit message to",address
+					print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
+					thread.exit()
 
 	def listen(self,address):
 		clientsocket = self.clients[address]
@@ -104,7 +105,7 @@ class Server(object):
 			else:
 				message += recv
 				if message[-1] == ESCAPE_CHARACTER:
-					self.received_messages[address].append(message)
+					self.received_messages[address].append(message[:-1])
 					message = ""
 
 	def sendall(self,message):
@@ -175,7 +176,7 @@ class Client(object):
 			else:
 				message += recv
 				if message[-1] == ESCAPE_CHARACTER:
-					self.received_messages.append(message)
+					self.received_messages.append(message[-1])
 					message = ""
 
 	def send(self, message):
