@@ -62,6 +62,7 @@ class MasterDeck(object):
 					pc_f = open("cards/" + f)
 					org_pc = pc_f.read()
 					self.pc_cards.append(org_pc)
+					pc_f.close()
 
 					pc = open_pickledcard("cards/" + f)
 					pc.filename = "cards/" + f
