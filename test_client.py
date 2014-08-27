@@ -12,10 +12,10 @@ import io
 
 ##########
 
-client = netcom.Client("71.10.148.168", 27015)
-
 screen = pygame.display.set_mode((800,600))
 clock = pygame.time.Clock()
+
+client = netcom.Client("71.10.148.168", 27015)
 
 running = True
 while running:

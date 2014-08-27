@@ -17,14 +17,14 @@ print "THIS SERVER'S EXTERNAL IP IS: "
 print netcom.get_this_computers_external_address()
 print
 
+screen = pygame.display.set_mode((800,600))
+clock = pygame.time.Clock()
+
 print "LOADING THE DECK..."
 deck = MasterDeck()
 deck.load_all_cards()
 
 server = netcom.Server(netcom.gethostname(), 27015)
-
-screen = pygame.display.set_mode((800,600))
-clock = pygame.time.Clock()
 
 running = True
 while running:
