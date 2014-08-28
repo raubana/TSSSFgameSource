@@ -18,20 +18,25 @@ clock = pygame.time.Clock()
 client = netcom.Client("71.10.148.168", 27015)
 
 running = True
+
+img = None
+
 while running:
 	events = pygame.event.get()
-
-	img = None
 
 	if len(client.received_messages) > 0:
 		message = client.received_messages.pop(0)
 		if message.startswith("CARD:"):
-			print "RECEIVED CARD FROM THE SERVER!"
-			message = message[len("CARD:"):]
-			f = open_pickledcard(io.BytesIO(message))
-			card = Card()
-			card.parsePickledCard(f)
-			img = card.image
+			try:
+				print "RECEIVED CARD FROM THE SERVER!"
+				message = message[len("CARD:"):]
+				f = open_pickledcard(io.BytesIO(message))
+				card = Card()
+				card.parsePickledCard(f)
+				img = card.image
+			except:
+				print "ERROR RECEIVING CARD :("
+				img = None
 		else:
 			print "SERVER SAYS: '"+message+"'"
 
