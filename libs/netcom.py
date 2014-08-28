@@ -6,7 +6,7 @@ import time
 import sys
 
 BUFFERSIZE = 4096
-ESCAPE_CHARACTER = chr(0)+chr(0)
+ESCAPE_CHARACTER = chr(4)+chr(3)
 
 
 def get_this_computers_external_address():
