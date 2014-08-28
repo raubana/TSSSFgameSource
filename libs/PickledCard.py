@@ -32,7 +32,10 @@ def save_pickledcard(card, f):
 
 
 def open_pickledcard(f):
-	t = tarfile.open(f, mode='r')
+	if type(f) == str:
+		t = tarfile.open(f, mode='r')
+	else:
+		t = tarfile.open(fileobj=f, mode='r')
 	# we get the image from the archive
 	img = t.extractfile("image.png").read()  # we get our attributes
 	attr = t.extractfile("attributes").read()
