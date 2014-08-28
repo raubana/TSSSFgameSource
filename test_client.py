@@ -38,7 +38,7 @@ while running:
 				print "ERROR RECEIVING CARD :("
 				img = None
 		else:
-			print "SERVER SAYS: '"+message+"'"
+			print "SERVER SAYS: '"+message[0:100]+"'"
 
 	for e in events:
 		if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE:
