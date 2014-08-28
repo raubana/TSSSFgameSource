@@ -1,3 +1,8 @@
+
+
+#TODO: THIS FILE IS OUTDATED, BUT SHOULD NOT BE DELETED SINCE IT CONTAINS CODE THAT WILL NEED TO BE REUSED.
+
+
 import pygame
 from pygame.locals import*
 pygame.init()

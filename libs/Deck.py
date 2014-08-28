@@ -80,7 +80,7 @@ class Card(object):
 
 	def parsePickledCard(self, pc):
 		# first we need our image
-		self.image = pygame.image.load(io.BytesIO(pc.img)).convert_alpha()
+		self.image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
 		#next we need to parse each attribute individually in preparation for proper parsing.
 		attributes = pc.attr.split("\n")
 		i = 0

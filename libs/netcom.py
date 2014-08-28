@@ -8,7 +8,6 @@ import sys
 BUFFERSIZE = 4096
 ESCAPE_CHARACTER = str(chr(4))+str(chr(3))
 
-
 def get_this_computers_external_address():
 	#I stole this code huehuehue - http://stackoverflow.com/a/9944261/2862816
 	import urllib
@@ -19,12 +18,12 @@ def get_this_computers_external_address():
 	m = re.search('(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)',html_doc)
 	return m.group(0)
 
-
 def gethostname():#a simple wrapper function
 	return socket.gethostname()
 
 
 class Server(object):
+	#TODO: Add function to manually disconnect a specific client.
 	def __init__(self, host, port):
 		print "-Starting server..."
 		self.buffersize = BUFFERSIZE
@@ -39,6 +38,7 @@ class Server(object):
 		self.clients = {}
 		self.client_listen_threads = {}
 		self.client_transmit_threads = {}
+		self.client_last_got_message = {}
 
 		self.received_messages = {}
 		self.messages_to_send = {}
@@ -58,11 +58,12 @@ class Server(object):
 			else:
 				print "-- this is a new connection"
 				print "-- creating new thread..."
-				self.clients[str(address)] = clientsocket
-				self.client_listen_threads[str(address)] = thread.start_new_thread(self.listen, tuple([str(address)]))
-				self.client_transmit_threads[str(address)] = thread.start_new_thread(self.transmit, tuple([str(address)]))
-				self.received_messages[str(address)] = []
-				self.messages_to_send[str(address)] = []
+				self.clients[address] = clientsocket
+				self.client_listen_threads[address] = thread.start_new_thread(self.listen, tuple([str(address)]))
+				self.client_transmit_threads[address] = thread.start_new_thread(self.transmit, tuple([str(address)]))
+				self.received_messages[address] = []
+				self.messages_to_send[address] = []
+				self.client_last_got_message[address] = time.time()
 
 	def transmit(self, address):
 		clientsocket = self.clients[address]
@@ -97,12 +98,13 @@ class Server(object):
 				clientsocket.shutdown(socket.SHUT_RDWR)
 				clientsocket.close()
 				del self.clients[address]
-				del self.received_messages[str(address)]
-				del self.messages_to_send[str(address)]
+				del self.received_messages[address]
+				del self.messages_to_send[address]
 				del clientsocket
 				print "-LISTEN THREAD FOR '"+address+"' EXITING..."
 				thread.exit()
 			else:
+				self.client_last_got_message[address] = time.time()
 				message += recv
 				if recv.endswith(ESCAPE_CHARACTER):
 					self.received_messages[address].append(message[:-len(ESCAPE_CHARACTER)])
@@ -114,7 +116,10 @@ class Server(object):
 
 	def sendto(self,address,message):
 		if address in self.clients:
-			self.messages_to_send[address].append(message)
+			try:
+				self.messages_to_send[address].append(message)
+			except:
+				print "-ERROR! Attempted to add message to the buffer, but an error was raised."
 		else:
 			print "-Sorry, that client doesn't exist."
 
@@ -130,8 +135,6 @@ class Server(object):
 		print "-SERVER CLOSED. FECK OFF."
 
 
-
-
 class Client(object):
 	def __init__(self, host, port):
 		self.buffersize = BUFFERSIZE
@@ -144,6 +147,7 @@ class Client(object):
 
 		self.listen_thread = thread.start_new_thread(self.listen, tuple())
 		self.transmit_thread = thread.start_new_thread(self.transmit, tuple())
+		self.server_last_got_message = time.time()
 
 		self.received_messages = []
 		self.messages_to_send = []
@@ -175,6 +179,7 @@ class Client(object):
 				thread.exit()
 			else:
 				#print "-recv: "+recv
+				self.server_last_got_message = time.time()
 				message += recv
 				if recv.endswith(ESCAPE_CHARACTER):
 					print "-message received from client"
