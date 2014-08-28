@@ -75,7 +75,7 @@ class Server(object):
 				try:
 					if len(self.messages_to_send[address]) > 0:
 						message = self.messages_to_send[address].pop(0) + ESCAPE_CHARACTER
-						print "-Sending message: "+message
+						print "-Sending message: "+message[0:100]
 						while len(message) > 0:
 							sent = clientsocket.send(message)
 							message = message[sent:]
@@ -174,9 +174,10 @@ class Client(object):
 				print "-LISTEN THREAD EXITING..."
 				thread.exit()
 			else:
-				print "-recv: "+recv
+				#print "-recv: "+recv
 				message += recv
 				if message[-1] == ESCAPE_CHARACTER:
+					print "-message received from client"
 					self.received_messages.append(message[:-1])
 					message = ""
 
