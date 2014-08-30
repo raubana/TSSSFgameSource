@@ -9,7 +9,7 @@ def translate_size_to_pixels(size,remaining):
 		if size.endswith("px"):
 			pixels = int(size[-2])
 		elif size.endswith("%"):
-			pixels = int((float(size[-1])*remaining)/100.0)
+			pixels = int((float(size[:-1])*remaining)/100.0)
 	elif type(size) in (float,int):
 		pixels = int(size)
 	else:
@@ -62,6 +62,7 @@ class Element(object):
 		self.children.append(child)
 		self.flag_for_rerender()
 
+	#Update For functions are called whenever this element's parent needs to update for a particular event
 	def update_for_mouse_move(self, mouse_pos_local, not_hover=False):
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
@@ -127,18 +128,12 @@ class Element(object):
 				pass
 			else:
 				#Nothing else caught the event, so we catch it.
+				self.main.focus = self
 				self.triggerMousePressed(mouse_pos_local, button)
 				for handler in self.mousepress_handlers:
 					handler.handle_event_mousepress(self, mouse_pos_local, button)
 			return True
 
-	def handle_event_mousehover(self, widget, mouse_pos_local):
-		pass
-
-	def handle_event_mousepress(self, widget, mouse_pos_local, button):
-		pass
-
-	#Update For functions are called whenever this element's parent needs to update for a particular event
 	def update_for_mouse_button_release(self, mouse_pos_local, button):
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
@@ -167,6 +162,13 @@ class Element(object):
 		pass
 
 	def update_for_keyup(self, key):
+		pass
+
+	#Handle functions are called when something handles another element's caught events.
+	def handle_event_mousehover(self, widget, mouse_pos_local):
+		pass
+
+	def handle_event_mousepress(self, widget, mouse_pos_local, button):
 		pass
 
 	#Add Handler functions allow other elements to catch events that this element catches
@@ -261,7 +263,7 @@ class Element(object):
 				new_pos = (int(x_pos+child.padding[0]),int(y_pos+child.padding[1]))
 				new_size = 	(int(size[0]), int(size[1]))
 
-				if new_pos[0] + new_size[0] + child.padding[0] + child.padding[2] > x_remaining:
+				if new_pos[0] + new_size[0] + child.padding[0] + child.padding[2] > self.size[0]:
 					x_pos = 0
 
 					x_remaining = int(self.size[0])
@@ -271,13 +273,13 @@ class Element(object):
 
 					size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
 						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-					x_remaining -= size[0]
 					new_pos = (int(x_pos+child.padding[0]),int(y_pos+child.padding[1]))
-					new_size = 	(int(size[0]), int(size[1]))
-				else:
-					x_pos += new_size[0] + child.padding[0] + child.padding[2]
+					new_size = (int(size[0]), int(size[1]))
 
+				x_pos += new_size[0] + child.padding[0] + child.padding[2]
+				x_remaining -= new_size[0] + child.padding[0] + child.padding[2]
 				y_needed = max(size[1] + child.padding[1] + child.padding[3], y_needed)
+
 				redo= False
 				if new_pos != child.pos:
 					redo = True

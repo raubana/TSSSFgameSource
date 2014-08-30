@@ -9,21 +9,6 @@ import math, random, time
 
 from libs.GUI import *
 
-
-class TestElement(Element):
-	def triggerMouseHover(self, mouse_pos):
-		self.set_bg_color((255, 255, 0))
-
-	def triggerMouseOut(self, mouse_pos):
-		self.set_bg_color((127, 127, 0))
-
-	def triggerMousePressed(self, mouse_pos, button):
-		self.set_bg_color((0, 255, 0))
-
-	def triggerMouseRelease(self, mouse_pos, button):
-		self.set_bg_color((255, 0, 0))
-
-
 class Main(object):
 	def __init__(self):
 		self.screen_size = (854, 480)
