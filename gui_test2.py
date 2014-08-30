@@ -28,9 +28,41 @@ class Main(object):
 		self.controller = None  # Controllers are used to control the application while something is being taken care of.
 
 		# SETS UP THE GUI
+		self.element_level = 0
+
 		self.updated_elements = []
-		self.main_element = Element(self, (0, 0), self.screen_size, None, always_count_hover=True)
+		self.elements_to_pack = {}
+
+		self.needs_to_pack = False
+		self.main_element = Element(self, self, (0, 0), self.screen_size, always_count_hover=True)
 		self.focus = None
+
+		self.manage_pack_requests()
+
+	def _setup_for_pack(self):
+		#THIS SHOULD NOT BE CALLED UNLESS YOU KNOW WHAT YOU'RE DOING!!
+		if self.needs_to_pack == False:
+			self.needs_to_pack = True
+			level_name = str(self.element_level)
+			if level_name not in self.elements_to_pack:
+				level = []
+				self.elements_to_pack[level_name] = level
+			else:
+				level = self.elements_to_pack[level_name]
+			level.append(self)
+
+	def manage_pack_requests(self):
+		#managed elements needing to be packed
+		while len(self.elements_to_pack) > 0:
+			#first we find the highest level needed to be packed
+			keys = self.elements_to_pack.keys()
+			highest = int(keys[0])
+			for key in keys[1:]:
+				highest = min(highest,int(key))
+			#next, we make each element in that level pack
+			elements_to_pack = self.elements_to_pack.pop(str(highest))
+			for element in elements_to_pack:
+				element.pack()
 
 	def update(self):
 		for e in self.events:
@@ -49,8 +81,10 @@ class Main(object):
 					self.focus.update_for_keyup(e.key)
 
 			elif e.type == VIDEORESIZE:
-				self.screen_size = self.screen.get_size()
-				self.main_element.set_size(self.screen_size)
+				self.screen_size = e.size
+				self.screen = pygame.display.set_mode(self.screen_size,RESIZABLE)
+				self.main_element.flag_for_rerender()
+				self.main_element.flag_for_pack()
 
 		for element in self.updated_elements:
 			element.update()
@@ -62,8 +96,22 @@ class Main(object):
 		if self.controller != None:
 			self.controller.move()
 
+	def pack(self):
+		new_pos = (0,0)
+		new_size = self.screen_size
+		redo= False
+		if new_pos != self.main_element.pos:
+			redo = True
+			self.main_element.pos = new_pos
+		if new_size != self.main_element.size:
+			redo = True
+			self.main_element.size = new_size
+			self.main_element._setup_for_pack()
+		if redo:
+			self.main_element.update_rect()
+			self.main_element.flag_for_rerender()
+
 	def render(self):
-		self.main_element.rendered_surface = self.screen
 		self.main_element.render()
 
 		if self.controller != None:
@@ -92,7 +140,9 @@ class Main(object):
 			self.events = pygame.event.get()
 
 			self.update()
+			self.manage_pack_requests()
 			self.move()
+			self.manage_pack_requests()
 			self.render()
 
 			for e in self.events:

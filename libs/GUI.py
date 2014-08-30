@@ -1,32 +1,56 @@
 import pygame
 import math
 
-#TODO: Add function that instructs an element's children to resize/move. This is for when the element is resized.
+
+def translate_size_to_pixels(size,remaining):
+	size = size.strip()
+	pixels = 0
+	if type(size) == str:
+		if size.endswith("px"):
+			pixels = int(size[-2])
+		elif size.endswith("%"):
+			pixels = int((float(size[-1])*remaining)/100.0)
+	elif type(size) in (float,int):
+		pixels = int(size)
+	else:
+		raise TypeError("Not a usable type")
+	return pixels
+
 
 class Element(object):
-	def __init__(self, main, pos, size, parent, bg_color=(255, 255, 255), always_count_hover=False):
-		self.pos = pos
-		self.size = size
-		self.update_rect()
+	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg_color=(255, 255, 255), always_count_hover=False):
+		self.main = main
+		self.element_level = parent.element_level + 1
+
+		self.preferred_pos = preferred_pos
+		self.preferred_size = preferred_size
+
+		self.pos = None
+		self.size = None
+
+		self.rect = None
+
+		self.rendered_surface = None
 
 		self.bg_color = bg_color
 
 		self.parent = parent
-		if parent != None:
+		if parent != self.main:
 			parent.add_child(self)
 		self.children = []
 
 		self.hover = False
-		self.always_count_hover = always_count_hover  # This is true when it detects hovers, even when we hover over it's children.
-
-		self.needs_to_rerender = True  # redundent, but it's here.
-		self.rendered_surface = pygame.Surface(size, pygame.SRCALPHA)
+		self.always_count_hover = always_count_hover # This is true when it detects hovers, even when we hover over it's children.
 
 		self.mousehover_handlers = []
 		self.mousepress_handlers = []
 
 		self.init(main)
-		self.rerender()
+
+		self.flag_for_rerender()
+		self.flag_for_pack()
+
+		self.needs_to_pack = False # This is True when this element's children need to be refitted.
 
 	def init(self, main):
 		# Here you would do any other initialization stuff you might need to do.
@@ -81,9 +105,6 @@ class Element(object):
 				handler.handle_event_mousehover(self, mouse_pos_local)
 		return self_hover or child_hover
 
-	def handle_event_mousehover(self, widget, mouse_pos_local):
-		pass
-
 	def update_for_mouse_button_press(self, mouse_pos_local, button):
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
@@ -110,9 +131,13 @@ class Element(object):
 					handler.handle_event_mousepress(self, mouse_pos_local, button)
 			return True
 
+	def handle_event_mousehover(self, widget, mouse_pos_local):
+		pass
+
 	def handle_event_mousepress(self, widget, mouse_pos_local, button):
 		pass
 
+	#Update For functions are called whenever this element's parent needs to update for a particular event
 	def update_for_mouse_button_release(self, mouse_pos_local, button):
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
@@ -143,12 +168,14 @@ class Element(object):
 	def update_for_keyup(self, key):
 		pass
 
+	#Add Handler functions allow other elements to catch events that this element catches
 	def add_handler_mousehover(self, handler):
 		self.mousehover_handlers.append(handler)
 
 	def add_handler_mousepress(self, handler):
 		self.mousepress_handlers.append(handler)
 
+	#Triggers are called when an event is caught by this element
 	def triggerMouseHover(self, mouse_pos):
 		pass
 
@@ -165,25 +192,21 @@ class Element(object):
 		pass
 
 	def set_size(self, new_size):
-		if new_size != self.size:
-			self.size = new_size
-			self.rendered_surface = pygame.Surface(new_size, pygame.SRCALPHA)
-			self.update_rect()
-			self.flag_for_rerender()
+		if new_size != self.preferred_size:
+			self.preferred_size = new_size
+			self.flag_for_pack()
 
 	def set_pos(self, new_pos):
-		if new_pos != self.pos:
-			self.pos = new_pos
-			self.update_rect()
-			if self.parent != None:
-				self.parent.flag_for_rerender()
+		if new_pos != self.preferred_pos:
+			self.preferred_pos = new_pos
+			self.flag_for_pack()
 
 	def get_local_pos(self):
 		return (float(self.pos[0]), float(self.pos[1]))
 
 	def get_world_pos(self):
 		# this is recursive
-		if self.parent == None:
+		if self.parent == self.main:
 			offset = (0, 0)
 		else:
 			offset = self.parent.get_world_pos()
@@ -198,51 +221,87 @@ class Element(object):
 		self.rect = pygame.Rect([self.pos[0], self.pos[1], self.size[0], self.size[1]])
 
 	def flag_for_rerender(self):
-		if self.parent != None:
+		if self.parent != self.main:
 			self.parent.flag_for_rerender()
 		self.needs_to_rerender = True
 
+	def flag_for_pack(self):
+		self.parent._setup_for_pack()
+
+	def _setup_for_pack(self):
+		#THIS SHOULD NOT BE CALLED UNLESS YOU KNOW WHAT YOU'RE DOING!!
+		if self.needs_to_pack == False:
+			self.needs_to_pack = True
+			level_name = str(self.element_level)
+			if level_name not in self.main.elements_to_pack:
+				level = []
+				self.main.elements_to_pack[level_name] = level
+			else:
+				level = self.main.elements_to_pack[level_name]
+			level.append(self)
+
+	def pack(self):
+		#This is the function called to resize and reorganize an element's children.
+		#You should override this function if this element doesn't organize it's elements in this way.
+		if self.needs_to_pack: # NECESSARY
+			self.needs_to_pack = False # NECESSARY
+			#In this case, our pack function will order our elements using a flow layout
+			x_pos = 0
+			y_pos = 0
+			x_remaining = int(self.size[0])
+			y_remaining = int(self.size[1])
+			y_needed = 0
+			#The flow layout tries to fill a single row until no more children can be added because the element isn't
+			# wide enough, at which point a new row is used below it.
+			for child in self.children:
+				#We need to determine this child's new size
+				size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+						max(translate_size_to_pixels(child.preferred_size[0],y_remaining),0))
+				x_remaining -= size[0]
+				new_pos = (int(x_pos),int(y_pos))
+				new_size = 	(size[0], size[1])
+
+				if new_pos[0] + new_size[0] > x_remaining and x_pos != 0:
+					x_pos = 0
+
+					y_remaining -= y_needed
+					y_pos += y_needed
+					y_needed = 0
+
+					size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+						max(translate_size_to_pixels(child.preferred_size[0],y_remaining),0))
+					x_remaining -= size[0]
+					new_pos = (int(x_pos),int(y_pos))
+					new_size = 	(size[0], size[1])
+
+				y_needed = max(size[1],y_needed)
+				redo= False
+				if new_pos != child.pos:
+					redo = True
+					child.pos = new_pos
+				if new_size != child.size:
+					redo = True
+					child.size = new_size
+					child._setup_for_pack()
+				if redo:
+					child.update_rect()
+					child.flag_for_rerender()
+
 	def rerender(self):
 		# this is redrawing it's elements to the rendered surface
-		self.needs_to_rerender = False
-		if self.bg_color != None:
-			self.rendered_surface.fill(self.bg_color)
-		#pygame.draw.rect(self.rendered_surface,(self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]),[0,0,self.size[0],self.size[1]],1)
-		for child in self.children:
-			child.render()
+		if self.needs_to_rerender:
+			self.needs_to_rerender = False
+			if self.parent == self.main:
+				self.rendered_surface = self.main.screen
+			else:
+				if self.rendered_surface == None or self.size != self.rendered_surface.get_size():
+					self.rendered_surface = pygame.Surface(self.size,pygame.SRCALPHA)
+			if self.bg_color != None:
+				self.rendered_surface.fill(self.bg_color)
+			for child in self.children:
+				child.render()
 
 	def render(self):
-		if self.needs_to_rerender:
-			self.rerender()
-		if self.parent != None:
-			self.parent.rendered_surface.blit(self.rendered_surface, self.pos)
-
-
-class ImageElement(Element):
-	def __init__(self, main, pos, size, parent, surface, always_count_hover=False):
-		self.pos = pos
-		self.size = size
-		self.update_rect()
-
-		self.surface = surface
-
-		self.parent = parent
-		if parent != None:
-			parent.add_child(self)
-		self.children = []
-
-		self.hover = False
-		self.always_count_hover = always_count_hover  # This is true when it detects hovers, even when we hover over it's children.
-
-		self.needs_to_rerender = True  # redundent, but it's here.
-		self.rendered_surface = pygame.Surface(size, pygame.SRCALPHA)
-
-		self.init(main)
 		self.rerender()
-
-	def rerender(self):
-		# this is redrawing it's elements to the rendered surface
-		self.needs_to_rerender = False
-		self.rendered_surface = pygame.transform.smoothscale(self.surface, self.size)
-		for child in self.children:
-			child.render()
+		if self.parent != self.main:
+			self.parent.rendered_surface.blit(self.rendered_surface, self.pos)
