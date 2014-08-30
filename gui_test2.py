@@ -37,6 +37,10 @@ class Main(object):
 		self.main_element = Element(self, self, (0, 0), self.screen_size, always_count_hover=True)
 		self.focus = None
 
+		for i in xrange(10):
+			element = Element(self, self.main_element, None, (50,50), (127,0,0))
+			element.padding = [10,10,10,10]
+
 		self.manage_pack_requests()
 
 	def _setup_for_pack(self):
@@ -97,19 +101,22 @@ class Main(object):
 			self.controller.move()
 
 	def pack(self):
-		new_pos = (0,0)
-		new_size = self.screen_size
-		redo= False
-		if new_pos != self.main_element.pos:
-			redo = True
-			self.main_element.pos = new_pos
-		if new_size != self.main_element.size:
-			redo = True
-			self.main_element.size = new_size
-			self.main_element._setup_for_pack()
-		if redo:
-			self.main_element.update_rect()
-			self.main_element.flag_for_rerender()
+		if self.needs_to_pack:
+			self.needs_to_pack = False
+
+			new_pos = (0,0)
+			new_size = self.screen_size
+			redo= False
+			if new_pos != self.main_element.pos:
+				redo = True
+				self.main_element.pos = new_pos
+			if new_size != self.main_element.size:
+				redo = True
+				self.main_element.size = new_size
+				self.main_element._setup_for_pack()
+			if redo:
+				self.main_element.update_rect()
+				self.main_element.flag_for_rerender()
 
 	def render(self):
 		self.main_element.render()

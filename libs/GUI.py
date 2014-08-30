@@ -3,9 +3,9 @@ import math
 
 
 def translate_size_to_pixels(size,remaining):
-	size = size.strip()
 	pixels = 0
 	if type(size) == str:
+		size = size.strip()
 		if size.endswith("px"):
 			pixels = int(size[-2])
 		elif size.endswith("%"):
@@ -27,6 +27,7 @@ class Element(object):
 
 		self.pos = None
 		self.size = None
+		self.padding = [0,0,0,0]
 
 		self.rect = None
 
@@ -36,7 +37,7 @@ class Element(object):
 
 		self.parent = parent
 		if parent != self.main:
-			parent.add_child(self)
+			parent._add_child(self)
 		self.children = []
 
 		self.hover = False
@@ -57,7 +58,7 @@ class Element(object):
 		#You'd want to setup this element for tick triggers in this function.
 		pass
 
-	def add_child(self, child):
+	def _add_child(self, child):
 		self.children.append(child)
 		self.flag_for_rerender()
 
@@ -230,7 +231,7 @@ class Element(object):
 
 	def _setup_for_pack(self):
 		#THIS SHOULD NOT BE CALLED UNLESS YOU KNOW WHAT YOU'RE DOING!!
-		if self.needs_to_pack == False:
+		if not self.needs_to_pack:
 			self.needs_to_pack = True
 			level_name = str(self.element_level)
 			if level_name not in self.main.elements_to_pack:
@@ -256,25 +257,27 @@ class Element(object):
 			for child in self.children:
 				#We need to determine this child's new size
 				size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-						max(translate_size_to_pixels(child.preferred_size[0],y_remaining),0))
-				x_remaining -= size[0]
-				new_pos = (int(x_pos),int(y_pos))
-				new_size = 	(size[0], size[1])
+						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+				new_pos = (int(x_pos+child.padding[0]),int(y_pos+child.padding[1]))
+				new_size = 	(int(size[0]), int(size[1]))
 
-				if new_pos[0] + new_size[0] > x_remaining and x_pos != 0:
+				if new_pos[0] + new_size[0] + child.padding[0] + child.padding[2] > x_remaining:
 					x_pos = 0
 
+					x_remaining = int(self.size[0])
 					y_remaining -= y_needed
 					y_pos += y_needed
 					y_needed = 0
 
 					size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-						max(translate_size_to_pixels(child.preferred_size[0],y_remaining),0))
+						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
 					x_remaining -= size[0]
-					new_pos = (int(x_pos),int(y_pos))
-					new_size = 	(size[0], size[1])
+					new_pos = (int(x_pos+child.padding[0]),int(y_pos+child.padding[1]))
+					new_size = 	(int(size[0]), int(size[1]))
+				else:
+					x_pos += new_size[0] + child.padding[0] + child.padding[2]
 
-				y_needed = max(size[1],y_needed)
+				y_needed = max(size[1] + child.padding[1] + child.padding[3], y_needed)
 				redo= False
 				if new_pos != child.pos:
 					redo = True
