@@ -115,7 +115,7 @@ class GameServer(object):
 					lgm = self.server.client_last_got_message[pa]
 					dif = t - lgm
 					if dif >= PING_FREQUENCY:
-						if player.is_pinged:
+						if not player.is_pinged:
 							player.is_pinged = True
 							self.server.sendto(pa,PING_MESSAGE)
 						else:

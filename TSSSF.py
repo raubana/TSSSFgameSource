@@ -103,12 +103,6 @@ class Main(object):
 		if self.controller != None:
 			self.controller.update()
 
-		if self.client != None:
-			messages = list(self.client.received_messages)
-			for message in messages:
-				if message == "PING":
-					self.client.send("PONG")
-
 	def move(self):
 		if self.controller != None:
 			self.controller.move()
