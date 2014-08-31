@@ -7,3 +7,6 @@ PONG_MESSAGE = "PONG" # response sent back to the server/client by the client/se
 TIMEOUT_TIME = 5.0  # seconds before a player is dropped for timing-out
 PING_FREQUENCY = 1.0  # ping the server/client every X seconds to ensure there's still a connection.
 DEFAULT_PORT = 27015
+
+#MISC.
+PRINTABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_+-={}|:\"<>?[]\\;',./ "

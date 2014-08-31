@@ -7,7 +7,9 @@ import numpy
 
 import math, random, time
 
-from libs.GUI import *
+from libs.gui.GUI import *
+from libs.locals import *
+
 
 class Main(object):
 	def __init__(self):
@@ -20,6 +22,10 @@ class Main(object):
 		self.stills = []
 		self.still_freq = 1 / 10.0
 		self.last_still = time.time() - self.still_freq
+
+		self.font = pygame.font.Font(pygame.font.get_default_font(),15)
+
+		pygame.key.set_repeat(300, 30)
 
 		self.reset()
 		self.run()
@@ -34,12 +40,12 @@ class Main(object):
 		self.elements_to_pack = {}
 
 		self.needs_to_pack = False
-		self.main_element = Element(self, self, (0, 0), self.screen_size, always_count_hover=True)
+		self.main_element = Element(self, self, (0,0), self.screen_size, always_count_hover=True)
 		self.focus = None
 
-		for i in xrange(10):
-			element = TestElement(self, self.main_element, None, ("20%", "20%"), (127, 0, 0))
-			element.padding = [10, 10, 10, 10]
+		element = InputBox(self, self.main_element, None, (self.font.size("000000000000")[0]+4,self.font.get_height()+4), (255,255,255))
+		element.padding = [2,2,2,2]
+		element.max_characters = len("000000000000")
 
 		self.manage_pack_requests()
 
@@ -79,7 +85,7 @@ class Main(object):
 
 			elif e.type == KEYDOWN:
 				if self.focus != None:
-					self.focus.update_for_keydown(e.key)
+					self.focus.update_for_keydown(e.unicode, e.key)
 			elif e.type == KEYUP:
 				if self.focus != None:
 					self.focus.update_for_keyup(e.key)
