@@ -108,9 +108,11 @@ class Server(object):
 			else:
 				self.client_last_got_message[address] = time.time()
 				message += recv
-				if recv.endswith(ESCAPE_CHARACTER):
-					self.received_messages[address].append(message[:-len(ESCAPE_CHARACTER)])
-					message = ""
+				if ESCAPE_CHARACTER in message:
+					data = message.split(ESCAPE_CHARACTER)
+					message = data[0]
+					self.received_messages[address].append(message)
+					message = data[1]
 
 	def sendall(self,message):
 		for key in self.clients:
@@ -204,10 +206,11 @@ class Client(object):
 				#print "-recv: "+recv
 				self.server_last_got_message = time.time()
 				message += recv
-				if recv.endswith(ESCAPE_CHARACTER):
-					#print "-message received from client"
-					self.received_messages.append(message[:-len(ESCAPE_CHARACTER)])
-					message = ""
+				if ESCAPE_CHARACTER in message:
+					data = message.split(ESCAPE_CHARACTER)
+					message = data[0]
+					self.received_messages.append(message)
+					message = data[1]
 
 	def send(self, message):
 		self.messages_to_send.append(message)

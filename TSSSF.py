@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 pygame.init()
 
-import numpy
+#import numpy
 
 import math, random, time
 
