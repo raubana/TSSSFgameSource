@@ -67,6 +67,12 @@ class Element(object):
 
 	def _add_child(self, child):
 		self.children.append(child)
+		self.child.flag_for_pack()
+		self.flag_for_rerender()
+
+	def _remove_child(self, child):
+		self.children.remove(child)
+		self._setup_for_pack()
 		self.flag_for_rerender()
 
 	def clear(self):

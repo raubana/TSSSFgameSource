@@ -68,18 +68,7 @@ class GameServer(object):
 							pass
 						else:
 							#This player is attempting to connect, we need to receive a CONNECT request before we continue.
-							messages = list(self.server.received_messages[key])
-							for message in messages:
-								if message.startswith("CONNECT:"):
-									#We get the clients name now and add them to the game.
-									#TODO: Kick the client if their name sucks.
-									if False:
-										pass
-									else:
-										name = message[len("CONNECT:"):]
-										self.players.append(Player(key, name))
-										self.server.sendto(key,"CONNECTED")
-										print "=Player '"+name+"'", key, "has joined the game."
+							pass
 				# Check if any players have disconnected
 				keys = self.server.clients.keys()
 				i = len(self.players) - 1
@@ -88,10 +77,36 @@ class GameServer(object):
 					if player.address not in keys:
 						#Player has disconnected
 						print "=Player '"+player.name+"'", player.address, "has left the game."
+						self.server.sendall("ADD_CHAT:"+"Player '"+player.name+"' has left.")
 						#TODO: Do proper cleanup for disconnected players.
 						del self.players[i]
 					i -= 1
-
+			for key in self.server.clients.keys():
+				if len(self.server.received_messages[key]) > 0:
+					message = self.server.received_messages[key].pop(0)
+					if message.startswith("CONNECT:"):
+						#We get the clients name now and add them to the game.
+						#TODO: Kick the client if their name sucks.
+						if False:
+							pass
+						else:
+							name = message[len("CONNECT:"):]
+							self.players.append(Player(key, name))
+							self.server.sendto(key,"CONNECTED")
+							print "=Player '"+name+"'", key, "has joined the game."
+							self.server.sendall("ADD_CHAT:"+"Player '"+name+"' has joined.")
+					elif message.startswith("CHAT:"):
+						player = None
+						for pl in self.players:
+							if pl.address == key:
+								player = pl
+								break
+						if not player:
+							name = "UNKNOWN"
+						else:
+							name = player.name
+						chat = message[len("CHAT:"):]
+						self.server.sendall("ADD_CHAT:"+name+": "+chat)
 
 
 
