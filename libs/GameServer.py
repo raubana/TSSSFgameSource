@@ -50,7 +50,7 @@ class GameServer(object):
 
 	def _update(self):
 		#TODO: Finish _update command.
-		if self.state == GAMESTAGE_PREGAME:
+		if self.stage == GAMESTAGE_PREGAME:
 			# We are in the pregame stage.
 			pass
 
