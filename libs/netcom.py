@@ -23,7 +23,6 @@ def gethostname():#a simple wrapper function
 
 
 class Server(object):
-	#TODO: Add function to manually disconnect a specific client.
 	def __init__(self, host, port):
 		print "-Starting server..."
 		self.buffersize = BUFFERSIZE
@@ -139,8 +138,11 @@ class Server(object):
 
 	def disconnect(self, address):
 		print "-Killing connection with",address,"..."
-		self.clients[address].close()
-		del self.clients[address]
+		if address in self.clients:
+			self.clients[address].close()
+			del self.clients[address]
+		else:
+			print "-Sorry, that client doesn't exist."
 
 
 class Client(object):

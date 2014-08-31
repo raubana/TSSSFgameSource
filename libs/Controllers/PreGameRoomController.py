@@ -15,7 +15,5 @@ class PreGameRoomController(Controller):
 	def update(self):
 		if len(self.main.client.received_messages) > 0:
 			message = self.main.client.received_messages.pop(0)
-			print message
 			if message == PING_MESSAGE:
 				self.main.client.send(PONG_MESSAGE)
-				print "PONG!"
