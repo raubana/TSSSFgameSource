@@ -58,6 +58,7 @@ class Server(object):
 			else:
 				print "-- this is a new connection"
 				print "-- creating new thread..."
+				print clientsocket, address
 				self.clients[address] = clientsocket
 				self.client_listen_threads[address] = thread.start_new_thread(self.listen, tuple([str(address)]))
 				self.client_transmit_threads[address] = thread.start_new_thread(self.transmit, tuple([str(address)]))

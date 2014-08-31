@@ -44,6 +44,8 @@ class Main(object):
 		self.main_element = Element(self, self, (0,0), self.screen_size, bg_color=(210,180,220))
 		self.main_element.set_text_align(ALIGN_MIDDLE)
 
+		self.client = None
+
 		self.controller = ConnectMenuController(self)  # Controllers are used to control the application while something is being taken care of.
 
 		self.manage_pack_requests()
@@ -165,6 +167,9 @@ class Main(object):
 
 		for i in xrange(len(self.stills)):
 			pygame.image.save(self.stills[i], "stills/" + str(len(self.stills) - i) + ".bmp")
+
+		if self.client != None:
+			self.client.close()
 
 		pygame.quit()
 
