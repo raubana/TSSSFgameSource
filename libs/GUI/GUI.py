@@ -29,6 +29,7 @@ class Element(object):
 		self.pos = None
 		self.size = None
 		self.padding = [0,0,0,0]
+		self.margin = [0,0,0,0]
 
 		self.rect = None
 
@@ -67,7 +68,7 @@ class Element(object):
 
 	def _add_child(self, child):
 		self.children.append(child)
-		self.child.flag_for_pack()
+		child.flag_for_pack()
 		self.flag_for_rerender()
 
 	def _remove_child(self, child):
@@ -321,10 +322,10 @@ class Element(object):
 				#We need to determine this child's new size
 				size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
 						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-				new_pos = (int(x_pos+child.padding[0]),int(y_pos+child.padding[1]))
-				new_size = 	(int(size[0]), int(size[1]))
+				new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+				new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),0), max(int(size[1]-child.padding[1]-child.padding[3]),0))
 
-				if new_pos[0] + new_size[0] + child.padding[0] + child.padding[2] > self.size[0]:
+				if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] >= self.size[0]:
 					x_pos = 0
 
 					x_remaining = int(self.size[0])
@@ -334,12 +335,12 @@ class Element(object):
 
 					size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
 						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-					new_pos = (int(x_pos+child.padding[0]),int(y_pos+child.padding[1]))
-					new_size = (int(size[0]), int(size[1]))
+					new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),0), max(int(size[1]-child.padding[1]-child.padding[3]),0))
 
-				x_pos += new_size[0] + child.padding[0] + child.padding[2]
-				x_remaining -= new_size[0] + child.padding[0] + child.padding[2]
-				y_needed = max(size[1] + child.padding[1] + child.padding[3], y_needed)
+				x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+				x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+				y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
 
 				redo= False
 				if new_pos != child.pos:

@@ -13,8 +13,10 @@ class PreGameRoomController(Controller):
 		self.main.main_element.set_text("")
 
 		self.chat_window = Element(self.main, self.main.main_element, None, ("100%","90%"), bg_color=(255,255,255))
+		self.chat_window.padding = [2,2,2,2]
 
 		self.text_inputbox = InputBox(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()+4))
+		self.chat_window.padding = [2,0,2,0]
 		self.text_inputbox.max_characters = 50
 
 		self.text_inputbox.add_handler_submit(self)
@@ -22,19 +24,22 @@ class PreGameRoomController(Controller):
 	def update(self):
 		if len(self.main.client.received_messages) > 0:
 			message = self.main.client.received_messages.pop(0)
+			print message
 			if message == PING_MESSAGE:
 				self.main.client.send(PONG_MESSAGE)
 			elif message.startswith("ADD_CHAT:"):
 				chat = message[len("ADD_CHAT:"):]
 				element = Element(self.main, self.chat_window, None, ("100%",self.main.font.get_height()), bg_color=None)
+				element.set_text(chat)
 				if len(self.chat_window.children) > 15:
 					self.chat_window._remove_child(self.chat_window.children[0])
 
 	def handle_event_submit(self, widget):
 		message = self.text_inputbox.text
 
-		self.main.client.send("CHAT:"+message)
+		if message:
+			self.main.client.send("CHAT:"+message)
 
-		self.text_inputbox.set_text("")
-		self.text_inputbox.index = 0
-		self.text_inputbox.offset = 0
+			self.text_inputbox.set_text("")
+			self.text_inputbox.index = 0
+			self.text_inputbox.offset = 0

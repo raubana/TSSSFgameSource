@@ -13,48 +13,48 @@ class ConnectMenuController(Controller):
 		
 		element1 = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(96,96,96))
 		element1.text = "IP ADDRESS"
-		element1.padding = [10,10,2,2]
+		element1.margin = [10,10,2,2]
 
 		self.ip_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("000000000000000")[0]+4,self.main.font.get_height()+4), (255,255,255))
-		self.ip_inputbox.padding = [10,2,2,2]
+		self.ip_inputbox.margin = [10,2,2,2]
 		self.ip_inputbox.legal_characters = "1234567890."
 		self.ip_inputbox.max_characters = len("000_000_000_000")
 
 		element2 = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(96,96,96))
 		element2.text = "PORT"
-		element2.padding = [10,2,2,2]
+		element2.margin = [10,2,2,2]
 
 		self.port_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("00000")[0]+4,self.main.font.get_height()+4), (255,255,255))
-		self.port_inputbox.padding = [10,2,2,2]
+		self.port_inputbox.margin = [10,2,2,2]
 		self.port_inputbox.legal_characters = "1234567890"
 		self.port_inputbox.max_characters = len("00000")
 
 		element3 = Element(self.main, self.main.main_element, None, ("100%",0), None)
-		element3.padding = [0,0,1,0]
+		element3.margin = [0,0,1,0]
 
 		self.paste_button = Button(self.main, self.main.main_element, None, (self.main.font.size("PASTE ADDRESS")[0]+5,self.main.font.get_height()+5), (255,255,255))
 		self.paste_button.text = "PASTE ADDRESS"
-		self.paste_button.padding = [10,2,2,25]
+		self.paste_button.margin = [10,2,2,25]
 
 		element4 = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(96,96,96))
 		element4.text = "NAME"
-		element4.padding = [10,2,2,2]
+		element4.margin = [10,2,2,2]
 
 		self.name_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("123456789012345")[0]+4, self.main.font.get_height()+4), (255,255,255))
-		self.name_inputbox.padding = [10,2,2,2]
+		self.name_inputbox.margin = [10,2,2,2]
 		self.name_inputbox.legal_characters = string.letters + string.digits + " "
 		self.name_inputbox.max_characters = len("123456789012345")
 
 		element5 = Element(self.main, self.main.main_element, None, ("100%",0), None)
-		element5.padding = [0,0,1,22]
+		element5.margin = [0,0,1,22]
 
 		self.connect_button = Button(self.main, self.main.main_element, None, (self.main.font.size("CONNECT")[0]+15,self.main.font.get_height()+15), (255,255,255))
 		self.connect_button.text = "CONNECT"
-		self.connect_button.padding = [10,2,2,2]
+		self.connect_button.margin = [10,2,2,2]
 
 		self.message_element = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(127,0,0))
 		self.message_element.text = ""
-		self.message_element.padding = [10,2,2,2]
+		self.message_element.margin = [10,2,2,2]
 
 		#Sets up handling
 		self.ip_inputbox.add_handler_losefocus(self)
