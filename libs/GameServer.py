@@ -28,6 +28,7 @@ class GameServer(object):
 		print "== the MasterDeck is now fully loaded."
 		self.players = []
 		self.stage = GAMESTAGE_INIT
+		self.last_updated_playerlist = 0
 		print "= Waiting for 'run_main_loop' to be called."
 		print
 
@@ -51,8 +52,48 @@ class GameServer(object):
 	def _update(self):
 		#TODO: Finish _update command.
 		if self.stage == GAMESTAGE_PREGAME:
-			# We are in the pregame stage.
-			pass
+			t = time.time()
+			if t - self.last_updated_playerlist > 1:
+				self.last_updated_playerlist = t
+				# Check if any players have connected
+				for key in self.server.clients.keys():
+					match = False
+					for player in self.players:
+						if player.address == key:
+							match = True
+							break
+					if not match:
+						#TODO: Kick them if the server is full or they're banned
+						if False:
+							pass
+						else:
+							#This player is attempting to connect, we need to receive a CONNECT request before we continue.
+							messages = list(self.server.received_messages[key])
+							for message in messages:
+								if message.startswith("CONNECT:"):
+									#We get the clients name now and add them to the game.
+									#TODO: Kick the client if their name sucks.
+									if False:
+										pass
+									else:
+										name = message[len("CONNECT:"):]
+										self.players.append(Player(key, name))
+										self.server.sendto(key,"CONNECTED")
+										print "=Player '"+name+"'", key, "has joined the game."
+				# Check if any players have disconnected
+				keys = self.server.clients.keys()
+				i = len(self.players) - 1
+				while i >= 0:
+					player = self.players[i]
+					if player.address not in keys:
+						#Player has disconnected
+						print "=Player '"+player.name+"'", player.address, "has left the game."
+						#TODO: Do proper cleanup for disconnected players.
+						del self.players[i]
+					i -= 1
+
+
+
 
 	def _read_messages(self):
 		#TODO: Do _read_messages command.
