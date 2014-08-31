@@ -137,6 +137,11 @@ class Server(object):
 			del self.clients[address]
 		print "-SERVER CLOSED. FECK OFF."
 
+	def disconnect(self, address):
+		print "-Killing connection with",address,"..."
+		self.clients[address].close()
+		del self.clients[address]
+
 
 class Client(object):
 	def __init__(self, host, port):

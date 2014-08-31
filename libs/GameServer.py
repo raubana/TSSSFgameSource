@@ -133,9 +133,9 @@ class GameServer(object):
 				print "= Client '"+pn+"' has disconnected from '"+pa+"'"
 				kick_em = True
 			if kick_em:
-				print "= Player '"+pn+"' has disconnected."
-				#TODO: Close connection between the server and this client.
-				#TODO: Remove this player from the
+				print "= Player '"+pn+"' has been kicked."
+				self.server.disconnect(pa)
+				self.players.remove(player)
 				#TODO: update players list and reassign whose turn it is, if necessary.
 				#TODO: send message to remaining clients to let them know about the updated player list.
 
