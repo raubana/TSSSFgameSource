@@ -40,12 +40,39 @@ class Main(object):
 		self.elements_to_pack = {}
 
 		self.needs_to_pack = False
-		self.main_element = Element(self, self, (0,0), self.screen_size, always_count_hover=True)
+		self.main_element = Element(self, self, (0,0), self.screen_size, bg_color=(210,180,220))
 		self.focus = None
 
-		element = InputBox(self, self.main_element, None, (self.font.size("000000000000")[0]+4,self.font.get_height()+4), (255,255,255))
-		element.padding = [2,2,2,2]
-		element.max_characters = len("000000000000")
+		element1 = Element(self, self.main_element, None, ("100%",self.font.get_height()), None, text_color=(96,96,96))
+		element1.text = "IP ADDRESS"
+		element1.padding = [10,10,2,2]
+
+		element2 = InputBox(self, self.main_element, None, (self.font.size("00_00_000_000")[0]+4,self.font.get_height()+4), (255,255,255))
+		element2.padding = [10,2,2,2]
+		element2.max_characters = len("00_00_000_000")
+
+		element3 = Element(self, self.main_element, None, ("100%",self.font.get_height()), None, text_color=(96,96,96))
+		element3.text = "PORT"
+		element3.padding = [10,2,2,2]
+
+		element4 = InputBox(self, self.main_element, None, (self.font.size("00000")[0]+4,self.font.get_height()+4), (255,255,255))
+		element4.padding = [10,2,2,50]
+		element4.max_characters = len("00000")
+
+		element5 = Element(self, self.main_element, None, ("100%",self.font.get_height()), None, text_color=(96,96,96))
+		element5.text = "NAME"
+		element5.padding = [10,2,2,2]
+
+		element6 = InputBox(self, self.main_element, None, (self.font.size("123456789012345")[0]+4, self.font.get_height()+4), (255,255,255))
+		element6.padding = [10,2,2,2]
+		element6.max_characters = len("123456789012345")
+
+		element7 = Element(self, self.main_element, None, ("100%",0), None)
+		element7.padding = [0,0,1,50]
+
+		element8 = Button(self, self.main_element, None, (self.font.size("CONNECT")[0]+15,self.font.get_height()+15), (255,255,255))
+		element8.text = "CONNECT"
+		element8.padding = [10,2,2,2]
 
 		self.manage_pack_requests()
 
