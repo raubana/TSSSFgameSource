@@ -139,18 +139,31 @@ class Client(object):
 	def __init__(self, host, port):
 		self.buffersize = BUFFERSIZE
 
-		print "-Connecting..."
-		self.serversocket = socket.socket(
-			socket.AF_INET, socket.SOCK_STREAM)
-		self.serversocket.connect((host, port))
-		print "-Connected."
+		self.host = host
+		self.port = port
 
-		self.listen_thread = thread.start_new_thread(self.listen, tuple())
-		self.transmit_thread = thread.start_new_thread(self.transmit, tuple())
-		self.server_last_got_message = time.time()
+		self.connected = False
+		self.connection_status = ""
 
-		self.received_messages = []
-		self.messages_to_send = []
+	def connect(self):
+		try:
+			print "-Connecting..."
+			self.serversocket = socket.socket(
+				socket.AF_INET, socket.SOCK_STREAM)
+			self.serversocket.connect((self.host, self.port))
+			print "-Connected."
+
+			self.listen_thread = thread.start_new_thread(self.listen, tuple())
+			self.transmit_thread = thread.start_new_thread(self.transmit, tuple())
+			self.server_last_got_message = time.time()
+
+			self.received_messages = []
+			self.messages_to_send = []
+
+			self.connected = True
+		except Exception, e:
+			print "-Failed to connect."
+			self.connection_status = str(e)
 
 	def transmit(self):
 		while True:

@@ -1,6 +1,5 @@
 import pygame
 from pygame.locals import *
-
 pygame.init()
 
 import numpy
@@ -10,11 +9,14 @@ import math, random, time
 from libs.gui.GUI import *
 from libs.locals import *
 
+from libs.Controllers.ConnectMenuController import *
 
 class Main(object):
 	def __init__(self):
 		self.screen_size = (854, 480)
 		self.screen = pygame.display.set_mode(self.screen_size, RESIZABLE)
+
+		pygame.scrap.init()
 
 		self.framerate = 60
 		self.clock = pygame.time.Clock()
@@ -31,8 +33,6 @@ class Main(object):
 		self.run()
 
 	def reset(self):
-		self.controller = None  # Controllers are used to control the application while something is being taken care of.
-
 		# SETS UP THE GUI
 		self.element_level = 0
 
@@ -40,39 +40,11 @@ class Main(object):
 		self.elements_to_pack = {}
 
 		self.needs_to_pack = False
-		self.main_element = Element(self, self, (0,0), self.screen_size, bg_color=(210,180,220))
 		self.focus = None
+		self.main_element = Element(self, self, (0,0), self.screen_size, bg_color=(210,180,220))
+		self.main_element.set_text_align(ALIGN_MIDDLE)
 
-		element1 = Element(self, self.main_element, None, ("100%",self.font.get_height()), None, text_color=(96,96,96))
-		element1.text = "IP ADDRESS"
-		element1.padding = [10,10,2,2]
-
-		element2 = InputBox(self, self.main_element, None, (self.font.size("00_00_000_000")[0]+4,self.font.get_height()+4), (255,255,255))
-		element2.padding = [10,2,2,2]
-		element2.max_characters = len("00_00_000_000")
-
-		element3 = Element(self, self.main_element, None, ("100%",self.font.get_height()), None, text_color=(96,96,96))
-		element3.text = "PORT"
-		element3.padding = [10,2,2,2]
-
-		element4 = InputBox(self, self.main_element, None, (self.font.size("00000")[0]+4,self.font.get_height()+4), (255,255,255))
-		element4.padding = [10,2,2,50]
-		element4.max_characters = len("00000")
-
-		element5 = Element(self, self.main_element, None, ("100%",self.font.get_height()), None, text_color=(96,96,96))
-		element5.text = "NAME"
-		element5.padding = [10,2,2,2]
-
-		element6 = InputBox(self, self.main_element, None, (self.font.size("123456789012345")[0]+4, self.font.get_height()+4), (255,255,255))
-		element6.padding = [10,2,2,2]
-		element6.max_characters = len("123456789012345")
-
-		element7 = Element(self, self.main_element, None, ("100%",0), None)
-		element7.padding = [0,0,1,50]
-
-		element8 = Button(self, self.main_element, None, (self.font.size("CONNECT")[0]+15,self.font.get_height()+15), (255,255,255))
-		element8.text = "CONNECT"
-		element8.padding = [10,2,2,2]
+		self.controller = ConnectMenuController(self)  # Controllers are used to control the application while something is being taken care of.
 
 		self.manage_pack_requests()
 
