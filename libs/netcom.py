@@ -50,6 +50,8 @@ class Server(object):
 			clientsocket, address = self.serversocket.accept()
 			print "-Connection made from",address
 
+			address = str(address)
+
 			if str(address) in self.clients:
 				print "-- connection already exists!"
 				print "-- closing connection."
