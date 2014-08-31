@@ -1,6 +1,6 @@
 from Controller import*
 
-from ..gui.GUI import *
+from ..GUI.GUI import *
 from ..netcom import Client
 
 import string, os, thread

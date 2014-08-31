@@ -6,7 +6,7 @@ import numpy
 
 import math, random, time
 
-from libs.gui.GUI import *
+from libs.GUI.GUI import *
 from libs.locals import *
 
 from libs.Controllers.ConnectMenuController import *

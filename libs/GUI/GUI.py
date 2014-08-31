@@ -1,6 +1,7 @@
 import pygame
-import math
+from pygame.locals import*
 
+from ..locals import *
 
 def translate_size_to_pixels(size,remaining):
 	pixels = 0
@@ -18,7 +19,7 @@ def translate_size_to_pixels(size,remaining):
 
 
 class Element(object):
-	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg_color=(255, 255, 255), always_count_hover=False):
+	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg_color=(255, 255, 255), text_color=(0,0,0), always_count_hover=False):
 		self.main = main
 		self.element_level = parent.element_level + 1
 
@@ -34,6 +35,10 @@ class Element(object):
 		self.rendered_surface = None
 
 		self.bg_color = bg_color
+		self.text_color = text_color
+
+		self.text = ""
+		self.text_align = ALIGN_TOPLEFT
 
 		self.parent = parent
 		if parent != self.main:
@@ -45,6 +50,8 @@ class Element(object):
 
 		self.mousehover_handlers = []
 		self.mousepress_handlers = []
+		self.getfocus_handlers = []
+		self.losefocus_handlers = []
 
 		self.init()
 
@@ -62,15 +69,24 @@ class Element(object):
 		self.children.append(child)
 		self.flag_for_rerender()
 
+	def clear(self):
+		#This removes every child from this element.
+		while len(self.children) > 0:
+			del self.children[0]
+
 	def give_focus(self):
 		if self.main.focus != None:
 			self.main.focus.unfocus()
 		self.main.focus = self
 		self.triggerGetFocus()
+		for handler in self.losefocus_handlers:
+			handler.handle_event_getfocus(self)
 
 	def unfocus(self):
 		self.main.focus = None
 		self.triggerLoseFocus()
+		for handler in self.losefocus_handlers:
+			handler.handle_event_losefocus(self)
 
 	#Update For functions are called whenever this element's parent needs to update for a particular event
 	def update_for_mouse_move(self, mouse_pos_local, not_hover=False):
@@ -112,6 +128,7 @@ class Element(object):
 			self.triggerMouseOut(mouse_pos_local)
 		elif not self.hover and self_hover:
 			self.hover = True
+			pygame.mouse.set_cursor(*pygame.cursors.arrow)
 			self.triggerMouseHover(mouse_pos_local)
 			for handler in self.mousehover_handlers:
 				handler.handle_event_mousehover(self, mouse_pos_local)
@@ -181,12 +198,24 @@ class Element(object):
 	def handle_event_mousepress(self, widget, mouse_pos_local, button):
 		pass
 
+	def handle_event_getfocus(self, widget):
+		pass
+
+	def handle_event_losefocus(self, widget):
+		pass
+
 	#Add Handler functions allow other elements to catch events that this element catches
 	def add_handler_mousehover(self, handler):
 		self.mousehover_handlers.append(handler)
 
 	def add_handler_mousepress(self, handler):
 		self.mousepress_handlers.append(handler)
+
+	def add_handler_getfocus(self, handler):
+		self.getfocus_handlers.append(handler)
+
+	def add_handler_losefocus(self, handler):
+		self.losefocus_handlers.append(handler)
 
 	#Triggers are called when an event is caught by this element
 	def triggerMouseHover(self, mouse_pos):
@@ -219,6 +248,16 @@ class Element(object):
 		if new_pos != self.preferred_pos:
 			self.preferred_pos = new_pos
 			self.flag_for_pack()
+
+	def set_text(self, new_text):
+		if new_text != self.text:
+			self.text = new_text
+			self.flag_for_rerender()
+
+	def set_text_align(self, new_align):
+		if new_align != self.text_align:
+			self.text_align = new_align
+			self.flag_for_rerender()
 
 	def get_local_pos(self):
 		return (float(self.pos[0]), float(self.pos[1]))
@@ -308,6 +347,28 @@ class Element(object):
 					child.update_rect()
 					child.flag_for_rerender()
 
+	def rerender_background(self):
+		if self.bg_color != None:
+			self.rendered_surface.fill(self.bg_color)
+		else:
+			self.rendered_surface.fill((0,0,0,0))
+
+	def rerender_text(self):
+		if self.text != "":
+			img = self.main.font.render(self.text,True,self.text_color)
+			if self.text_align == ALIGN_TOPLEFT:
+				rect = img.get_rect(topleft = (0,0))
+			elif self.text_align == ALIGN_MIDDLE:
+				rect = img.get_rect(center = (self.size[0]/2,self.size[1]/2))
+			self.rendered_surface.blit(img, rect)
+
+	def rerender_foreground(self):
+		pass
+
+	def rerender_children(self):
+		for child in self.children:
+			child.render()
+
 	def rerender(self):
 		# this is redrawing it's elements to the rendered surface
 		if self.needs_to_rerender:
@@ -317,12 +378,139 @@ class Element(object):
 			else:
 				if self.rendered_surface == None or self.size != self.rendered_surface.get_size():
 					self.rendered_surface = pygame.Surface(self.size,pygame.SRCALPHA)
-			if self.bg_color != None:
-				self.rendered_surface.fill(self.bg_color)
-			for child in self.children:
-				child.render()
+			self.rerender_background()
+			self.rerender_foreground()
+			self.rerender_text()
+			self.rerender_children()
 
 	def render(self):
 		self.rerender()
 		if self.parent != self.main:
 			self.parent.rendered_surface.blit(self.rendered_surface, self.pos)
+
+
+class InputBox(Element):
+	def init(self):
+		self.index = 0
+		self.offset = 0
+		self.cursor_pos = 0
+
+		self.max_characters = None
+		self.legal_characters = PRINTABLE_CHARS
+
+		self.valuechange_handlers = []
+		self.submit_handlers = []
+
+	def add_handler_valuechange(self, handler):
+		self.valuechange_handlers.append(handler)
+
+	def add_handler_submit(self, handler):
+		self.submit_handlers.append(handler)
+
+	def update_for_keydown(self, unicode, key):
+		prev_value = str(self.text)
+		#first we check if it's a printable character
+		if key == K_DELETE or key == K_BACKSPACE:
+			#We remove a character to the left of this index.
+			if self.index > 0:
+				self.text = self.text[:max(self.index-1,0)] + self.text[self.index:]
+				self.index -= 1
+				self.flag_for_rerender()
+		elif key in (K_LEFT, K_RIGHT):
+			if key == K_LEFT: self.index -= 1
+			else: self.index += 1
+			self.index = min(max(self.index,0),len(self.text))
+			self.flag_for_rerender()
+		elif key == K_RETURN:
+			self.update_for_submit()
+		elif (unicode in (u"",u" ") and key == K_SPACE) or (unicode not in (u"",u" ") and unicode in self.legal_characters and unicode in PRINTABLE_CHARS):
+			#We know this is printable, so we add this character to the string.
+			if self.max_characters == None or len(self.text) < self.max_characters:
+				self.text = self.text[:self.index] + unicode + self.text[self.index:]
+				self.index += 1
+				self.flag_for_rerender()
+
+		#we check if our cursor is still visible
+		while True:
+			self.cursor_pos = self.main.font.size(self.text[:self.index])[0] - self.main.font.size(self.text[:self.offset])[0]
+			if self.cursor_pos < 0:
+				self.offset -= 1
+			elif self.cursor_pos > self.size[0]-4:
+				self.offset += 1
+			else:
+				break
+
+		if prev_value != self.text:
+			self.update_for_valuechange()
+
+	def triggerMouseHover(self, mouse_pos):
+		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
+
+	def triggerGetFocus(self):
+		self.flag_for_rerender()
+
+	def triggerLoseFocus(self):
+		self.flag_for_rerender()
+
+	def triggerValueChange(self):
+		pass
+
+	def triggerSubmit(self):
+		pass
+
+	def update_for_valuechange(self):
+		self.triggerValueChange()
+		for handler in self.valuechange_handlers:
+			handler.handle_event_valuechange(self)
+
+	def update_for_submit(self):
+		self.triggerSubmit()
+		for handler in self.submit_handlers:
+			handler.handle_event_submit(self)
+
+	def rerender_foreground(self):
+		pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/4,self.bg_color[1]/4,self.bg_color[2]/4), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
+		pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
+
+	def rerender_text(self):
+		img = self.main.font.render(self.text[max(self.offset,0):],True,self.text_color)
+		self.rendered_surface.blit(img,(2,2))
+
+		if self.main.focus == self:
+			pos = self.cursor_pos
+			pygame.draw.line(self.rendered_surface, (127,0,0), (pos+2,2), (pos+2,self.size[1]-4))
+
+
+class Button(Element):
+	def init(self):
+		self.submit_handlers = []
+
+	def add_handler_submit(self, handler):
+		self.submit_handlers.append(handler)
+
+	def update_for_submit(self):
+		self.triggerSubmit()
+		for handler in self.submit_handlers:
+			handler.handle_event_submit(self)
+
+	def triggerSubmit(self):
+		pass
+
+	def triggerMousePressed(self, mouse_pos, button):
+		self.update_for_submit()
+
+	def triggerMouseHover(self, mouse_pos):
+		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
+
+	def rerender_text(self):
+		img = self.main.font.render(self.text, True, self.text_color)
+		rect = img.get_rect(center = (self.size[0]/2,self.size[1]/2))
+		self.rendered_surface.blit(img, rect)
+
+	def rerender_background(self):
+		if self.bg_color != None:
+			self.rendered_surface.fill((self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2))
+
+	def rerender_foreground(self):
+		pygame.draw.lines(self.rendered_surface, (self.bg_color[0],self.bg_color[1],self.bg_color[2]), False, [(0,self.size[1]),(0,0),(self.size[0],0)], 1)
+		pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/4,self.bg_color[1]/4,self.bg_color[2]/4), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)], 1)

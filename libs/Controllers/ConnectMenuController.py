@@ -1,6 +1,6 @@
 from Controller import*
 
-from ..gui.GUI import *
+from ..GUI.GUI import *
 
 import string, os
 
