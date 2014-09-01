@@ -83,8 +83,14 @@ class GameServer(object):
 						self.send_playerlist()
 					i -= 1
 			for key in self.server.clients.keys():
-				if key in self.server.received_messages and len(self.server.received_messages[key]) > 0:
-					message = self.server.received_messages[key].pop(0)
+				try:
+					if len(self.server.received_messages[key]) > 0:
+						message = self.server.received_messages[key].pop(0)
+				except:
+					message = None
+					print "= FAILED TO POP AT KEY:",key
+
+				if message != None:
 					if message == PING_MESSAGE:
 						self.server.sendto(key,PONG_MESSAGE)
 					elif message.startswith("CONNECT:"):
