@@ -80,6 +80,7 @@ class GameServer(object):
 						self.server.sendall("ADD_CHAT:"+"Player '"+player.name+"' has left.")
 						#TODO: Do proper cleanup for disconnected players.
 						del self.players[i]
+						self.send_playerlist()
 					i -= 1
 			for key in self.server.clients.keys():
 				if len(self.server.received_messages[key]) > 0:
@@ -95,6 +96,7 @@ class GameServer(object):
 							self.server.sendto(key,"CONNECTED")
 							print "=Player '"+name+"'", key, "has joined the game."
 							self.server.sendall("ADD_CHAT:"+"Player '"+name+"' has joined.")
+							self.send_playerlist()
 					elif message.startswith("CHAT:"):
 						player = None
 						for pl in self.players:
@@ -107,9 +109,7 @@ class GameServer(object):
 							name = player.name
 						chat = message[len("CHAT:"):]
 						self.server.sendall("ADD_CHAT:"+name+": "+chat)
-
-
-
+	
 	def _read_messages(self):
 		#TODO: Do _read_messages command.
 		pass

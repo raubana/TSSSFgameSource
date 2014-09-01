@@ -9,12 +9,12 @@ def translate_size_to_pixels(size,remaining):
 		size = size.replace(" ","")
 		if "-" in size:
 			parts = size.split("-")
-			p1 = translate_size_to_pixels(parts[0])
-			p2 = translate_size_to_pixels(parts[1])
+			p1 = translate_size_to_pixels(parts[0],remaining)
+			p2 = translate_size_to_pixels(parts[1],remaining)
 			pixels = p1 - p2
 		else:
 			if size.endswith("px"):
-				pixels = int(size[-2])
+				pixels = int(size[:-2])
 			elif size.endswith("%"):
 				pixels = int((float(size[:-1])*remaining)/100.0)
 	elif type(size) in (float,int):
@@ -329,9 +329,9 @@ class Element(object):
 				size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
 						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
 				new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
-				new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),0), max(int(size[1]-child.padding[1]-child.padding[3]),0))
+				new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 
-				if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] >= self.size[0]:
+				if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
 					x_pos = 0
 
 					x_remaining = int(self.size[0])
@@ -342,7 +342,7 @@ class Element(object):
 					size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
 						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
 					new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
-					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),0), max(int(size[1]-child.padding[1]-child.padding[3]),0))
+					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 
 				x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
 				x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]

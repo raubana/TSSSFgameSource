@@ -25,7 +25,7 @@ class PreGameRoomController(Controller):
 		self.playerlist_window.padding = [2,2,2,2]
 
 		self.text_inputbox = InputBox(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()+4))
-		self.chat_window.padding = [2,0,2,0]
+		self.text_inputbox.padding = [2,0,2,0]
 		self.text_inputbox.max_characters = 50
 
 		self.text_inputbox.add_handler_submit(self)
