@@ -35,7 +35,24 @@ class PreGameRoomController(Controller):
 		#Sets up the handlers
 		self.text_inputbox.add_handler_submit(self)
 
+		self.server_is_pinged = False
+
 	def update(self):
+		#Ping
+		if self.main.client.connected:
+			lgm = self.main.client.server_last_got_message
+			dif = self.main.time.time - lgm
+			if dif >= PING_FREQUENCY:
+				if not self.server_is_pinged:
+					self.server_is_pinged = True
+					self.client.send(PING_MESSAGE)
+				else:
+					# This means the server was already sent a 'ping', and we're waiting for a 'pong'
+					if dif >= PING_FREQUENCY + TIMEOUT_TIME:
+						#This server has timed out, so we must disconnect
+						print "= Server has timed-out."
+						self.main.client.close()
+		#Everything else
 		if self.main.client.connected:
 			if len(self.main.client.received_messages) > 0:
 				message = self.main.client.received_messages.pop(0)

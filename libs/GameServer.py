@@ -85,7 +85,9 @@ class GameServer(object):
 			for key in self.server.clients.keys():
 				if key in self.server.received_messages and len(self.server.received_messages[key]) > 0:
 					message = self.server.received_messages[key].pop(0)
-					if message.startswith("CONNECT:"):
+					if message == PING_MESSAGE:
+						self.server.sendto(key,PONG_MESSAGE)
+					elif message.startswith("CONNECT:"):
 						#We get the clients name now and add them to the game.
 						#TODO: Kick the client if their name sucks.
 						if False:
@@ -109,6 +111,7 @@ class GameServer(object):
 							name = player.name
 						chat = message[len("CHAT:"):]
 						self.server.sendall("ADD_CHAT:"+name+": "+chat)
+
 
 	def _read_messages(self):
 		#TODO: Do _read_messages command.

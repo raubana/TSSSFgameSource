@@ -224,5 +224,6 @@ class Client(object):
 	def close(self):
 		#self.listen_thread.exit()
 		#self.serversocket.shutdown(socket.SHUT_RDWR)
+		self.connected = False
 		self.serversocket.close()
 
