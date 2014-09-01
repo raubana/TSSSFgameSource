@@ -55,7 +55,7 @@ class Server(object):
 			if str(address) in self.clients:
 				print "-- connection already exists!"
 				print "-- closing connection."
-				clientsocket.shutdown(socket.SHUT_RDWR)
+				#clientsocket.shutdown(socket.SHUT_RDWR)
 				clientsocket.close()
 			else:
 				print "-- this is a new connection"
@@ -99,7 +99,7 @@ class Server(object):
 				recv = None
 			if not recv:
 				print "-Connection at",address,"dropped."
-				clientsocket.shutdown(socket.SHUT_RDWR)
+				#clientsocket.shutdown(socket.SHUT_RDWR)
 				clientsocket.close()
 				del self.clients[address]
 				del self.received_messages[address]
