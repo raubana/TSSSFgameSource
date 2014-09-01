@@ -108,11 +108,16 @@ class Server(object):
 			else:
 				self.client_last_got_message[address] = time.time()
 				message += recv
-				if ESCAPE_CHARACTER in message:
-					data = message.split(ESCAPE_CHARACTER)
-					message = data[0]
-					self.received_messages[address].append(message)
-					message = data[1]
+				i = -min((len(ESCAPE_CHARACTER)+len(recv)),len(message))
+				m2 = message[i:]
+				if ESCAPE_CHARACTER in m2:
+					m1 = message[:i]
+					data = m2.split(ESCAPE_CHARACTER)
+					m1 += data.pop(0)
+					self.received_messages[address].append(str(m1))
+					while len(data) > 1:
+						self.received_messages[address].append(str(data.pop(0)))
+					message = data.pop()
 
 	def sendall(self,message):
 		for key in self.clients:
@@ -206,17 +211,19 @@ class Client(object):
 				self.connected = False
 				thread.exit()
 			else:
-				print "-recv: "+recv
+				#print "-recv: "+recv
 				self.server_last_got_message = time.time()
 				message += recv
 				i = -min((len(ESCAPE_CHARACTER)+len(recv)),len(message))
-				if ESCAPE_CHARACTER in message[i:]:
+				m2 = message[i:]
+				if ESCAPE_CHARACTER in m2:
 					m1 = message[:i]
-					m2 = message[i:]
 					data = m2.split(ESCAPE_CHARACTER)
-					m1 += data[0]
+					m1 += data.pop(0)
 					self.received_messages.append(str(m1))
-					message = data[1]
+					while len(data) > 1:
+						self.received_messages.append(str(data.pop(0)))
+					message = data.pop()
 
 	def send(self, message):
 		self.messages_to_send.append(message)
