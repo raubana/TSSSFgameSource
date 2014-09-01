@@ -25,7 +25,7 @@ class Main(object):
 		self.still_freq = 1 / 10.0
 		self.last_still = time.time() - self.still_freq
 
-		self.font = pygame.font.SysFont("Lucida Sans Unicode",16)
+		self.font = pygame.font.SysFont("Tahoma",12)
 
 		pygame.key.set_repeat(300, 30)
 
