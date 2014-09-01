@@ -407,9 +407,9 @@ class Element(object):
 					#we also set the scrollbar to be in the proper location
 					self.v_scrollbar.pos = (self.size[0]-SCROLLBAR_WIDTH,0)
 					new_size = (SCROLLBAR_WIDTH,self.size[1])
-					if new_size != self.h_scrollbar.size:
-						self.h_scrollbar.size = new_size
-						self.h_scrollbar.flag_for_rerender()
+					if new_size != self.v_scrollbar.size:
+						self.v_scrollbar.size = new_size
+						self.v_scrollbar.flag_for_rerender()
 					self.v_scrollbar.update_rect()
 					#we need to make sure that our scrollbar is at the top of the children list
 					self.children.remove(self.v_scrollbar)
