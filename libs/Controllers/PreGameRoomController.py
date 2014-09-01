@@ -12,8 +12,17 @@ class PreGameRoomController(Controller):
 		self.main.main_element.clear()
 		self.main.main_element.set_text("")
 
-		self.chat_window = Element(self.main, self.main.main_element, None, ("100%","90%"), bg_color=(255,255,255))
+		H = "100%-"+str(self.main.font.get_height()*4)+"px"
+
+		self.chat_window = Element(self.main,
+								   self.main.main_element,
+								   None,
+								   ("100%-"+str(self.main.font.size("12345678901234567890")[0])+"px",H),
+								   bg_color=(255,255,255))
 		self.chat_window.padding = [2,2,2,2]
+
+		self.playerlist_window = Element(self.main, self.main.main_element, None, ("100%",H), bg_color=(255,255,255))
+		self.playerlist_window.padding = [2,2,2,2]
 
 		self.text_inputbox = InputBox(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()+4))
 		self.chat_window.padding = [2,0,2,0]
@@ -32,6 +41,14 @@ class PreGameRoomController(Controller):
 				element.set_text(chat)
 				if len(self.chat_window.children) > 15:
 					self.chat_window._remove_child(self.chat_window.children[0])
+			elif message.startswith("PLAYERLIST:"):
+				s = message[len("PLAYERLIST:"):]
+				L = s.split(",")
+				self.playerlist_window.clear()
+				for p in L:
+					element = Element(self.main, self.playerlist_window, None, ("100%",self.main.font.get_height()), bg_color=None)
+					element.set_text(p)
+
 
 	def handle_event_submit(self, widget):
 		message = self.text_inputbox.text

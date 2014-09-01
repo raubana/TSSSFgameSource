@@ -151,8 +151,17 @@ class GameServer(object):
 				print "= Player '"+pn+"' has been kicked."
 				self.server.disconnect(pa)
 				self.players.remove(player)
-				#TODO: update players list and reassign whose turn it is, if necessary.
+				self.send_playerlist()
 				#TODO: send message to remaining clients to let them know about the updated player list.
+
+	def send_playerlist(self):
+		s = "PLAYERLIST:"
+		i = 0
+		while i < len(self.players):
+			s += self.players[i].name
+			if i != len(self.players)-1:
+				s += ","
+			i += 1
 
 
 

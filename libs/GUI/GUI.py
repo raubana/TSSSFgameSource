@@ -6,11 +6,17 @@ from ..locals import *
 def translate_size_to_pixels(size,remaining):
 	pixels = 0
 	if type(size) == str:
-		size = size.strip()
-		if size.endswith("px"):
-			pixels = int(size[-2])
-		elif size.endswith("%"):
-			pixels = int((float(size[:-1])*remaining)/100.0)
+		size = size.replace(" ","")
+		if "-" in size:
+			parts = size.split("-")
+			p1 = translate_size_to_pixels(parts[0])
+			p2 = translate_size_to_pixels(parts[1])
+			pixels = p1 - p2
+		else:
+			if size.endswith("px"):
+				pixels = int(size[-2])
+			elif size.endswith("%"):
+				pixels = int((float(size[:-1])*remaining)/100.0)
 	elif type(size) in (float,int):
 		pixels = int(size)
 	else:

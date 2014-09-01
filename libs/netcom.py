@@ -1,3 +1,5 @@
+from locals import*
+
 import socket
 import thread
 import traceback
@@ -5,7 +7,6 @@ import string
 import time
 import sys
 
-BUFFERSIZE = 4096
 ESCAPE_CHARACTER = str(chr(4))+str(chr(3))
 
 def get_this_computers_external_address():
@@ -70,6 +71,7 @@ class Server(object):
 	def transmit(self, address):
 		clientsocket = self.clients[address]
 		while True:
+			time.sleep(MESSAGE_DELAY)
 			if address not in self.messages_to_send:
 				print "-missing",address
 				print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
@@ -179,6 +181,7 @@ class Client(object):
 
 	def transmit(self):
 		while True:
+			time.sleep(MESSAGE_DELAY)
 			if len(self.messages_to_send) > 0:
 				message = self.messages_to_send.pop(0) + ESCAPE_CHARACTER
 				try:
@@ -188,6 +191,7 @@ class Client(object):
 				except:
 					print "-Failed to transmit message."
 					print "-TRANSMIT THREAD EXITING..."
+					self.connected = False
 					thread.exit()
 
 	def listen(self):
@@ -201,15 +205,19 @@ class Client(object):
 				print "-Connection dropped."
 				self.serversocket.close()
 				print "-LISTEN THREAD EXITING..."
+				self.connected = False
 				thread.exit()
 			else:
 				#print "-recv: "+recv
 				self.server_last_got_message = time.time()
 				message += recv
-				if ESCAPE_CHARACTER in message:
-					data = message.split(ESCAPE_CHARACTER)
-					message = data[0]
-					self.received_messages.append(message)
+				i = -min((len(ESCAPE_CHARACTER)+len(recv)),len(message))
+				if ESCAPE_CHARACTER in message[i:]:
+					m1 = message[:i]
+					m2 = message[i:]
+					data = m2.split(ESCAPE_CHARACTER)
+					m1 += data[0]
+					self.received_messages.append(str(m1))
 					message = data[1]
 
 	def send(self, message):
@@ -217,6 +225,6 @@ class Client(object):
 
 	def close(self):
 		#self.listen_thread.exit()
-		self.serversocket.shutdown(socket.SHUT_RDWR)
+		#self.serversocket.shutdown(socket.SHUT_RDWR)
 		self.serversocket.close()
 

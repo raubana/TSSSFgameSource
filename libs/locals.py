@@ -8,6 +8,8 @@ PING_MESSAGE = "PING" # message sent when a server/client needs to know that a c
 PONG_MESSAGE = "PONG" # response sent back to the server/client by the client/server after they get a PING_MESSAGE.
 TIMEOUT_TIME = 10.0  # seconds before a player is dropped for timing-out
 PING_FREQUENCY = 2.0  # ping the server/client every X seconds to ensure there's still a connection.
+BUFFERSIZE = 2048 # the size of the buffer used in the sockets
+MESSAGE_DELAY = 0.1 # the delay between sent messages to prevent buffer overflows
 DEFAULT_PORT = 27015
 
 # FILE CONSTANTS
