@@ -109,7 +109,7 @@ class GameServer(object):
 							name = player.name
 						chat = message[len("CHAT:"):]
 						self.server.sendall("ADD_CHAT:"+name+": "+chat)
-	
+
 	def _read_messages(self):
 		#TODO: Do _read_messages command.
 		pass
@@ -162,6 +162,7 @@ class GameServer(object):
 			if i != len(self.players)-1:
 				s += ","
 			i += 1
+		self.server.sendall(s)
 
 
 

@@ -49,7 +49,6 @@ class PreGameRoomController(Controller):
 					element = Element(self.main, self.playerlist_window, None, ("100%",self.main.font.get_height()), bg_color=None)
 					element.set_text(p)
 
-
 	def handle_event_submit(self, widget):
 		message = self.text_inputbox.text
 
