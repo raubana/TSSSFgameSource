@@ -41,17 +41,19 @@ class PreGameRoomController(Controller):
 		#Ping
 		if self.main.client.connected:
 			lgm = self.main.client.server_last_got_message
-			dif = self.main.time.time - lgm
+			dif = self.main.time - lgm
 			if dif >= PING_FREQUENCY:
 				if not self.server_is_pinged:
 					self.server_is_pinged = True
-					self.client.send(PING_MESSAGE)
+					self.main.client.send(PING_MESSAGE)
 				else:
 					# This means the server was already sent a 'ping', and we're waiting for a 'pong'
 					if dif >= PING_FREQUENCY + TIMEOUT_TIME:
 						#This server has timed out, so we must disconnect
 						print "= Server has timed-out."
 						self.main.client.close()
+			else:
+				self.server_is_pinged = False
 		#Everything else
 		if self.main.client.connected:
 			if len(self.main.client.received_messages) > 0:
@@ -59,6 +61,7 @@ class PreGameRoomController(Controller):
 				if message == PING_MESSAGE:
 					self.main.client.send(PONG_MESSAGE)
 				elif message.startswith("ADD_CHAT:"):
+					self.main.sound_chat.play()
 					chat = message[len("ADD_CHAT:"):]
 					element = Element(self.main, self.chat_window, None, ("100%",self.main.font.get_height()), bg_color=None)
 					element.set_text(chat)
@@ -75,6 +78,7 @@ class PreGameRoomController(Controller):
 			self.main.client.close()
 			self.main.client = None
 			import ConnectMenuController
+			self.main.sound_lost_connection.play()
 			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 			self.main.controller.message_element.set_text("Lost Connection")
 
