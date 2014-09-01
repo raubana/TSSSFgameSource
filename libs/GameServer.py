@@ -83,11 +83,11 @@ class GameServer(object):
 						self.send_playerlist()
 					i -= 1
 			for key in self.server.clients.keys():
+				message = None
 				try:
 					if len(self.server.received_messages[key]) > 0:
 						message = self.server.received_messages[key].pop(0)
 				except:
-					message = None
 					print "= FAILED TO POP AT KEY:",key
 
 				if message != None:
