@@ -353,31 +353,42 @@ class Element(object):
 			# wide enough, at which point a new row is used below it.
 			for child in self.children:
 				if child not in (self.v_scrollbar, self.h_scrollbar):
-					#We need to determine this child's new size
-					size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-							max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-					new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
-					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
-
-					if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
-						x_pos = 0
-
-						x_remaining = int(self.size[0])
-						y_remaining -= y_needed
-						y_pos += y_needed
-						y_needed = 0
-
+					if self.layout == LAYOUT_FLOW:
+						#We need to determine this child's new size
 						size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-							max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+								max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
 						new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
 						new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 
-					x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-					x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-					y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
+						if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
+							x_pos = 0
 
-					x_max = max(x_max,x_pos)
-					y_max = max(y_max,y_pos+y_needed)
+							x_remaining = int(self.size[0])
+							y_remaining -= y_needed
+							y_pos += y_needed
+							y_needed = 0
+
+							size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+								max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+							new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+							new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+
+						x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+						x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+						y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
+
+						x_max = max(x_max,x_pos)
+						y_max = max(y_max,y_pos+y_needed)
+					elif self.layout == LAYOUT_VERTICAL:
+						#We need to determine this child's new size
+						size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+								max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+						new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+						new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+						y_pos += new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3]
+
+						x_max = max(x_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
+						y_max = max(y_max,y_pos)
 
 					new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
 
@@ -419,6 +430,7 @@ class Element(object):
 					if self.v_scrollbar != None:
 						self.children.remove(self.v_scrollbar)
 						self.v_scrollbar = None
+						self._setup_for_pack()
 
 			if self.h_scrollable:
 				#We check if we've exceeded our horizontal limit
@@ -446,6 +458,7 @@ class Element(object):
 					if self.h_scrollbar != None:
 						self.children.remove(self.h_scrollbar)
 						self.h_scrollbar = None
+						self._setup_for_pack()
 
 	def rerender_background(self):
 		if self.bg_color != None:
