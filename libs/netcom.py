@@ -7,8 +7,6 @@ import string
 import time
 import sys
 
-ESCAPE_CHARACTER = str(chr(4))+str(chr(3))
-
 def get_this_computers_external_address():
 	#I stole this code huehuehue - http://stackoverflow.com/a/9944261/2862816
 	import urllib
