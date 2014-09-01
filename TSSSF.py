@@ -25,7 +25,7 @@ class Main(object):
 		self.still_freq = 1 / 10.0
 		self.last_still = time.time() - self.still_freq
 
-		self.font = pygame.font.Font(pygame.font.get_default_font(),15)
+		self.font = pygame.font.SysFont("Lucida Sans Unicode",16)
 
 		pygame.key.set_repeat(300, 30)
 
@@ -78,16 +78,21 @@ class Main(object):
 	def update(self):
 		for e in self.events:
 			if e.type == MOUSEMOTION:
+				self.mouse_pos = e.pos
 				self.main_element.update_for_mouse_move(e.pos)
 			elif e.type == MOUSEBUTTONDOWN:
+				if e.button <= 3: self.mouse_button[e.button-1] = True
 				self.main_element.update_for_mouse_button_press(e.pos, e.button)
 			elif e.type == MOUSEBUTTONUP:
+				if e.button <= 3: self.mouse_button[e.button-1] = False
 				self.main_element.update_for_mouse_button_release(e.pos, e.button)
 
 			elif e.type == KEYDOWN:
+				self.keys[e.key] = True
 				if self.focus != None:
 					self.focus.update_for_keydown(e.unicode, e.key)
 			elif e.type == KEYUP:
+				self.keys[e.key] = False
 				if self.focus != None:
 					self.focus.update_for_keyup(e.key)
 
@@ -149,8 +154,8 @@ class Main(object):
 		while self.running:
 			self.time = time.time()
 			self.keys = list(pygame.key.get_pressed())
-			self.mouse_pos = pygame.mouse.get_pos()
-			self.mouse_button = pygame.mouse.get_pressed()
+			self.mouse_pos = list(pygame.mouse.get_pos())
+			self.mouse_button = list(pygame.mouse.get_pressed())
 			self.events = pygame.event.get()
 
 			self.update()

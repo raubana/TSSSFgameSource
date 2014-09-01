@@ -8,3 +8,5 @@ def floorint(x):
 def lerp(a,b,p):
     return a+(b-a)*p
 
+def invlerp(a,b,x):
+	return (x-a)/(b-a)

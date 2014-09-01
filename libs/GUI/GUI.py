@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import*
 
 from ..locals import *
+from ..common import lerp, invlerp
 
 def translate_size_to_pixels(size,remaining):
 	pixels = 0
@@ -36,6 +37,7 @@ class Element(object):
 		self.size = None
 		self.padding = [0,0,0,0]
 		self.margin = [0,0,0,0]
+		self.layout = LAYOUT_FLOW
 
 		self.rect = None
 
@@ -46,6 +48,15 @@ class Element(object):
 
 		self.text = ""
 		self.text_align = ALIGN_TOPLEFT
+
+		self.v_scrollable = False
+		self.h_scrollable = False
+
+		self.v_scrollbar = None
+		self.h_scrollbar = None
+
+		self.always_show_v_scroll = False
+		self.always_show_h_scroll = False
 
 		self.parent = parent
 		if parent != self.main:
@@ -108,12 +119,12 @@ class Element(object):
 		#Not hover is true only if we know that there's no way this element is being hovered over.
 		self_hover = False
 		child_hover = False
-
+		self.triggerMouseMove(mouse_pos_local)
 		if not_hover:
 			for c in self.children:
 				c.update_for_mouse_move((mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), True)
 		else:
-			if self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
+			if self.rect != None and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
 				#We know that at least the mouse was inside this element when it clicked.
 				#The question is, did something inside of this element get hovered over?
 				#In order to properly test this, we need to iterate in reverse order.
@@ -217,6 +228,10 @@ class Element(object):
 	def handle_event_losefocus(self, widget):
 		pass
 
+	def handle_event_scroll(self, widget, amount):
+		if widget in (self.h_scrollbar, self.v_scrollbar):
+			self._setup_for_pack()
+
 	#Add Handler functions allow other elements to catch events that this element catches
 	def add_handler_mousehover(self, handler):
 		self.mousehover_handlers.append(handler)
@@ -231,6 +246,9 @@ class Element(object):
 		self.losefocus_handlers.append(handler)
 
 	#Triggers are called when an event is caught by this element
+	def triggerMouseMove(self, mouse_pos):
+		pass
+
 	def triggerMouseHover(self, mouse_pos):
 		pass
 
@@ -314,6 +332,13 @@ class Element(object):
 	def pack(self):
 		#This is the function called to resize and reorganize an element's children.
 		#You should override this function if this element doesn't organize it's elements in this way.
+
+		offset = [0,0]
+		if self.h_scrollbar != None:
+			offset[0] = -self.h_scrollbar.scrolled_amount
+		if self.v_scrollbar != None:
+			offset[1] = -self.v_scrollbar.scrolled_amount
+
 		if self.needs_to_pack: # NECESSARY
 			self.needs_to_pack = False # NECESSARY
 			#In this case, our pack function will order our elements using a flow layout
@@ -322,43 +347,105 @@ class Element(object):
 			x_remaining = int(self.size[0])
 			y_remaining = int(self.size[1])
 			y_needed = 0
+			x_max = 0
+			y_max = 0
 			#The flow layout tries to fill a single row until no more children can be added because the element isn't
 			# wide enough, at which point a new row is used below it.
 			for child in self.children:
-				#We need to determine this child's new size
-				size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-				new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
-				new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
-
-				if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
-					x_pos = 0
-
-					x_remaining = int(self.size[0])
-					y_remaining -= y_needed
-					y_pos += y_needed
-					y_needed = 0
-
+				if child not in (self.v_scrollbar, self.h_scrollbar):
+					#We need to determine this child's new size
 					size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-						max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+							max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
 					new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
 					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 
-				x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-				x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-				y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
+					if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
+						x_pos = 0
 
-				redo= False
-				if new_pos != child.pos:
-					redo = True
-					child.pos = new_pos
-				if new_size != child.size:
-					redo = True
-					child.size = new_size
-					child._setup_for_pack()
-				if redo:
-					child.update_rect()
-					child.flag_for_rerender()
+						x_remaining = int(self.size[0])
+						y_remaining -= y_needed
+						y_pos += y_needed
+						y_needed = 0
+
+						size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+							max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+						new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+						new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+
+					x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+					x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+					y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
+
+					x_max = max(x_max,x_pos)
+					y_max = max(y_max,y_pos+y_needed)
+
+					new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
+
+					redo= False
+					if new_pos != child.pos:
+						redo = True
+						child.pos = new_pos
+					if new_size != child.size:
+						redo = True
+						child.size = new_size
+						child._setup_for_pack()
+					if redo:
+						child.update_rect()
+						child.flag_for_rerender()
+
+			#We setup our scroll bars now
+			if self.v_scrollable:
+				#We check if we've exceeded our vertical limit
+				v_dif = (self.size[1]-SCROLLBAR_WIDTH) - y_max
+				if v_dif < 0 or self.always_show_v_scroll:
+					#we will need the vertical scrollbar, so we check if one already exists, otherwise we create one
+					if self.v_scrollbar == None:
+						self.v_scrollbar = ScrollBar(self.main, self, None, None)
+						self.v_scrollbar.add_handler_scroll(self)
+					#we setup the scrollbar to scroll the proper amounts
+					self.v_scrollbar.set_scroll_range(0,max(-v_dif,0))
+					#we also set the scrollbar to be in the proper location
+					self.v_scrollbar.pos = (self.size[0]-SCROLLBAR_WIDTH,0)
+					new_size = (SCROLLBAR_WIDTH,self.size[1])
+					if new_size != self.h_scrollbar.size:
+						self.h_scrollbar.size = new_size
+						self.h_scrollbar.flag_for_rerender()
+					self.v_scrollbar.update_rect()
+					#we need to make sure that our scrollbar is at the top of the children list
+					self.children.remove(self.v_scrollbar)
+					self.children.append(self.v_scrollbar)
+				else:
+					#We no longer need the vertical scrollbar, so we remove it.
+					if self.v_scrollbar != None:
+						self.children.remove(self.v_scrollbar)
+						self.v_scrollbar = None
+
+			if self.h_scrollable:
+				#We check if we've exceeded our horizontal limit
+				h_dif = (self.size[0]-SCROLLBAR_WIDTH) - x_max
+				if h_dif < 0 or self.always_show_h_scroll:
+					#we will need the horizontal scrollbar, so we check if one already exists, otherwise we create one
+					if self.h_scrollbar == None:
+						self.h_scrollbar = ScrollBar(self.main, self, None, None)
+						self.h_scrollbar.scroll_direction = SCROLLBAR_HORIZONTAL
+						self.h_scrollbar.add_handler_scroll(self)
+					#we setup the scrollbar to scroll the proper amounts
+					self.h_scrollbar.set_scroll_range(0,max(-h_dif,0))
+					#we also set the scrollbar to be in the proper location
+					self.h_scrollbar.pos = (0,self.size[1]-SCROLLBAR_WIDTH)
+					new_size = (self.size[0]-SCROLLBAR_WIDTH,SCROLLBAR_WIDTH)
+					if new_size != self.h_scrollbar.size:
+						self.h_scrollbar.size = new_size
+						self.h_scrollbar.flag_for_rerender()
+					self.h_scrollbar.update_rect()
+					#we need to make sure that our scrollbar is at the top of the children list
+					self.children.remove(self.h_scrollbar)
+					self.children.append(self.h_scrollbar)
+				else:
+					#We no longer need the horizontal scrollbar, so we remove it.
+					if self.h_scrollbar != None:
+						self.children.remove(self.h_scrollbar)
+						self.h_scrollbar = None
 
 	def rerender_background(self):
 		if self.bg_color != None:
@@ -527,3 +614,86 @@ class Button(Element):
 	def rerender_foreground(self):
 		pygame.draw.lines(self.rendered_surface, (self.bg_color[0],self.bg_color[1],self.bg_color[2]), False, [(0,self.size[1]),(0,0),(self.size[0],0)], 1)
 		pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/4,self.bg_color[1]/4,self.bg_color[2]/4), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)], 1)
+
+
+class ScrollBar(Element):
+	def init(self):
+		self.grabbed = False
+		self.scroll_direction = SCROLLBAR_VERTICAL
+		self.scrolled_amount = 0
+		self.min_scroll = 0
+		self.max_scroll = 10
+
+		self.scroll_handlers = []
+
+	def add_handler_scroll(self, handler):
+		self.scroll_handlers.append(handler)
+
+	def update_for_scroll(self, amount):
+		self.triggerScroll(amount)
+		for handler in self.scroll_handlers:
+			handler.handle_event_scroll(self, amount)
+
+	def triggerMousePressed(self, mouse_pos, button):
+		if button == 1:
+			self.grabbed = True
+
+	def triggerMouseMove(self, mouse_pos):
+		if self.grabbed:
+			if self.min_scroll < self.max_scroll:
+				if self.scroll_direction == SCROLLBAR_HORIZONTAL:
+					size = self.size[0]
+					pos = mouse_pos[0]
+				else:
+					size = self.size[1]
+					pos = mouse_pos[1]
+				pos = min(max(pos,0),size)
+				size = float(size)
+				self.set_scrolled_amount(int(lerp(self.min_scroll,self.max_scroll,invlerp(0,size,pos))))
+			if not self.main.mouse_button[0]:
+				self.grabbed = False
+
+	def triggerMouseHover(self, mouse_pos):
+		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
+
+	def triggerScroll(self, amount):
+		pass
+
+	def set_scroll_range(self, mins, maxs):
+		if mins != self.min_scroll or maxs != self.max_scroll:
+			self.min_scroll = mins
+			self.max_scroll = maxs
+			if self.scrolled_amount < self.min_scroll or self.scrolled_amount > self.max_scroll:
+				self.set_scrolled_amount(min(max(self.scrolled_amount,self.min_scroll),self.max_scroll))
+			self.flag_for_rerender()
+
+	def set_scrolled_amount(self, amount):
+		if amount != self.scrolled_amount:
+			self.update_for_scroll(amount)
+			self.scrolled_amount = amount
+			self.flag_for_rerender()
+
+	def flag_for_pack(self):
+		pass
+
+	def _setup_for_pack(self):
+		pass
+
+	def rerender_background(self):
+		if self.bg_color != None:
+			self.rendered_surface.fill((self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2,127))
+
+	def rerender_foreground(self):
+		pygame.draw.rect(self.rendered_surface,(self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2),(0,0,self.size[0],self.size[1]),1)
+		#pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/4,self.bg_color[1]/4,self.bg_color[2]/4), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
+		#pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
+		if self.min_scroll < self.max_scroll:
+			bar_size = SCROLLBAR_BAR_MINSIZE
+			if self.scroll_direction == SCROLLBAR_HORIZONTAL:
+				size = (bar_size,SCROLLBAR_WIDTH-2)
+				pos = (int(lerp(1,self.size[0]-bar_size-1,invlerp(self.min_scroll,self.max_scroll,float(self.scrolled_amount)))), 1)
+			else:
+				size = (SCROLLBAR_WIDTH-2,bar_size)
+				pos = (1,int(lerp(1,self.size[1]-bar_size-1,invlerp(self.min_scroll,self.max_scroll,float(self.scrolled_amount)))))
+			pygame.draw.rect(self.rendered_surface,self.bg_color,(pos[0],pos[1],size[0],size[1]))
+

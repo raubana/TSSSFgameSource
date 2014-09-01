@@ -83,7 +83,7 @@ class GameServer(object):
 						self.send_playerlist()
 					i -= 1
 			for key in self.server.clients.keys():
-				if len(self.server.received_messages[key]) > 0:
+				if key in self.server.received_messages and len(self.server.received_messages[key]) > 0:
 					message = self.server.received_messages[key].pop(0)
 					if message.startswith("CONNECT:"):
 						#We get the clients name now and add them to the game.
