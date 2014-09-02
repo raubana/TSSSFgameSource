@@ -142,7 +142,7 @@ class Main(object):
     def prompt_open_file(self):
         self.check_save_first()
 
-        filename = askopenfilename(filetypes = [('Card files','.tsssf,.tsf')], initialdir="cards")
+        filename = askopenfilename(filetypes = [('Card file','.tsf'),('Card file','.tsssf')], initialdir="cards")
         self.filename = filename
         self.load_file(filename)
 
