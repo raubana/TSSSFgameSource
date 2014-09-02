@@ -59,6 +59,7 @@ class MasterDeck(object):
 					print("loading '" + f + "'")
 					pc_f = open("cards/" + f, "rb")
 					org_pc = pc_f.read()
+					print org_pc[:100]
 					self.pc_cards.append(org_pc)
 					pc_f.close()
 
