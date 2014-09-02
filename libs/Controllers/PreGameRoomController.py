@@ -123,6 +123,8 @@ class PreGameRoomController(Controller):
 					self.sound_ready.play()
 				elif message == "ALERT_NOT_READY":
 					self.sound_not_ready.play()
+				elif message == "ALERT_TIMER":
+					self.main.sound_game_timer.play()
 		else:
 			self.main.client.close()
 			self.main.client = None

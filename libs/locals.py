@@ -2,6 +2,8 @@ import os
 
 # GAME CONSTANTS
 CARDSIZE = (350, 500)
+MIN_PLAYERS = 2
+MAX_PLAYERS = 5
 
 # SOCKET CONSTANTS
 PING_MESSAGE = "PING" # message sent when a server/client needs to know that a client/server is still connected.

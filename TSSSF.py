@@ -28,9 +28,10 @@ class Main(object):
 
 		self.font = pygame.font.SysFont("Tahoma",12)
 
-		self.sound_chat= pygame.mixer.Sound("snds/app/chat.ogg")
+		self.sound_chat = pygame.mixer.Sound("snds/app/chat.ogg")
 		self.sound_connected = pygame.mixer.Sound("snds/app/connected.ogg")
 		self.sound_lost_connection = pygame.mixer.Sound("snds/app/lost_connection.ogg")
+		self.sound_game_timer = pygame.mixer.Sound("snds/game/misc/game_timer.ogg")
 
 		pygame.key.set_repeat(300, 30)
 

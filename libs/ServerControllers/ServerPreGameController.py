@@ -10,7 +10,7 @@ class ServerPreGameController(ServerController):
 		self.last_updated_playerlist = 0
 		self.timer_started = False
 		self.timer_start_time = 0
-		self.timer_prev_count = None
+		self.timer_count = None
 
 	def update(self):
 		t = time.time()
@@ -42,6 +42,17 @@ class ServerPreGameController(ServerController):
 					self.gameserver.players.pop(i)
 					self.send_playerlist()
 				i -= 1
+
+		if self.timer_started:
+			if t-self.timer_start_time >= 1:
+				self.timer_count -= 1
+				if self.timer_count <= 0:
+					self.timer_started = False
+					self.gameserver.server.sendall("ADD_CHAT:SERVER: ...oh uh, this hasn't been programmed yet.")
+				else:
+					self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"..."+str(self.timer_count)+"...")
+					self.gameserver.server.sendall("ALERT_TIMER")
+					self.timer_start_time = float(t)
 
 	def read_messages(self):
 		for key in self.gameserver.server.clients.keys():
@@ -159,12 +170,12 @@ class ServerPreGameController(ServerController):
 			for player in self.gameserver.players:
 				player.is_ready = bool(force)
 
-		if self.players_ready == len(self.gameserver.players) and len(self.gameserver.players) >= 2:
+		if self.players_ready == len(self.gameserver.players) and len(self.gameserver.players) >= MIN_PLAYERS:
 			if not self.timer_started:
 				self.gameserver.server.sendall("CHAT_ADD:SERVER:All players are ready, the game will start in...")
 				self.timer_started = True
 				self.timer_start_time = time.time()
-				self.timer_prev_count = 10
+				self.timer_count = 10
 		else:
 			if self.timer_started:
 				self.gameserver.server.sendall("CHAT_ADD:SERVER:Cancelled.")
