@@ -139,7 +139,7 @@ class PreGameController(ServerController):
 		while i < len(self.gameserver.players):
 			if self.gameserver.players[i].is_ready:
 				s += "☑ "
-				self.gameserver.players_ready += 1
+				self.players_ready += 1
 			else:
 				s += "☐ "
 			s += self.gameserver.players[i].name
