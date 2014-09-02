@@ -5,16 +5,7 @@ import thread
 import time
 
 from libs.ServerControllers import PreGameController
-
-class Player(object):
-	def __init__(self,address,name):
-		self.address = address
-		self.name = name
-		self.hand = Deck.Deck()
-
-		self.is_pinged = False
-		self.is_ready = False
-
+from ServerPlayer import Player
 
 class GameServer(object):
 	def __init__(self, port=DEFAULT_PORT):

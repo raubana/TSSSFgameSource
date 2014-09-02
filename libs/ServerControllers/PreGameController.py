@@ -3,7 +3,7 @@
 
 from ServerController import ServerController
 
-from ..GameServer import Player
+from ..ServerPlayer import Player
 from ..locals import *
 
 import time
