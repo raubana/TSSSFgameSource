@@ -51,7 +51,7 @@ class GameStartingController(Controller):
 					else:
 						print "EMPTY DECK!!"
 						self.main.client.close()
-				elif message == "CARDFILE:":
+				elif message.startswith("CARDFILE:"):
 					s1 = message[len("CARDFILE:"):]
 					s2 = message[:s1.index(":")]
 					print "RECEIVED CARD "+s2+"/"+str(self.number_of_cards)
