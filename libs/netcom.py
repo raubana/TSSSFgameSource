@@ -211,7 +211,7 @@ class Client(object):
 				self.connected = False
 				thread.exit()
 			else:
-				print "-recv: "+recv
+				#print "-recv: "+recv
 				self.server_last_got_message = time.time()
 				message += recv
 				i = -min((len(ESCAPE_CHARACTER)+len(recv)),len(message))

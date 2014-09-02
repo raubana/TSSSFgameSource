@@ -45,7 +45,7 @@ class GameStartingController(Controller):
 				if message == PING_MESSAGE:
 					self.main.client.send(PONG_MESSAGE)
 				elif message.startswith("DECKSIZE:"):
-					self.number_of_cards = int(message[len("DECKSIZE:")])
+					self.number_of_cards = int(message[len("DECKSIZE:"):])
 					if self.number_of_cards > 0:
 						self.main.client.send("REQUEST_CARDFILE:0")
 					else:
@@ -59,8 +59,7 @@ class GameStartingController(Controller):
 					index = int(s2)
 					s3 = s1[len(s2)+1:]
 					print s3[:1000]
-					f = open_pickledcard(io.BytesIO(s3))
-					self.main.master_deck.unpickle_and_add_card(f)
+					self.main.master_deck.unpickle_and_add_card(s3)
 					if len(self.main.master_deck.cards) == self.number_of_cards:
 						self.main.client.send("DONE_AND_WAITING")
 					else:
