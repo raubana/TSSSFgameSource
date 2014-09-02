@@ -58,7 +58,7 @@ class GameStartingController(Controller):
 					self.current_message = s2+"/"+str(self.number_of_cards)
 					index = int(s2)
 					s3 = s1[len(s2)+1:]
-					print s3[:100]
+					print s3[:1000]
 					f = open_pickledcard(io.BytesIO(s3))
 					self.main.master_deck.unpickle_and_add_card(f)
 					if len(self.main.master_deck.cards) == self.number_of_cards:

@@ -13,7 +13,7 @@ PING_FREQUENCY = 2.0  # ping the server/client every X seconds to ensure there's
 BUFFERSIZE = 2048 # the size of the buffer used in the sockets
 MESSAGE_DELAY = 0.0 # the delay between sent messages to prevent buffer overflows
 DEFAULT_PORT = 27015
-ESCAPE_CHARACTER = str(chr(6))+str(chr(6))
+ESCAPE_CHARACTER = str(chr(4))+str(chr(4))
 
 # FILE CONSTANTS
 APPDATA_LOCATION = os.getenv('APPDATA').replace("\\","/")

@@ -55,11 +55,11 @@ class MasterDeck(object):
 			pc_list = []
 			files = os.listdir("cards")
 			for f in files:
-				if f.endswith(".tsssf"):
+				if f.endswith(".tsssf") or f.endswith(".tsf"):
 					print("loading '" + f + "'")
 					pc_f = open("cards/" + f, "rb")
 					org_pc = pc_f.read()
-					print org_pc[:100]
+					print org_pc[:1000]
 					self.pc_cards.append(org_pc)
 					pc_f.close()
 

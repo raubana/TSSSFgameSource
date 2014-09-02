@@ -142,7 +142,7 @@ class Main(object):
     def prompt_open_file(self):
         self.check_save_first()
 
-        filename = askopenfilename(filetypes = [('Card files','.tsssf')], initialdir="cards")
+        filename = askopenfilename(filetypes = [('Card files','.tsssf,.tsf')], initialdir="cards")
         self.filename = filename
         self.load_file(filename)
 
@@ -153,7 +153,7 @@ class Main(object):
     def prompt_save_file(self):
         if self.img_data!= None:
             suggested_filename = self.getSuggestedFilename()
-            self.filename = asksaveasfilename(filetypes = [('Card files','.tsssf')],initialfile=suggested_filename,initialdir="cards")
+            self.filename = asksaveasfilename(filetypes = [('Card files','.tsf')],initialfile=suggested_filename,initialdir="cards")
             self.save_file()
 
     def import_image(self, filename):
