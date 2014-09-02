@@ -5,12 +5,13 @@ from ..locals import *
 
 import time
 
-class ServerPreGameController(ServerController):
+class ServerGameStartingController(ServerController):
 	def init(self):
+		for player in self.gameserver.players:
+			player.is_ready = False
+		self.players_ready = 0
 		self.last_updated_playerlist = 0
-		self.timer_started = False
-		self.timer_start_time = 0
-		self.timer_count = None
+		self.gameserver.server.sendall("BEGIN_LOAD")
 
 	def update(self):
 		t = time.time()
@@ -43,17 +44,8 @@ class ServerPreGameController(ServerController):
 					self.send_playerlist()
 				i -= 1
 
-		if self.timer_started:
-			if t-self.timer_start_time >= 1:
-				self.timer_count -= 1
-				if self.timer_count <= 0:
-					self.timer_started = False
-					import ServerGameStartingController
-					self.gameserver.controller = ServerGameStartingController.ServerGameStartingController(self.gameserver)
-				else:
-					self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"..."+str(self.timer_count)+"...")
-					self.gameserver.server.sendall("ALERT_TIMER")
-					self.timer_start_time = float(t)
+		if self.players_ready == len(self.gameserver.players):
+			self.gameserver.server.sendall("GAME_START")
 
 	def read_messages(self):
 		for key in self.gameserver.server.clients.keys():
@@ -63,7 +55,6 @@ class ServerPreGameController(ServerController):
 				if pl.address == key:
 					player = pl
 					break
-
 			try:
 				if len(self.gameserver.server.received_messages[key]) > 0:
 					message = self.gameserver.server.received_messages[key].pop(0)
@@ -73,35 +64,15 @@ class ServerPreGameController(ServerController):
 			if message != None:
 				if message == PING_MESSAGE:
 					self.gameserver.server.sendto(key,PONG_MESSAGE)
-				elif message.startswith("CONNECT:"):
-					#We get the clients name now and add them to the game.
-					#TODO: Kick the client if their name sucks.
-					if False:
-						pass
-					else:
-						name = message[len("CONNECT:"):]
-						self.gameserver.players.append(Player(key, name))
-						self.gameserver.server.sendto(key,"CONNECTED")
-						print "=Player '"+name+"'", key, "has joined the game."
-						self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has joined.")
-						self.send_playerlist()
-				elif message.startswith("CHAT:"):
-					if not player:
-						name = "UNKNOWN"
-					else:
-						name = player.name
-					chat = message[len("CHAT:"):]
-					self.gameserver.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
-				elif message == "READY":
+				elif message == "REQUEST_DECKSIZE":
+					self.gameserver.server.sendto(key,"DECKSIZE:"+str(len(self.gameserver.master_deck.cards)))
+				elif message.startswith("REQUEST_CARDFILE:"):
+					index = int(message[len("REQUEST_CARDFILE:"):])
+					self.gameserver.server.sendto(key,"CARDFILE:"+str(index)+":"+self.gameserver.master_deck.pc_cards[index])
+				elif message == "DONE_AND_WAITING":
 					if not player.is_ready:
 						player.is_ready = True
-						self.gameserver.server.sendall("ALERT_READY")
-						self.send_playerlist()
-					else:
-						player.is_ready = False
-						self.gameserver.server.sendall("ALERT_NOT_READY")
-						self.send_playerlist()
-
+						self.players_ready += 1
 
 	def check_player_status(self):
 		# This function is to check that players are still connected, otherwise it kicks them after no response.

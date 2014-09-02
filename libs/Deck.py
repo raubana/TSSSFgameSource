@@ -65,11 +65,14 @@ class MasterDeck(object):
 					pc = open_pickledcard("cards/" + f)
 					pc.filename = "cards/" + f
 					pc_list.append(pc)
-			for pc in pc_list:
-				print "parsing " + pc.filename
-				c = Card()
-				c.parsePickledCard(pc)
-				self.cards.append(c)
+		for pc in pc_list:
+			print "parsing " + pc.filename
+			self.unpickle_and_add_card(pc)
+
+	def unpickle_and_add_card(self, pc):
+		c = Card()
+		c.parsePickledCard(pc)
+		self.cards.append(c)
 
 
 class Card(object):

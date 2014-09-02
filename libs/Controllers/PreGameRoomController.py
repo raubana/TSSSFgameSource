@@ -124,6 +124,9 @@ class PreGameRoomController(Controller):
 					self.sound_not_ready.play()
 				elif message == "ALERT_TIMER":
 					self.main.sound_game_timer.play()
+				elif message == "BEGIN_LOAD":
+					import GameStartingController
+					self.main.controller = GameStartingController.GameStartingController(self.main)
 		else:
 			self.main.client.close()
 			self.main.client = None
