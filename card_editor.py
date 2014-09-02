@@ -179,8 +179,8 @@ class Main(object):
 
     def save_file(self):
         if self.filename != "" and self.img_data != None:
-            if not self.filename.endswith(".tsssf"):
-                self.filename += ".tsssf"
+            if not self.filename.endswith(".tsf") and not self.filename.endswith(".tsssf"):
+                self.filename += ".tsf"
             #We need to make our object first.
             attr = str(self.attributes.get("1.0","1000000000.0"))
             attr = attr.strip()
