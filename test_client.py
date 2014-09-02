@@ -16,6 +16,7 @@ screen = pygame.display.set_mode((800,600))
 clock = pygame.time.Clock()
 
 client = netcom.Client("71.10.148.168", 27015)
+client.connect()
 
 running = True
 
@@ -34,8 +35,8 @@ while running:
 				card = Card()
 				card.parsePickledCard(f)
 				img = card.image
-			except:
-				print "ERROR RECEIVING CARD :("
+			except Exception, e:
+				print str(e)
 				img = None
 		else:
 			print "SERVER SAYS: '"+message[0:100]+"'"
