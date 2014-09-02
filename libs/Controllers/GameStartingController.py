@@ -12,7 +12,6 @@ class GameStartingController(Controller):
 		#Clear the gui
 		self.main.updated_elements = []
 		self.main.main_element.clear()
-		self.main.main_element.set_text("Connecting...")
 
 		self.number_of_cards = None
 		self.main.master_deck = MasterDeck()
@@ -71,5 +70,4 @@ class GameStartingController(Controller):
 			self.main.sound_lost_connection.play()
 			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 			self.main.controller.message_element.set_text(self.main.client.connection_status)
-		else:
-			self.main.main_element.set_text(self.current_message)
+		self.main.main_element.set_text(self.current_message)
