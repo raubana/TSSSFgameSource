@@ -172,11 +172,11 @@ class ServerPreGameController(ServerController):
 
 		if self.players_ready == len(self.gameserver.players) and len(self.gameserver.players) >= MIN_PLAYERS:
 			if not self.timer_started:
-				self.gameserver.server.sendall("CHAT_ADD:SERVER:All players are ready, the game will start in...")
+				self.gameserver.server.sendall("ADD_CHAT:SERVER:All players are ready, the game will start in...")
 				self.timer_started = True
 				self.timer_start_time = time.time()
 				self.timer_count = 10
 		else:
 			if self.timer_started:
-				self.gameserver.server.sendall("CHAT_ADD:SERVER:Cancelled.")
+				self.gameserver.server.sendall("ADD_CHAT:SERVER:Cancelled.")
 				self.timer_started = False

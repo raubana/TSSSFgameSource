@@ -85,7 +85,6 @@ class PreGameRoomController(Controller):
 				if message == PING_MESSAGE:
 					self.main.client.send(PONG_MESSAGE)
 				elif message.startswith("ADD_CHAT:"):
-					self.main.sound_chat.play()
 					chat = message[len("ADD_CHAT:"):]
 					self.add_chat(chat)
 				elif message.startswith("PLAYERLIST:"):
@@ -145,6 +144,8 @@ class PreGameRoomController(Controller):
 		self.move_scrollbar_down = amount >= widget.max_scroll
 
 	def add_chat(self, message):
+		if message.startswith("PLAYER:"):
+			self.main.sound_chat.play()
 		self.chat_log.append(message)
 		if len(self.chat_log) > self.max_chat_lines:
 			self.chat_log.pop(0)
