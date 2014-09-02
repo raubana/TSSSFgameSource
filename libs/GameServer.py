@@ -24,10 +24,10 @@ class GameServer(object):
 	def run_main_loop(self):
 		# Call this function to get the server running.
 		print "= 'run_main_loop' called..."
-		self.stage = PreGameController.PreGameController(self)
 		print "== starting server now..."
 		self.server = netcom.Server(netcom.gethostname(), self.port)
 		print "== the server should now operational."
+		self.controller = PreGameController.PreGameController(self)
 		thread.start_new_thread(self._run(), tuple([]))
 
 	def _run(self):
