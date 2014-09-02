@@ -14,6 +14,7 @@ class GameStartingController(Controller):
 		self.main.main_element.clear()
 
 		self.rerender = True
+		self.last_rerendered = 0
 
 		self.card_size = (int(0.7*200),200)
 		self.card_img = pygame.Surface(self.card_size)
@@ -64,7 +65,7 @@ class GameStartingController(Controller):
 					self.current_message = s2+"/"+str(self.number_of_cards)
 					index = int(s2)
 					s3 = s1[len(s2)+1:]
-					print s3[:1000]
+					#print s3[:1000]
 					self.main.master_deck.unpickle_and_add_card(s3)
 					self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
 					if len(self.main.master_deck.cards) == self.number_of_cards:
@@ -88,7 +89,8 @@ class GameStartingController(Controller):
 			self.main.controller.message_element.set_text("Lost Connection")
 
 	def render(self):
-		if self.rerender:
+		if self.rerender or self.main.time-self.last_rerendered>1:
+			self.last_rerendered = float(self.main.time)
 			self.rerender = False
 			self.main.screen.fill((0,0,0))
 			text_img = self.main.font.render(self.current_message, True, (255,255,255))
