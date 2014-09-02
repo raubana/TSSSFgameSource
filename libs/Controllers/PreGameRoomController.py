@@ -37,9 +37,14 @@ class PreGameRoomController(Controller):
 								   self.main.main_element,
 								   None,
 								   (self.main.font.size("READY")[0],self.main.font.get_height()+4))
+		self.is_ready = False
+
+		self.sound_ready = pygame.mixer.Sound("snds/app/player_ready.ogg")
+		self.sound_not_ready = pygame.mixer.Sound("snds/app/player_not_ready.ogg")
 
 		#Sets up the handlers
 		self.text_inputbox.add_handler_submit(self)
+		self.ready_button.add_handler_submit(self)
 
 		self.server_is_pinged = False
 
@@ -80,6 +85,10 @@ class PreGameRoomController(Controller):
 					for p in L:
 						element = Element(self.main, self.playerlist_window, None, ("100%",self.main.font.get_height()), bg_color=None)
 						element.set_text(p)
+				elif message == "ALERT_READY":
+					self.sound_ready.play()
+				elif message == "ALERT_NOT_READY":
+					self.sound_not_ready.play()
 		else:
 			self.main.client.close()
 			self.main.client = None
@@ -89,11 +98,17 @@ class PreGameRoomController(Controller):
 			self.main.controller.message_element.set_text("Lost Connection")
 
 	def handle_event_submit(self, widget):
-		message = self.text_inputbox.text
+		if widget == self.text_inputbox:
+			message = self.text_inputbox.text
+			if message:
+				self.main.client.send("CHAT:"+message)
 
-		if message:
-			self.main.client.send("CHAT:"+message)
-
-			self.text_inputbox.set_text("")
-			self.text_inputbox.index = 0
-			self.text_inputbox.offset = 0
+				self.text_inputbox.set_text("")
+				self.text_inputbox.index = 0
+				self.text_inputbox.offset = 0
+		elif widget == self.ready_button:
+			self.is_ready = not self.is_ready
+			if self.is_ready:
+				self.main.client.send("READY")
+			else:
+				self.main.client.send("NOT_READY")
