@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from ServerController import ServerController
 
 from ..ServerPlayer import Player
@@ -138,10 +135,10 @@ class PreGameController(ServerController):
 		i = 0
 		while i < len(self.gameserver.players):
 			if self.gameserver.players[i].is_ready:
-				s += "☑ "
+				s += "READY: "
 				self.players_ready += 1
 			else:
-				s += "☐ "
+				s += "NOT READY: "
 			s += self.gameserver.players[i].name
 			if i != len(self.gameserver.players)-1:
 				s += ","
