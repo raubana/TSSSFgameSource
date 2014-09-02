@@ -33,6 +33,11 @@ class PreGameRoomController(Controller):
 		self.text_inputbox.padding = [5,0,5,0]
 		self.text_inputbox.max_characters = 100
 
+		self.ready_button = Button(self.main,
+								   self.main.main_element,
+								   None,
+								   (self.main.font.size("READY")[0],self.main.font.get_height()+4))
+
 		#Sets up the handlers
 		self.text_inputbox.add_handler_submit(self)
 
