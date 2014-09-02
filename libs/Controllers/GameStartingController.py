@@ -41,6 +41,7 @@ class GameStartingController(Controller):
 		if self.main.client.connected:
 			if len(self.main.client.received_messages) > 0:
 				message = self.main.client.received_messages.pop(0)
+				print message[:100]
 				if message == PING_MESSAGE:
 					self.main.client.send(PONG_MESSAGE)
 				elif message.startswith("DECKSIZE:"):

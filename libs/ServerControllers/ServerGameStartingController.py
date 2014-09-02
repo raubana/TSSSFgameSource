@@ -60,7 +60,7 @@ class ServerGameStartingController(ServerController):
 					message = self.gameserver.server.received_messages[key].pop(0)
 			except:
 				print "= FAILED TO POP AT KEY:",key
-
+			print message[:100]
 			if message != None:
 				if message == PING_MESSAGE:
 					self.gameserver.server.sendto(key,PONG_MESSAGE)
@@ -111,44 +111,3 @@ class ServerGameStartingController(ServerController):
 				print "= Player '"+pn+"' has been kicked."
 				self.gameserver.server.disconnect(pa)
 				self.gameserver.players.remove(player)
-				self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
-				self.gameserver.server.sendall("ALERT_NOT_READY")
-				self.check_ready(False)
-				self.send_playerlist()
-
-	def send_playerlist(self):
-		self.players_ready = 0
-		s = "PLAYERLIST:"
-		i = 0
-		while i < len(self.gameserver.players):
-			if self.gameserver.players[i].is_ready:
-				s += "READY: "
-				self.players_ready += 1
-			else:
-				s += "NOT READY: "
-			s += self.gameserver.players[i].name
-			if i != len(self.gameserver.players)-1:
-				s += ","
-			i += 1
-		self.gameserver.server.sendall(s)
-		self.check_ready()
-
-	def check_ready(self, force = None):
-		if force in (True, False):
-			if force:
-				self.players_ready = len(self.gameserver.players)
-			else:
-				self.players_ready = 0
-			for player in self.gameserver.players:
-				player.is_ready = bool(force)
-
-		if self.players_ready == len(self.gameserver.players) and len(self.gameserver.players) >= MIN_PLAYERS:
-			if not self.timer_started:
-				self.gameserver.server.sendall("ADD_CHAT:SERVER:All players are ready, the game will start in...")
-				self.timer_started = True
-				self.timer_start_time = time.time()
-				self.timer_count = 10
-		else:
-			if self.timer_started:
-				self.gameserver.server.sendall("ADD_CHAT:SERVER:Cancelled.")
-				self.timer_started = False
