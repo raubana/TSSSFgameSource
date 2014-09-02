@@ -49,7 +49,7 @@ class ServerPreGameController(ServerController):
 				if self.timer_count <= 0:
 					self.timer_started = False
 					import ServerGameStartingController
-					self.main.controller = ServerGameStartingController.ServerGameStartingController(self.main)
+					self.gameserver.controller = ServerGameStartingController.ServerGameStartingController(self.gameserver)
 				else:
 					self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"..."+str(self.timer_count)+"...")
 					self.gameserver.server.sendall("ALERT_TIMER")
