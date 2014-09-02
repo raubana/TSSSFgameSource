@@ -59,18 +59,23 @@ class MasterDeck(object):
 					print("loading '" + f + "'")
 					pc_f = open("cards/" + f, "rb")
 					org_pc = pc_f.read()
-					print org_pc[:100]
+					print type(org_pc)
 					self.pc_cards.append(org_pc)
 					pc_f.close()
 
 					pc = open_pickledcard("cards/" + f)
 					pc.filename = "cards/" + f
 					pc_list.append(pc)
-		for pc in pc_list:
-			print "parsing " + pc.filename
-			self.unpickle_and_add_card(pc)
+			for pc in pc_list:
+				print "parsing " + pc.filename
+				c = Card()
+				c.parsePickledCard(pc)
+				self.cards.append(c)
 
-	def unpickle_and_add_card(self, pc):
+	def unpickle_and_add_card(self, s):
+		print type(s)
+		self.pc_cards.append(s)
+		pc = open_pickledcard(io.BytesIO(s))
 		c = Card()
 		c.parsePickledCard(pc)
 		self.cards.append(c)

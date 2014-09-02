@@ -32,7 +32,8 @@ def save_pickledcard(card, f):
 
 
 def open_pickledcard(f):
-	if type(f) == str:
+	print f
+	if type(f) in (str,unicode):
 		t = tarfile.open(f, mode='r')
 	else:
 		t = tarfile.open(fileobj=f, mode='r')
