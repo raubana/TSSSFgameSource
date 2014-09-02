@@ -53,7 +53,7 @@ class GameStartingController(Controller):
 						self.main.client.close()
 				elif message.startswith("CARDFILE:"):
 					s1 = message[len("CARDFILE:"):]
-					s2 = message[:s1.index(":")]
+					s2 = s1[:s1.index(":")]
 					print "RECEIVED CARD "+s2+"/"+str(self.number_of_cards)
 					self.current_message = s2+"/"+str(self.number_of_cards)
 					index = int(s2)
