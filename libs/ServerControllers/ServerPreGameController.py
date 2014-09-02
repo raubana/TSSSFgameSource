@@ -32,14 +32,13 @@ class ServerPreGameController(ServerController):
 						pass
 			# Check if any players have disconnected
 			keys = self.gameserver.server.clients.keys()
-			print keys
 			i = len(self.gameserver.players) - 1
 			while i >= 0:
 				player = self.gameserver.players[i]
 				if player.address not in keys:
 					#Player has disconnected
 					print "=Player '"+player.name+"'", player.address, "has left the game."
-					self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has left.")
+					self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected?")
 					self.gameserver.players.pop(i)
 					self.send_playerlist()
 				i -= 1
@@ -129,6 +128,9 @@ class ServerPreGameController(ServerController):
 				print "= Player '"+pn+"' has been kicked."
 				self.gameserver.server.disconnect(pa)
 				self.gameserver.players.remove(player)
+				self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
+				self.gameserver.server.sendall("ALERT_NOT_READY")
+				self.check_ready(False)
 				self.send_playerlist()
 
 	def send_playerlist(self):
