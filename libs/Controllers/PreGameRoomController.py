@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from Controller import*
 
 from ..GUI.GUI import *
@@ -17,7 +20,7 @@ class PreGameRoomController(Controller):
 		self.chat_window = Element(self.main,
 								   self.main.main_element,
 								   None,
-								   ("100%-"+str(self.main.font.size("12345678901234567890")[0])+"px",H),
+								   ("100%-"+str(self.main.font.size("0"*(PLAYERNAME_MAX_LENGTH+5))[0])+"px",H),
 								   bg_color=(255,255,255))
 		self.chat_window.layout = LAYOUT_VERTICAL
 		self.chat_window.padding = [5,5,5,5]
@@ -25,6 +28,10 @@ class PreGameRoomController(Controller):
 		#self.chat_window.always_show_h_scroll = True
 		self.chat_window.v_scrollable = True
 		#self.chat_window.always_show_v_scroll = True
+
+		self.max_chat_lines = 50
+		self.chat_line_elements = []
+		self.chat_log = []
 
 		self.playerlist_window = Element(self.main, self.main.main_element, None, ("100%",H), bg_color=(255,255,255))
 		self.playerlist_window.padding = [0,5,5,5]
@@ -36,8 +43,14 @@ class PreGameRoomController(Controller):
 		self.ready_button = Button(self.main,
 								   self.main.main_element,
 								   None,
-								   (self.main.font.size("READY")[0],self.main.font.get_height()+4))
-		self.is_ready = False
+								   (self.main.font.size("READY")[0]+15,self.main.font.get_height()+15))
+		self.ready_button.margin = [5,5,5,5]
+		self.ready_button.set_text("READY")
+
+		self.move_scrollbar_down = True
+
+		#custom resources
+		self.symbols_font = pygame.font.SysFont("Wingdings", 12)
 
 		self.sound_ready = pygame.mixer.Sound("snds/app/player_ready.ogg")
 		self.sound_not_ready = pygame.mixer.Sound("snds/app/player_not_ready.ogg")
@@ -74,17 +87,38 @@ class PreGameRoomController(Controller):
 				elif message.startswith("ADD_CHAT:"):
 					self.main.sound_chat.play()
 					chat = message[len("ADD_CHAT:"):]
-					element = Element(self.main, self.chat_window, None, (self.main.font.size(chat)[0],self.main.font.get_height()), bg_color=None)
-					element.set_text(chat)
-					if len(self.chat_window.children) > 50:
-						self.chat_window._remove_child(self.chat_window.children[0])
+					self.add_chat(chat)
 				elif message.startswith("PLAYERLIST:"):
 					s = message[len("PLAYERLIST:"):]
 					L = s.split(",")
 					self.playerlist_window.clear()
-					for p in L:
-						element = Element(self.main, self.playerlist_window, None, ("100%",self.main.font.get_height()), bg_color=None)
-						element.set_text(p)
+					for pl in L:
+						ready = None
+						if pl.startswith("READY: "):
+							ready = True
+							name = pl[len("READY: "):]
+						elif pl.startswith("NOT READY: "):
+							ready = False
+							name = pl[len("NOT READY: "):]
+						else:
+							name = pl
+						if ready or not ready:
+							if ready:
+								ch = u""
+								color = (0,127,0)
+							else:
+								ch = u""
+								color = (196,127,127)
+							element1 = Element(self.main, self.playerlist_window, None,
+											   (int(self.symbols_font.size(ch)[0]),self.main.font.get_height()),
+											   bg_color=None, text_color=color)
+							element1.font = self.symbols_font
+							element1.set_text(ch)
+							element1.set_text_align(ALIGN_MIDDLE)
+						element2 = Element(self.main, self.playerlist_window, None,
+										   ("100%",self.main.font.get_height()), bg_color=None)
+						element2.set_text(name)
+						element2.set_text_align(ALIGN_MIDDLE)
 				elif message == "ALERT_READY":
 					self.sound_ready.play()
 				elif message == "ALERT_NOT_READY":
@@ -97,6 +131,40 @@ class PreGameRoomController(Controller):
 			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 			self.main.controller.message_element.set_text("Lost Connection")
 
+		if self.chat_window.v_scrollbar != None:
+			if self not in self.chat_window.v_scrollbar.scroll_handlers:
+				self.chat_window.v_scrollbar.add_handler_scroll(self)
+
+		if self.move_scrollbar_down:
+			if self.chat_window.v_scrollbar != None and not self.chat_window.v_scrollbar.grabbed:
+				self.chat_window.v_scrollbar.set_scrolled_amount(self.chat_window.v_scrollbar.max_scroll)
+
+	def handle_event_scroll(self, widget, amount):
+		self.move_scrollbar_down = amount >= widget.max_scroll
+
+	def add_chat(self, message):
+		self.chat_log.append(message)
+		if len(self.chat_log) > self.max_chat_lines:
+			self.chat_log.pop(0)
+			self.chat_window._remove_child(self.chat_line_elements.pop(0))
+		element = Element(self.main, self.chat_window, None, (0,0), bg_color=None)
+		self.chat_line_elements.append(element)
+		self.apply_message_to_element(message,element)
+
+	def apply_message_to_element(self, message, element):
+		if message.startswith("PLAYER:"):
+			chat = message[len("PLAYER:"):]
+			color = (0,0,0)
+		elif message.startswith("SERVER:"):
+			chat = message[len("SERVER:"):]
+			color = (127,127,127)
+		else:
+			chat = message
+			color = (127,0,0)
+		element.set_size(self.main.font.size(chat))
+		element.set_text(chat)
+		element.set_text_color(color)
+
 	def handle_event_submit(self, widget):
 		if widget == self.text_inputbox:
 			message = self.text_inputbox.text
@@ -107,8 +175,4 @@ class PreGameRoomController(Controller):
 				self.text_inputbox.index = 0
 				self.text_inputbox.offset = 0
 		elif widget == self.ready_button:
-			self.is_ready = not self.is_ready
-			if self.is_ready:
-				self.main.client.send("READY")
-			else:
-				self.main.client.send("NOT_READY")
+			self.main.client.send("READY")

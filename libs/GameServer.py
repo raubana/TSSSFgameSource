@@ -4,7 +4,7 @@ from locals import *
 import thread
 import time
 
-from libs.ServerControllers import PreGameController
+from libs.ServerControllers import ServerPreGameController
 from ServerPlayer import Player
 
 class GameServer(object):
@@ -27,7 +27,7 @@ class GameServer(object):
 		print "== starting server now..."
 		self.server = netcom.Server(netcom.gethostname(), self.port)
 		print "== the server should now operational."
-		self.controller = PreGameController.PreGameController(self)
+		self.controller = ServerPreGameController.ServerPreGameController(self)
 		thread.start_new_thread(self._run(), tuple([]))
 
 	def _run(self):

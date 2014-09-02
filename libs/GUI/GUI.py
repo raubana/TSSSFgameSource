@@ -48,6 +48,7 @@ class Element(object):
 
 		self.text = ""
 		self.text_align = ALIGN_TOPLEFT
+		self.font = self.main.font
 
 		self.v_scrollable = False
 		self.h_scrollable = False
@@ -290,6 +291,11 @@ class Element(object):
 			self.text_align = new_align
 			self.flag_for_rerender()
 
+	def set_text_color(self, new_color):
+		if new_color != self.text_color:
+			self.text_color = new_color
+			self.flag_for_rerender()
+
 	def get_local_pos(self):
 		return (float(self.pos[0]), float(self.pos[1]))
 
@@ -468,7 +474,7 @@ class Element(object):
 
 	def rerender_text(self):
 		if self.text != "":
-			img = self.main.font.render(self.text,True,self.text_color)
+			img = self.font.render(self.text,True,self.text_color)
 			if self.text_align == ALIGN_TOPLEFT:
 				rect = img.get_rect(topleft = (0,0))
 			elif self.text_align == ALIGN_MIDDLE:
@@ -597,6 +603,7 @@ class InputBox(Element):
 class Button(Element):
 	def init(self):
 		self.submit_handlers = []
+		self.text_align = ALIGN_MIDDLE
 
 	def add_handler_submit(self, handler):
 		self.submit_handlers.append(handler)

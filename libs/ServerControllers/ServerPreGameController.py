@@ -5,9 +5,12 @@ from ..locals import *
 
 import time
 
-class PreGameController(ServerController):
+class ServerPreGameController(ServerController):
 	def init(self):
 		self.last_updated_playerlist = 0
+		self.timer_started = False
+		self.timer_start_time = 0
+		self.timer_prev_count = None
 
 	def update(self):
 		t = time.time()
@@ -35,8 +38,7 @@ class PreGameController(ServerController):
 				if player.address not in keys:
 					#Player has disconnected
 					print "=Player '"+player.name+"'", player.address, "has left the game."
-					self.gameserver.server.sendall("ADD_CHAT:"+"Player '"+player.name+"' has left.")
-					#TODO: Do proper cleanup for disconnected players.
+					self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has left.")
 					del self.gameserver.players[i]
 					self.send_playerlist()
 				i -= 1
@@ -69,7 +71,7 @@ class PreGameController(ServerController):
 						self.gameserver.players.append(Player(key, name))
 						self.gameserver.server.sendto(key,"CONNECTED")
 						print "=Player '"+name+"'", key, "has joined the game."
-						self.gameserver.server.sendall("ADD_CHAT:"+"Player '"+name+"' has joined.")
+						self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has joined.")
 						self.send_playerlist()
 				elif message.startswith("CHAT:"):
 					if not player:
@@ -77,17 +79,17 @@ class PreGameController(ServerController):
 					else:
 						name = player.name
 					chat = message[len("CHAT:"):]
-					self.gameserver.server.sendall("ADD_CHAT:"+name+": "+chat)
+					self.gameserver.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
 				elif message == "READY":
-					if player.is_ready != True:
+					if not player.is_ready:
 						player.is_ready = True
 						self.gameserver.server.sendall("ALERT_READY")
 						self.send_playerlist()
-				elif message == "NOT_READY":
-					if player.is_ready != False:
+					else:
 						player.is_ready = False
 						self.gameserver.server.sendall("ALERT_NOT_READY")
 						self.send_playerlist()
+
 
 	def check_player_status(self):
 		# This function is to check that players are still connected, otherwise it kicks them after no response.
@@ -127,7 +129,6 @@ class PreGameController(ServerController):
 				self.gameserver.server.disconnect(pa)
 				self.gameserver.players.remove(player)
 				self.send_playerlist()
-				#TODO: send message to remaining clients to let them know about the updated player list.
 
 	def send_playerlist(self):
 		self.players_ready = 0
@@ -144,3 +145,24 @@ class PreGameController(ServerController):
 				s += ","
 			i += 1
 		self.gameserver.server.sendall(s)
+		self.check_ready()
+
+	def check_ready(self, force = None):
+		if force in (True, False):
+			if force:
+				self.players_ready = len(self.gameserver.players)
+			else:
+				self.players_ready = 0
+			for player in self.gameserver.players:
+				player.is_ready = bool(force)
+
+		if self.players_ready == len(self.gameserver.players) and len(self.gameserver.players) >= 2:
+			if not self.timer_started:
+				self.gameserver.server.sendall("CHAT_ADD:SERVER:All players are ready, the game will start in...")
+				self.timer_started = True
+				self.timer_start_time = time.time()
+				self.timer_prev_count = 10
+		else:
+			if self.timer_started:
+				self.gameserver.server.sendall("CHAT_ADD:SERVER:Cancelled.")
+				self.timer_started = False
