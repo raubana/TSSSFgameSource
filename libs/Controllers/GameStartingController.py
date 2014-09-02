@@ -13,6 +13,10 @@ class GameStartingController(Controller):
 		self.main.updated_elements = []
 		self.main.main_element.clear()
 
+		self.container_element = None
+
+		self.card_size = (int(0.7*200),200)
+
 		self.number_of_cards = None
 		self.main.master_deck = MasterDeck()
 
@@ -47,6 +51,20 @@ class GameStartingController(Controller):
 				elif message.startswith("DECKSIZE:"):
 					self.number_of_cards = int(message[len("DECKSIZE:"):])
 					if self.number_of_cards > 0:
+						self.container_element = Element(self.main,
+														 self.main.main_element,
+														 None,
+														 (self.card_size[0],self.card_size[1]+self.main.font.get_height()),
+														 bg_color=None)
+						self.text_element = Element(self.main,
+													self.container_element,
+													None,
+													("100%",self.main.font.get_height()),
+													bg_color=None)
+						self.card_element = Element(self.main,
+													self.container_element,
+													None,
+													(self.card_size[0],self.card_size[1]))
 						self.main.client.send("REQUEST_CARDFILE:0")
 					else:
 						print "EMPTY DECK!!"
@@ -78,4 +96,8 @@ class GameStartingController(Controller):
 			self.main.sound_lost_connection.play()
 			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 			self.main.controller.message_element.set_text("Lost Connection")
-		self.main.main_element.set_text(self.current_message)
+		if self.container_element == None:
+			self.main.main_element.set_text(self.current_message)
+		else:
+			self.main.main_element.set_text("")
+			self.text_element.set_text(self.current_message)

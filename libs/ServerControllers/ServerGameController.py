@@ -5,13 +5,10 @@ from ..locals import *
 
 import time
 
-class ServerGameStartingController(ServerController):
+class ServerGameController(ServerController):
 	def init(self):
-		for player in self.gameserver.players:
-			player.is_ready = False
-		self.players_ready = 0
 		self.last_updated_playerlist = 0
-		self.gameserver.server.sendall("BEGIN_LOAD")
+		self.gameserver.server.sendall("GAME_START")
 
 	def update(self):
 		t = time.time()
@@ -39,14 +36,9 @@ class ServerGameStartingController(ServerController):
 				if player.address not in keys:
 					#Player has disconnected
 					print "=Player '"+player.name+"'", player.address, "has left the game."
-					self.gameserver.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected?")
 					self.gameserver.players.pop(i)
 					self.send_playerlist()
 				i -= 1
-
-		if self.players_ready == len(self.gameserver.players):
-			import ServerGameController
-			self.gameserver.controller = ServerGameController.ServerGameController(self.gameserver)
 
 	def read_messages(self):
 		for key in self.gameserver.server.clients.keys():
@@ -56,26 +48,16 @@ class ServerGameStartingController(ServerController):
 				if pl.address == key:
 					player = pl
 					break
+
 			try:
 				if len(self.gameserver.server.received_messages[key]) > 0:
 					message = self.gameserver.server.received_messages[key].pop(0)
 			except:
 				print "= FAILED TO POP AT KEY:",key
+
 			if message != None:
-				print message[:100]
 				if message == PING_MESSAGE:
 					self.gameserver.server.sendto(key,PONG_MESSAGE)
-				elif message == "REQUEST_DECKSIZE":
-					self.gameserver.server.sendto(key,"DECKSIZE:"+str(len(self.gameserver.master_deck.cards)))
-				elif message.startswith("REQUEST_CARDFILE:"):
-					index = int(message[len("REQUEST_CARDFILE:"):])
-					data = "CARDFILE:"+str(index)+":"+self.gameserver.master_deck.pc_cards[index]
-					print "SENDING CARD: "+data[:100]
-					self.gameserver.server.sendto(key,data)
-				elif message == "DONE_AND_WAITING":
-					if not player.is_ready:
-						player.is_ready = True
-						self.players_ready += 1
 
 	def check_player_status(self):
 		# This function is to check that players are still connected, otherwise it kicks them after no response.
