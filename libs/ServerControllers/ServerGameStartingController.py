@@ -60,8 +60,8 @@ class ServerGameStartingController(ServerController):
 					message = self.gameserver.server.received_messages[key].pop(0)
 			except:
 				print "= FAILED TO POP AT KEY:",key
-			print message[:100]
 			if message != None:
+				print message[:100]
 				if message == PING_MESSAGE:
 					self.gameserver.server.sendto(key,PONG_MESSAGE)
 				elif message == "REQUEST_DECKSIZE":

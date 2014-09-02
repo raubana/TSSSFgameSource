@@ -71,4 +71,11 @@ class GameStartingController(Controller):
 			self.main.sound_lost_connection.play()
 			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 			self.main.controller.message_element.set_text(self.main.client.connection_status)
+		else:
+			self.main.client.close()
+			self.main.client = None
+			import ConnectMenuController
+			self.main.sound_lost_connection.play()
+			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
+			self.main.controller.message_element.set_text("Lost Connection")
 		self.main.main_element.set_text(self.current_message)
