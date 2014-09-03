@@ -92,7 +92,9 @@ class ServerPreGameController(ServerController):
 					chat = message[len("CHAT:"):]
 					self.gameserver.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
 				elif message == "READY":
-					if time.time() - player.last_toggled_is_ready >= 2.5:
+					t = time.time()
+					if t - player.last_toggled_is_ready >= 2.5:
+						player.last_toggled_is_ready = t
 						if not player.is_ready:
 							player.is_ready = True
 							self.gameserver.server.sendall("ALERT_READY")
