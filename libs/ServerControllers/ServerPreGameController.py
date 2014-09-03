@@ -7,8 +7,6 @@ import time
 
 class ServerPreGameController(ServerController):
 	def init(self):
-		for player in self.gameserver.players:
-			player.last_toggled_is_ready = 0
 		self.last_updated_playerlist = 0
 		self.timer_started = False
 		self.timer_start_time = 0

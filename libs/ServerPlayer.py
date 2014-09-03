@@ -8,3 +8,4 @@ class Player(object):
 
 		self.is_pinged = False
 		self.is_ready = False
+		self.last_toggled_is_ready = 0
