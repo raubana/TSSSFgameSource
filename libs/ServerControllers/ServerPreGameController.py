@@ -7,6 +7,8 @@ import time
 
 class ServerPreGameController(ServerController):
 	def init(self):
+		for player in self.gameserver.players:
+			player.last_toggled_is_ready = 0
 		self.last_updated_playerlist = 0
 		self.timer_started = False
 		self.timer_start_time = 0
@@ -63,7 +65,6 @@ class ServerPreGameController(ServerController):
 				if pl.address == key:
 					player = pl
 					break
-
 			try:
 				if len(self.gameserver.server.received_messages[key]) > 0:
 					message = self.gameserver.server.received_messages[key].pop(0)
@@ -93,14 +94,17 @@ class ServerPreGameController(ServerController):
 					chat = message[len("CHAT:"):]
 					self.gameserver.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
 				elif message == "READY":
-					if not player.is_ready:
-						player.is_ready = True
-						self.gameserver.server.sendall("ALERT_READY")
-						self.send_playerlist()
+					if time.time() - player.last_toggled_is_ready >= 2.5:
+						if not player.is_ready:
+							player.is_ready = True
+							self.gameserver.server.sendall("ALERT_READY")
+							self.send_playerlist()
+						else:
+							player.is_ready = False
+							self.gameserver.server.sendall("ALERT_NOT_READY")
+							self.send_playerlist()
 					else:
-						player.is_ready = False
-						self.gameserver.server.sendall("ALERT_NOT_READY")
-						self.send_playerlist()
+						self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too frequently. Please wait 3 seconds before toggling again.")
 
 
 	def check_player_status(self):
