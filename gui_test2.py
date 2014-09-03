@@ -7,7 +7,7 @@ import numpy
 
 import math, random, time
 
-from libs.GUI import *
+from libs.GUI.GUI import *
 
 
 class TestElement(Element):
@@ -35,6 +35,8 @@ class Main(object):
 		self.stills = []
 		self.still_freq = 1 / 10.0
 		self.last_still = time.time() - self.still_freq
+
+		self.font = pygame.font.SysFont("Tahoma",12)
 
 		self.reset()
 		self.run()
