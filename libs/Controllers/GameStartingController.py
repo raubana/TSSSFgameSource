@@ -70,6 +70,7 @@ class GameStartingController(Controller):
 					self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
 					if len(self.main.master_deck.cards) == self.number_of_cards:
 						self.main.client.send("DONE_AND_WAITING")
+						self.current_message = "Waiting for other players to finish..."
 					else:
 						self.main.client.send("REQUEST_CARDFILE:"+str(len(self.main.master_deck.cards)))
 				elif message == "GAME_START":
