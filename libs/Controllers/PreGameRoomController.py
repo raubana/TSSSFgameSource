@@ -10,7 +10,7 @@ import string, os, thread
 
 class PreGameRoomController(Controller):
 	def init(self):
-		self.players = None
+		self.players = []
 		self.players_ready = None
 
 		#Clear the gui
