@@ -10,6 +10,9 @@ import string, os, thread
 
 class PreGameRoomController(Controller):
 	def init(self):
+		self.players = None
+		self.players_ready = None
+
 		#Clear the gui
 		self.main.updated_elements = []
 		self.main.main_element.clear()
@@ -89,35 +92,13 @@ class PreGameRoomController(Controller):
 					self.add_chat(chat)
 				elif message.startswith("PLAYERLIST:"):
 					s = message[len("PLAYERLIST:"):]
-					L = s.split(",")
-					self.playerlist_window.clear()
-					for pl in L:
-						ready = None
-						if pl.startswith("READY: "):
-							ready = True
-							name = pl[len("READY: "):]
-						elif pl.startswith("NOT READY: "):
-							ready = False
-							name = pl[len("NOT READY: "):]
-						else:
-							name = pl
-						if ready or not ready:
-							if ready:
-								ch = u""
-								color = (0,127,0)
-							else:
-								ch = u""
-								color = (196,127,127)
-							element1 = Element(self.main, self.playerlist_window, None,
-											   (int(self.symbols_font.size(ch)[0]),self.main.font.get_height()),
-											   bg_color=None, text_color=color)
-							element1.font = self.symbols_font
-							element1.set_text(ch)
-							element1.set_text_align(ALIGN_MIDDLE)
-						element2 = Element(self.main, self.playerlist_window, None,
-										   ("100%",self.main.font.get_height()), bg_color=None)
-						element2.set_text(name)
-						element2.set_text_align(ALIGN_MIDDLE)
+					self.players = s.split(",")
+					self.players_ready = None
+					self.update_players_list_window()
+				elif message.startswith("PLAYERS_READY:"):
+					s = message[len("PLAYERS_READY:"):]
+					self.players_ready = s.split(",")
+					self.update_players_list_window()
 				elif message == "ALERT_READY":
 					self.sound_ready.play()
 				elif message == "ALERT_NOT_READY":
@@ -142,6 +123,36 @@ class PreGameRoomController(Controller):
 		if self.move_scrollbar_down:
 			if self.chat_window.v_scrollbar != None and not self.chat_window.v_scrollbar.grabbed:
 				self.chat_window.v_scrollbar.set_scrolled_amount(self.chat_window.v_scrollbar.max_scroll)
+
+	def update_players_list_window(self):
+		self.playerlist_window.clear()
+		if len(self.players) > 0:
+			i = 0
+			while i < len(self.players):
+				ready = None
+				if self.players_ready != None:
+					if self.players_ready[i] == "1":
+						ready = True
+					elif self.players_ready[i] == "0":
+						ready = False
+				if ready or not ready:
+					if ready:
+						ch = u""
+						color = (0,127,0)
+					else:
+						ch = u""
+						color = (196,127,127)
+					element1 = Element(self.main, self.playerlist_window, None,
+									   (int(self.symbols_font.size(ch)[0]),self.main.font.get_height()),
+									   bg_color=None, text_color=color)
+					element1.font = self.symbols_font
+					element1.set_text(ch)
+					element1.set_text_align(ALIGN_MIDDLE)
+				element2 = Element(self.main, self.playerlist_window, None,
+								   ("100%",self.main.font.get_height()), bg_color=None)
+				element2.set_text(self.players[i])
+				element2.set_text_align(ALIGN_MIDDLE)
+				i += 1
 
 	def handle_event_scroll(self, widget, amount):
 		self.move_scrollbar_down = amount >= widget.max_scroll

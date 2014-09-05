@@ -35,17 +35,47 @@ class ServerPreGameController(ServerController):
 						player.is_ready = True
 						self.gameserver.server.sendall("ALERT_READY")
 						self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:"+player.name+" is ready")
+						self.send_players_ready_all()
 						self.check_ready()
 					else:
 						player.is_ready = False
 						self.gameserver.server.sendall("ALERT_NOT_READY")
 						self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:"+player.name+" is NOT ready")
 						self.check_ready()
+						self.send_players_ready_all()
 				else:
 					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too frequently. Please wait 3 seconds before toggling again.")
 			else:
 				return False
 		return True
+
+	def triggerNewPlayer(self, player):
+		self.check_ready()
+		self.send_players_ready_all(player)
+
+	def triggerPlayerDisconnect(self, player):
+		self.check_ready()
+		self.send_players_ready_all(player)
+
+	def get_players_ready(self):
+		s = "PLAYERS_READY:"
+		i = 0
+		while i < len(self.gameserver.players):
+			s += int(self.gameserver.players[i].is_ready)
+			if i != len(self.gameserver.players)-1:
+				s += ","
+			i += 1
+		return s
+
+	def send_players_ready_to(self, player, message = None):
+		if message == None:
+			message = self.get_players_ready()
+		self.gameserver.server.sendto(player.address, message)
+
+	def send_players_ready_all(self):
+		message = self.get_players_ready()
+		for player in self.gameserver.players:
+			self.send_players_ready_to(player, str(message))
 
 	def check_ready(self, force = None):
 		if force in (True, False):
