@@ -61,7 +61,7 @@ class ServerPreGameController(ServerController):
 		s = "PLAYERS_READY:"
 		i = 0
 		while i < len(self.gameserver.players):
-			s += int(self.gameserver.players[i].is_ready)
+			s += str(int(self.gameserver.players[i].is_ready))
 			if i != len(self.gameserver.players)-1:
 				s += ","
 			i += 1
