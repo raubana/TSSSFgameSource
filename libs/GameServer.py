@@ -91,7 +91,7 @@ class GameServer(object):
 					if not attempt:
 						print "ERROR: Received unknown message: "+message[:100]
 
-	def check_player_status(self):
+	def _check_player_status(self):
 		# This function is to check that players are still connected, otherwise it kicks them after no response.
 		t = time.time()
 		i = len(self.players)-1
