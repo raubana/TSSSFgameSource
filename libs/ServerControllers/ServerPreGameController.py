@@ -34,10 +34,12 @@ class ServerPreGameController(ServerController):
 					if not player.is_ready:
 						player.is_ready = True
 						self.gameserver.server.sendall("ALERT_READY")
+						self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:"+player.name+" is ready")
 						self.check_ready()
 					else:
 						player.is_ready = False
 						self.gameserver.server.sendall("ALERT_NOT_READY")
+						self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:"+player.name+" is NOT ready")
 						self.check_ready()
 				else:
 					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too frequently. Please wait 3 seconds before toggling again.")
@@ -53,6 +55,10 @@ class ServerPreGameController(ServerController):
 				self.players_ready = 0
 			for player in self.gameserver.players:
 				player.is_ready = bool(force)
+		else:
+			self.players_ready = 0
+			for player in self.gameserver.players:
+				self.players_ready += int(player.is_ready)
 
 		if self.players_ready == len(self.gameserver.players) and len(self.gameserver.players) >= MIN_PLAYERS:
 			if not self.timer_started:
