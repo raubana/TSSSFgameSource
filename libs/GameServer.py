@@ -42,16 +42,16 @@ class GameServer(object):
 		self.controller.update()
 
 	def _read_messages(self):
-		for key in self.gameserver.server.clients.keys():
+		for key in self.server.clients.keys():
 			message = None
 			player = None
-			for pl in self.gameserver.players:
+			for pl in self.players:
 				if pl.address == key:
 					player = pl
 					break
 			try:
-				if len(self.gameserver.server.received_messages[key]) > 0:
-					message = self.gameserver.server.received_messages[key].pop(0)
+				if len(self.server.received_messages[key]) > 0:
+					message = self.server.received_messages[key].pop(0)
 			except:
 				print "= FAILED TO POP AT KEY:",key
 
@@ -137,9 +137,9 @@ class GameServer(object):
 	def send_playerlist(self):
 		s = "PLAYERLIST:"
 		i = 0
-		while i < len(self.gameserver.players):
-			s += self.gameserver.players[i].name
-			if i != len(self.gameserver.players)-1:
+		while i < len(self.players):
+			s += self.players[i].name
+			if i != len(self.players)-1:
 				s += ","
 			i += 1
-		self.gameserver.server.sendall(s)
+		self.server.sendall(s)
