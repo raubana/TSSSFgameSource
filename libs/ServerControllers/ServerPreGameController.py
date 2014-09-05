@@ -35,8 +35,8 @@ class ServerPreGameController(ServerController):
 						player.is_ready = True
 						self.gameserver.server.sendall("ALERT_READY")
 						self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:"+player.name+" is ready")
-						self.send_players_ready_all()
 						self.check_ready()
+						self.send_players_ready_all()
 					else:
 						player.is_ready = False
 						self.gameserver.server.sendall("ALERT_NOT_READY")
@@ -51,11 +51,11 @@ class ServerPreGameController(ServerController):
 
 	def triggerNewPlayer(self, player):
 		self.check_ready()
-		self.send_players_ready_all(player)
+		self.send_players_ready_all()
 
 	def triggerPlayerDisconnect(self, player):
 		self.check_ready()
-		self.send_players_ready_all(player)
+		self.send_players_ready_all()
 
 	def get_players_ready(self):
 		s = "PLAYERS_READY:"
@@ -70,6 +70,7 @@ class ServerPreGameController(ServerController):
 	def send_players_ready_to(self, player, message = None):
 		if message == None:
 			message = self.get_players_ready()
+		print "sending",message,"to",player.name,player.address
 		self.gameserver.server.sendto(player.address, message)
 
 	def send_players_ready_all(self):

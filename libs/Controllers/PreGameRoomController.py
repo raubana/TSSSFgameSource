@@ -87,6 +87,8 @@ class PreGameRoomController(Controller):
 				message = self.main.client.received_messages.pop(0)
 				if message == PING_MESSAGE:
 					self.main.client.send(PONG_MESSAGE)
+				elif message == PONG_MESSAGE:
+					pass
 				elif message.startswith("ADD_CHAT:"):
 					chat = message[len("ADD_CHAT:"):]
 					self.add_chat(chat)
@@ -97,6 +99,7 @@ class PreGameRoomController(Controller):
 					self.update_players_list_window()
 				elif message.startswith("PLAYERS_READY:"):
 					s = message[len("PLAYERS_READY:"):]
+					print s
 					self.players_ready = s.split(",")
 					self.update_players_list_window()
 				elif message == "ALERT_READY":
