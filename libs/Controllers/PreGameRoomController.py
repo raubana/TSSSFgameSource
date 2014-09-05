@@ -132,7 +132,7 @@ class PreGameRoomController(Controller):
 			i = 0
 			while i < len(self.players):
 				ready = None
-				if self.players_ready != None:
+				if self.players_ready != None and len(self.players) == len(self.players_ready):
 					if self.players_ready[i] == "1":
 						ready = True
 					elif self.players_ready[i] == "0":
