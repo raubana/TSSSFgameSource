@@ -70,7 +70,6 @@ class ServerPreGameController(ServerController):
 	def send_players_ready_to(self, player, message = None):
 		if message == None:
 			message = self.get_players_ready()
-		print "sending",message,"to",player.name,player.address
 		self.gameserver.server.sendto(player.address, message)
 
 	def send_players_ready_all(self):

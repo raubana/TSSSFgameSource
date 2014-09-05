@@ -99,7 +99,6 @@ class PreGameRoomController(Controller):
 					self.update_players_list_window()
 				elif message.startswith("PLAYERS_READY:"):
 					s = message[len("PLAYERS_READY:"):]
-					print s
 					self.players_ready = s.split(",")
 					self.update_players_list_window()
 				elif message == "ALERT_READY":
