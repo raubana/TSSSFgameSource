@@ -42,10 +42,104 @@ class GameServer(object):
 		self.controller.update()
 
 	def _read_messages(self):
-		self.controller.read_messages()
+		for key in self.gameserver.server.clients.keys():
+			message = None
+			player = None
+			for pl in self.gameserver.players:
+				if pl.address == key:
+					player = pl
+					break
+			try:
+				if len(self.gameserver.server.received_messages[key]) > 0:
+					message = self.gameserver.server.received_messages[key].pop(0)
+			except:
+				print "= FAILED TO POP AT KEY:",key
 
-	def _check_player_status(self):
-		self.controller.check_player_status()
+			if message != None:
+				if message == PING_MESSAGE:
+					self.server.sendto(key,PONG_MESSAGE)
+				elif message == PONG_MESSAGE:
+					pass
+				elif message.startswith("CONNECT:"):
+					#We get the clients name now and add them to the game.
+					#TODO: Kick the client if their name sucks.
+					if False:
+						pass
+					else:
+						name = message[len("CONNECT:"):]
+						self.server.sendto(key,"CONNECTED")
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has joined.")
+						if player != None:
+							#reconnect player
+							self.controller.triggerRejoinPlayer(player)
+							print "=Player '"+name+"'", key, "has rejoined the game."
+						else:
+							#connect new player
+							self.players.append(Player(key, name))
+							self.controller.triggerNewPlayer(self.players[-1])
+							print "=Player '"+name+"'", key, "has joined the game."
+						self.send_playerlist()
+				elif message.startswith("CHAT:"):
+					if not player:
+						name = "???"
+					else:
+						name = player.name
+					chat = message[len("CHAT:"):]
+					self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
+				else:
+					attempt = self.controller.read_message(message, player)
+					if not attempt:
+						print "ERROR: Received unknown message: "+message[:100]
 
+	def check_player_status(self):
+		# This function is to check that players are still connected, otherwise it kicks them after no response.
+		t = time.time()
+		i = len(self.players)-1
+		while i >= 0:
+			player = self.players[i]
+			pa = player.address
+			pn = player.name
+			kick_em = False
+			# First we check if the player is even still in the server's client listing.
+			if pa in self.server.clients:
+				#Next we check when we last received a message from that client.
+				try:
+					lgm = self.server.client_last_got_message[pa]
+					dif = t - lgm
+					if dif >= PING_FREQUENCY:
+						if not player.is_pinged:
+							player.is_pinged = True
+							self.server.sendto(pa,PING_MESSAGE)
+						else:
+							# This means the player was already sent a 'ping', and we're waiting for a 'pong'
+							if dif >= PING_FREQUENCY + TIMEOUT_TIME:
+								#This player has timed out, so we must kick them.
+								print "= Client '"+pn+"' has timed-out from '"+pa+"'"
+								kick_em = True
+					else:
+						# This player is likely still connected.
+						player.is_pinged = False
+				except:
+					print "= FAILED TO CHECK ON AND/OR PING PLAYER '"+pn+"' AT '"+pa+"'"
+			else:
+				print "= Client '"+pn+"' has disconnected from '"+pa+"'"
+				kick_em = True
+			if kick_em:
+				print "= Player '"+pn+"' has been kicked."
+				self.server.disconnect(pa)
+				self.players.remove(player)
+				self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
+				self.server.sendall("ALERT_NOT_READY")
+				self.controller.triggerPlayerDisconnect(player)
+				self.send_playerlist()
+			i -= 1
 
-
+	def send_playerlist(self):
+		s = "PLAYERLIST:"
+		i = 0
+		while i < len(self.gameserver.players):
+			s += self.gameserver.players[i].name
+			if i != len(self.gameserver.players)-1:
+				s += ","
+			i += 1
+		self.gameserver.server.sendall(s)

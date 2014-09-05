@@ -11,11 +11,14 @@ class ServerController(object):
 	def update(self):
 		pass
 
-	def read_messages(self):
+	def read_message(self, message, player):
 		pass
 
-	def check_player_status(self):
+	def triggerNewPlayer(self, player):
 		pass
 
-	def send_playerlist(self):
+	def triggerRejoinPlayer(self, player):
+		pass#TODO: Default this to a full-update
+
+	def triggerPlayerDisconnect(self, player):
 		pass

@@ -2,3 +2,6 @@
 *.tsf binary
 *.ogg binary
 *.wav binary
+*.mp3 binary
+*.bmp binary
+*.png binary
