@@ -86,6 +86,13 @@ class GameServer(object):
 						name = player.name
 					chat = message[len("CHAT:"):]
 					self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
+				elif message == "REQUEST_DECKSIZE":
+					self.server.sendto(player.address,"DECKSIZE:"+str(len(self.master_deck.cards)))
+				elif message.startswith("REQUEST_CARDFILE:"):
+					index = int(message[len("REQUEST_CARDFILE:"):])
+					data = "CARDFILE:"+str(index)+":"+self.master_deck.pc_cards[index]
+					print "SENDING CARD: "+data[:100]
+					self.server.sendto(player.address,data)
 				else:
 					attempt = self.controller.read_message(message, player)
 					if not attempt:

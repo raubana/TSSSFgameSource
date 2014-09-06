@@ -19,14 +19,7 @@ class ServerGameStartingController(ServerController):
 
 	def read_message(self, message, player):
 		#print message[:100]
-		if message == "REQUEST_DECKSIZE":
-			self.gameserver.server.sendto(player.address,"DECKSIZE:"+str(len(self.gameserver.master_deck.cards)))
-		elif message.startswith("REQUEST_CARDFILE:"):
-			index = int(message[len("REQUEST_CARDFILE:"):])
-			data = "CARDFILE:"+str(index)+":"+self.gameserver.master_deck.pc_cards[index]
-			print "SENDING CARD: "+data[:100]
-			self.gameserver.server.sendto(player.address,data)
-		elif message == "DONE_AND_WAITING":
+		if message == "DONE_AND_WAITING":
 			if not player.is_ready:
 				player.is_ready = True
 				self.players_ready += 1

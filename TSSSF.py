@@ -8,6 +8,7 @@ pygame.init()
 import math, random, time
 
 from libs.GUI.GUI import *
+from libs.Deck import *
 from libs.locals import *
 
 from libs.Controllers.ConnectMenuController import *
@@ -35,10 +36,6 @@ class Main(object):
 
 		pygame.key.set_repeat(300, 30)
 
-		self.reset()
-		self.run()
-
-	def reset(self):
 		# SETS UP THE GUI
 		self.element_level = 0
 
@@ -56,6 +53,14 @@ class Main(object):
 		self.controller = ConnectMenuController(self)  # Controllers are used to control the application while something is being taken care of.
 
 		self.manage_pack_requests()
+
+		self.reset()
+		self.run()
+
+	def reset(self):
+		#This function is used to clear out any game data that may remain from a previous game
+		self.name = None
+		self.master_deck = MasterDeck()
 
 	def _setup_for_pack(self):
 		# THIS SHOULD NOT BE CALLED UNLESS YOU KNOW WHAT YOU'RE DOING!!
@@ -214,7 +219,7 @@ class Main(object):
 			self.render()
 
 			for e in self.events:
-				if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE:
+				if e.type == QUIT:
 					print "Normal quit."
 					self.running = False
 
@@ -222,12 +227,9 @@ class Main(object):
 
 		for i in xrange(len(self.stills)):
 			pygame.image.save(self.stills[i], "stills/" + str(len(self.stills) - i) + ".bmp")
-
 		if self.client != None:
 			self.client.close()
-
 		print "GOODBYE!!"
-
 		pygame.quit()
 
 

@@ -29,7 +29,8 @@ class AttemptConnectController(Controller):
 				#we look for the permission to join the server
 				if len(self.client.received_messages) > 0:
 					message = self.client.received_messages.pop(0)
-					if message.startswith("CONNECTED"):
+					if message.startswith("CONNECTED:"):
+						self.main.name = message[len("CONNECTED:"):]
 						import PreGameRoomController
 						self.main.client = self.client
 						self.main.sound_connected.play()
