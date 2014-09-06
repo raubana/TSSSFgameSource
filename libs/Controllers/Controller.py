@@ -26,6 +26,9 @@ class Controller(object):
 	def handle_event_submit(self, widget):
 		pass
 
+	def read_message(self, message):
+		pass
+
 	def update(self):
 		pass
 

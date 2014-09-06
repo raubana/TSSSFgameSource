@@ -81,42 +81,6 @@ class PreGameRoomController(Controller):
 						self.main.client.close()
 			else:
 				self.server_is_pinged = False
-		#Everything else
-		if self.main.client.connected:
-			if len(self.main.client.received_messages) > 0:
-				message = self.main.client.received_messages.pop(0)
-				if message == PING_MESSAGE:
-					self.main.client.send(PONG_MESSAGE)
-				elif message == PONG_MESSAGE:
-					pass
-				elif message.startswith("ADD_CHAT:"):
-					chat = message[len("ADD_CHAT:"):]
-					self.add_chat(chat)
-				elif message.startswith("PLAYERLIST:"):
-					s = message[len("PLAYERLIST:"):]
-					self.players = s.split(",")
-					self.players_ready = None
-					self.update_players_list_window()
-				elif message.startswith("PLAYERS_READY:"):
-					s = message[len("PLAYERS_READY:"):]
-					self.players_ready = s.split(",")
-					self.update_players_list_window()
-				elif message == "ALERT_READY":
-					self.sound_ready.play()
-				elif message == "ALERT_NOT_READY":
-					self.sound_not_ready.play()
-				elif message == "ALERT_TIMER":
-					self.main.sound_game_timer.play()
-				elif message == "BEGIN_LOAD":
-					import GameStartingController
-					self.main.controller = GameStartingController.GameStartingController(self.main)
-		else:
-			self.main.client.close()
-			self.main.client = None
-			import ConnectMenuController
-			self.main.sound_lost_connection.play()
-			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
-			self.main.controller.message_element.set_text("Lost Connection")
 
 		if self.chat_window.v_scrollbar != None:
 			if self not in self.chat_window.v_scrollbar.scroll_handlers:
@@ -125,6 +89,32 @@ class PreGameRoomController(Controller):
 		if self.move_scrollbar_down:
 			if self.chat_window.v_scrollbar != None and not self.chat_window.v_scrollbar.grabbed:
 				self.chat_window.v_scrollbar.set_scrolled_amount(self.chat_window.v_scrollbar.max_scroll)
+
+	def read_message(self, message):
+		if message.startswith("ADD_CHAT:"):
+			chat = message[len("ADD_CHAT:"):]
+			self.add_chat(chat)
+		elif message.startswith("PLAYERLIST:"):
+			s = message[len("PLAYERLIST:"):]
+			self.players = s.split(",")
+			self.players_ready = None
+			self.update_players_list_window()
+		elif message.startswith("PLAYERS_READY:"):
+			s = message[len("PLAYERS_READY:"):]
+			self.players_ready = s.split(",")
+			self.update_players_list_window()
+		elif message == "ALERT_READY":
+			self.sound_ready.play()
+		elif message == "ALERT_NOT_READY":
+			self.sound_not_ready.play()
+		elif message == "ALERT_TIMER":
+			self.main.sound_game_timer.play()
+		elif message == "BEGIN_LOAD":
+			import GameStartingController
+			self.main.controller = GameStartingController.GameStartingController(self.main)
+		else:
+			return False
+		return True
 
 	def update_players_list_window(self):
 		self.playerlist_window.clear()

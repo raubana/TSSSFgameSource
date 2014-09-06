@@ -111,12 +111,34 @@ class Main(object):
 		for element in self.updated_elements:
 			element.update()
 
+		self.read_messages()
+
 		if self.controller != None:
 			self.controller.update()
 
 	def move(self):
 		if self.controller != None:
 			self.controller.move()
+
+	def read_message(self):
+		if self.client.connected:
+			if len(self.client.received_messages) > 0:
+				message = self.client.received_messages.pop(0)
+				if message == PING_MESSAGE:
+					self.client.send(PONG_MESSAGE)
+				elif message == PONG_MESSAGE:
+					pass
+				else:
+					attempt = self.controller.read_message(message)
+					if not attempt:
+						print "ERROR! Retrieved message unreadable:"+message
+		else:
+			self.client.close()
+			self.client = None
+			import ConnectMenuController
+			self.sound_lost_connection.play()
+			self.controller = ConnectMenuController.ConnectMenuController(self)
+			self.controller.message_element.set_text("Lost Connection")
 
 	def pack(self):
 		if self.needs_to_pack:
