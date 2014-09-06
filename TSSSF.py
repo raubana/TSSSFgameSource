@@ -51,6 +51,7 @@ class Main(object):
 		self.main_element.set_text_align(ALIGN_MIDDLE)
 
 		self.client = None
+		self.server_is_pinged = False
 
 		self.controller = ConnectMenuController(self)  # Controllers are used to control the application while something is being taken care of.
 
@@ -111,6 +112,7 @@ class Main(object):
 		for element in self.updated_elements:
 			element.update()
 
+		self.ping_server()
 		self.read_messages()
 
 		if self.controller != None:
@@ -120,25 +122,44 @@ class Main(object):
 		if self.controller != None:
 			self.controller.move()
 
-	def read_message(self):
-		if self.client.connected:
-			if len(self.client.received_messages) > 0:
-				message = self.client.received_messages.pop(0)
-				if message == PING_MESSAGE:
-					self.client.send(PONG_MESSAGE)
-				elif message == PONG_MESSAGE:
-					pass
+	def ping_server(self):
+		#Ping
+		if self.client != None:
+			if self.client.connected:
+				lgm = self.client.server_last_got_message
+				dif = self.time - lgm
+				if dif >= PING_FREQUENCY:
+					if not self.server_is_pinged:
+						self.server_is_pinged = True
+						self.client.send(PING_MESSAGE)
+					else:
+						# This means the server was already sent a 'ping', and we're waiting for a 'pong'
+						if dif >= PING_FREQUENCY + TIMEOUT_TIME:
+							#This server has timed out, so we must disconnect
+							print "= Server has timed-out."
+							self.client.close()
 				else:
-					attempt = self.controller.read_message(message)
-					if not attempt:
-						print "ERROR! Retrieved message unreadable:"+message
-		else:
-			self.client.close()
-			self.client = None
-			import ConnectMenuController
-			self.sound_lost_connection.play()
-			self.controller = ConnectMenuController.ConnectMenuController(self)
-			self.controller.message_element.set_text("Lost Connection")
+					self.server_is_pinged = False
+
+	def read_messages(self):
+		if self.client != None:
+			if self.client.connected:
+				if len(self.client.received_messages) > 0:
+					message = self.client.received_messages.pop(0)
+					if message == PING_MESSAGE:
+						self.client.send(PONG_MESSAGE)
+					elif message == PONG_MESSAGE:
+						pass
+					else:
+						attempt = self.controller.read_message(message)
+						if not attempt:
+							print "ERROR! Retrieved message unreadable:"+message
+			else:
+				self.client.close()
+				self.client = None
+				self.sound_lost_connection.play()
+				self.controller = ConnectMenuController(self)
+				self.controller.message_element.set_text("Lost Connection")
 
 	def pack(self):
 		if self.needs_to_pack:
@@ -194,6 +215,7 @@ class Main(object):
 
 			for e in self.events:
 				if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE:
+					print "Normal quit."
 					self.running = False
 
 			self.clock.tick(self.framerate)
@@ -203,6 +225,8 @@ class Main(object):
 
 		if self.client != None:
 			self.client.close()
+
+		print "GOODBYE!!"
 
 		pygame.quit()
 
