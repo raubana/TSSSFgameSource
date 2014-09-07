@@ -4,7 +4,6 @@ from locals import *
 import thread
 import time
 
-from libs.ServerControllers import ServerPreGameController
 from ServerPlayer import Player
 
 class GameServer(object):
@@ -12,14 +11,21 @@ class GameServer(object):
 		print "= GameServer initializing..."
 		self.port = port
 		# First we need to load the deck
+		print "= Waiting for 'run_main_loop' to be called."
+		print
+		self.controller = None
+		self.server = None
+
+		self.players = []
+
+		self.reset()
+
+	def reset(self):
+		self.game_started = False
 		print "== loading the MasterDeck"
 		self.master_deck = Deck.MasterDeck()
 		self.master_deck.load_all_cards()  # Each game server will have only one deck for the duration of it's existence
 		print "== the MasterDeck is now fully loaded."
-		self.players = []
-		print "= Waiting for 'run_main_loop' to be called."
-		print
-		self.controller = None
 
 	def run_main_loop(self):
 		# Call this function to get the server running.
@@ -27,7 +33,6 @@ class GameServer(object):
 		print "== starting server now..."
 		self.server = netcom.Server(netcom.gethostname(), self.port)
 		print "== the server should now operational."
-		self.controller = ServerPreGameController.ServerPreGameController(self)
 		thread.start_new_thread(self._run(), tuple([]))
 
 	def _run(self):
@@ -71,12 +76,14 @@ class GameServer(object):
 						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has joined.")
 						if player != None:
 							#reconnect player
-							self.controller.triggerRejoinPlayer(player)
+							if self.controller != None:
+								self.controller.triggerRejoinPlayer(player)
 							print "=Player '"+name+"'", key, "has rejoined the game."
 						else:
 							#connect new player
 							self.players.append(Player(key, name))
-							self.controller.triggerNewPlayer(self.players[-1])
+							if self.controller != None:
+								self.controller.triggerNewPlayer(self.players[-1])
 							print "=Player '"+name+"'", key, "has joined the game."
 						self.send_playerlist()
 				elif message.startswith("CHAT:"):
@@ -93,10 +100,16 @@ class GameServer(object):
 					data = "CARDFILE:"+str(index)+":"+self.master_deck.pc_cards[index]
 					print "SENDING CARD: "+data[:100]
 					self.server.sendto(player.address,data)
+				elif message == "DONE_LOADING":
+					player.is_loaded = True
+					self.server.sendto(player.address, "CLIENT_READY")
 				else:
-					attempt = self.controller.read_message(message, player)
-					if not attempt:
-						print "ERROR: Received unknown message: "+message[:100]
+					if self.controller != None:
+						attempt = self.controller.read_message(message, player)
+						if not attempt:
+							print "ERROR: Received unknown message: "+message[:100]
+					else:
+						print "ERROR: Received unknown message and no controller: "+message[:100]
 
 	def _check_player_status(self):
 		# This function is to check that players are still connected, otherwise it kicks them after no response.
@@ -137,7 +150,8 @@ class GameServer(object):
 				self.players.remove(player)
 				self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
 				self.server.sendall("ALERT_NOT_READY")
-				self.controller.triggerPlayerDisconnect(player)
+				if self.controller != None:
+					self.controller.triggerPlayerDisconnect(player)
 				self.send_playerlist()
 			i -= 1
 

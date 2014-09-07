@@ -1,4 +1,5 @@
 from Controller import*
+import GameStartingController
 
 from ..GUI.GUI import *
 from ..netcom import Client
@@ -33,10 +34,8 @@ class AttemptConnectController(Controller):
 					if message.startswith("CONNECTED:"):
 						self.main.connecting = False
 						self.main.name = message[len("CONNECTED:"):]
-						import PreGameRoomController
 						self.main.client = self.client
-						self.main.sound_connected.play()
-						self.main.controller = PreGameRoomController.PreGameRoomController(self.main)
+						self.main.controller = GameStartingController.GameStartingController(self.main)
 				elif self.main.time-self.connect_time > TIMEOUT_TIME:
 					self.client.close()
 					import ConnectMenuController

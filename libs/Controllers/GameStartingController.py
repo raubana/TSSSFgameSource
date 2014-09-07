@@ -46,13 +46,14 @@ class GameStartingController(Controller):
 			self.main.master_deck.unpickle_and_add_card(s3)
 			self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
 			if len(self.main.master_deck.cards) == self.number_of_cards:
-				self.main.client.send("DONE_AND_WAITING")
-				self.current_message = "Waiting for other players to finish..."
+				self.main.client.send("DONE_LOADING")
+				self.current_message = "Done loading!"
 			else:
 				self.main.client.send("REQUEST_CARDFILE:"+str(len(self.main.master_deck.cards)))
-		elif message == "GAME_START":
+		elif message == "CLIENT_READY":
 			self.rerender = True
-			self.current_message = "The game would have started here. Please close the program."
+			self.main.sound_connected.play()
+			self.main.controller = GameStartingController.GameStartingController(self.main)
 		else:
 			return False
 		return True
