@@ -48,6 +48,7 @@ class Main(object):
 		self.main_element.set_text_align(ALIGN_MIDDLE)
 
 		self.client = None
+		self.connecting = False
 		self.server_is_pinged = False
 
 		self.controller = ConnectMenuController(self)  # Controllers are used to control the application while something is being taken care of.
@@ -129,7 +130,7 @@ class Main(object):
 
 	def ping_server(self):
 		#Ping
-		if self.client != None:
+		if self.client != None and not self.connecting:
 			if self.client.connected:
 				lgm = self.client.server_last_got_message
 				dif = self.time - lgm
@@ -159,7 +160,7 @@ class Main(object):
 						attempt = self.controller.read_message(message)
 						if not attempt:
 							print "ERROR! Retrieved message unreadable:"+message
-			else:
+			elif not self.connecting:
 				self.client.close()
 				self.client = None
 				self.sound_lost_connection.play()

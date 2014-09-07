@@ -67,7 +67,7 @@ class GameServer(object):
 						pass
 					else:
 						name = message[len("CONNECT:"):]
-						self.server.sendto(key,"CONNECTED")
+						self.server.sendto(key,"CONNECTED:"+name)
 						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has joined.")
 						if player != None:
 							#reconnect player

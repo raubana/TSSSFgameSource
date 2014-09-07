@@ -11,6 +11,7 @@ class AttemptConnectController(Controller):
 		self.main.updated_elements = []
 		self.main.main_element.clear()
 		self.main.main_element.set_text("Connecting...")
+		self.main.connecting = True
 
 		self.client = Client(self.main.connect_data[0],self.main.connect_data[1])
 		self.connect_time = 0
@@ -30,27 +31,18 @@ class AttemptConnectController(Controller):
 				if len(self.client.received_messages) > 0:
 					message = self.client.received_messages.pop(0)
 					if message.startswith("CONNECTED:"):
+						self.main.connecting = False
 						self.main.name = message[len("CONNECTED:"):]
 						import PreGameRoomController
 						self.main.client = self.client
 						self.main.sound_connected.play()
 						self.main.controller = PreGameRoomController.PreGameRoomController(self.main)
-					else:
-						self.client.close()
-						import ConnectMenuController
-						self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
-						self.main.controller.message_element.set_text(message)
 				elif self.main.time-self.connect_time > TIMEOUT_TIME:
 					self.client.close()
 					import ConnectMenuController
 					self.main.sound_lost_connection.play()
 					self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 					self.main.controller.message_element.set_text("Server Ignored Request")
-		elif self.client.connection_status:
-			import ConnectMenuController
-			self.main.sound_lost_connection.play()
-			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
-			self.main.controller.message_element.set_text(self.client.connection_status)
 		else:
 			p = self.main.time%1.0
 			count = p*4
