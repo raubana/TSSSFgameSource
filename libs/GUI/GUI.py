@@ -557,7 +557,6 @@ class Element(object):
 				self.rendered_surface = self.main.screen
 			else:
 				if self.rendered_surface == None or self.size != self.rendered_surface.get_size():
-					print self.size
 					self.rendered_surface = pygame.Surface(self.size,pygame.SRCALPHA)
 			self.rerender_background()
 			self.rerender_foreground()

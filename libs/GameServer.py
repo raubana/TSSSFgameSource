@@ -121,40 +121,41 @@ class GameServer(object):
 			player = self.players[i]
 			pa = player.address
 			pn = player.name
-			kick_em = False
-			# First we check if the player is even still in the server's client listing.
-			if pa in self.server.clients:
-				#Next we check when we last received a message from that client.
-				try:
-					lgm = self.server.client_last_got_message[pa]
-					dif = t - lgm
-					if dif >= PING_FREQUENCY:
-						if not player.is_pinged:
-							player.is_pinged = True
-							self.server.sendto(pa,PING_MESSAGE)
+			if player.is_connected:
+				kick_em = False
+				# First we check if the player is even still in the server's client listing.
+				if pa in self.server.clients:
+					#Next we check when we last received a message from that client.
+					try:
+						lgm = self.server.client_last_got_message[pa]
+						dif = t - lgm
+						if dif >= PING_FREQUENCY:
+							if not player.is_pinged:
+								player.is_pinged = True
+								self.server.sendto(pa,PING_MESSAGE)
+							else:
+								# This means the player was already sent a 'ping', and we're waiting for a 'pong'
+								if dif >= PING_FREQUENCY + TIMEOUT_TIME:
+									#This player has timed out, so we must kick them.
+									print "= Client '"+pn+"' has timed-out from '"+pa+"'"
+									kick_em = True
 						else:
-							# This means the player was already sent a 'ping', and we're waiting for a 'pong'
-							if dif >= PING_FREQUENCY + TIMEOUT_TIME:
-								#This player has timed out, so we must kick them.
-								print "= Client '"+pn+"' has timed-out from '"+pa+"'"
-								kick_em = True
-					else:
-						# This player is likely still connected.
-						player.is_pinged = False
-				except:
-					print "= FAILED TO CHECK ON AND/OR PING PLAYER '"+pn+"' AT '"+pa+"'"
-			else:
-				print "= Client '"+pn+"' has disconnected from '"+pa+"'"
-				kick_em = True
-			if kick_em:
-				print "= Player '"+pn+"' has been kicked."
-				self.server.disconnect(pa)
-				player.is_connected = False
-				player.time_of_disconnect = time.time()
-				self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
-				if self.controller != None:
-					self.controller.triggerPlayerDisconnect(player)
-				self.send_playerlist()
+							# This player is likely still connected.
+							player.is_pinged = False
+					except:
+						print "= FAILED TO CHECK ON AND/OR PING PLAYER '"+pn+"' AT '"+pa+"'"
+				else:
+					print "= Client '"+pn+"' has disconnected from '"+pa+"'"
+					kick_em = True
+				if kick_em:
+					print "= Player '"+pn+"' has been kicked."
+					self.server.disconnect(pa)
+					player.is_connected = False
+					player.time_of_disconnect = time.time()
+					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
+					if self.controller != None:
+						self.controller.triggerPlayerDisconnect(player)
+					self.send_playerlist()
 			i -= 1
 
 	def send_playerlist(self):
