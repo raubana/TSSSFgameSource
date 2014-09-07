@@ -98,6 +98,7 @@ class Element(object):
 		#This removes every child from this element.
 		while len(self.children) > 0:
 			del self.children[0]
+		self.layout = LAYOUT_FLOW
 
 	def give_focus(self):
 		if self.main.focus != None:
@@ -123,7 +124,8 @@ class Element(object):
 		self.triggerMouseMove(mouse_pos_local)
 		if not_hover:
 			for c in self.children:
-				c.update_for_mouse_move((mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), True)
+				if c is not None:
+					c.update_for_mouse_move((mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), True)
 		else:
 			if self.rect != None and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
 				#We know that at least the mouse was inside this element when it clicked.
@@ -135,7 +137,8 @@ class Element(object):
 				i = len(self.children) - 1
 				while i >= 0:
 					c = self.children[i]
-					caught = c.update_for_mouse_move(
+					if c is not None:
+						caught = c.update_for_mouse_move(
 						(mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), caught) or caught
 					i -= 1
 
@@ -147,7 +150,8 @@ class Element(object):
 					self_hover = True
 			else:
 				for c in self.children:
-					c.update_for_mouse_move((mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), True)
+					if c is not None:
+						c.update_for_mouse_move((mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), True)
 		if self.hover and not self_hover:
 			self.hover = False
 			self.triggerMouseOut(mouse_pos_local)
@@ -170,7 +174,8 @@ class Element(object):
 			i = len(self.children) - 1
 			while i >= 0:
 				c = self.children[i]
-				caught = c.update_for_mouse_button_press(
+				if c is not None:
+					caught = c.update_for_mouse_button_press(
 					(mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), button)
 				if caught:
 					break
@@ -197,7 +202,8 @@ class Element(object):
 			i = len(self.children) - 1
 			while i >= 0:
 				c = self.children[i]
-				caught = c.update_for_mouse_button_release(
+				if c is not None:
+					caught = c.update_for_mouse_button_release(
 					(mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), button)
 				if caught:
 					break
@@ -336,135 +342,189 @@ class Element(object):
 			level.append(self)
 
 	def pack(self):
-		#This is the function called to resize and reorganize an element's children.
-		#You should override this function if this element doesn't organize it's elements in this way.
+		if self.layout == LAYOUT_SPLIT:
+			# This is a unique layout where the first 4 children fill the outside (left,top,right,bottom)
+			# and the 5th fills the center.
 
-		offset = [0,0]
-		if self.h_scrollbar != None:
-			offset[0] = -self.h_scrollbar.scrolled_amount
-		if self.v_scrollbar != None:
-			offset[1] = -self.v_scrollbar.scrolled_amount
+			min_x = 0
+			min_y = 0
+			max_x = self.size[0]
+			max_y = self.size[1]
 
-		if self.needs_to_pack: # NECESSARY
-			self.needs_to_pack = False # NECESSARY
-			#In this case, our pack function will order our elements using a flow layout
-			x_pos = 0
-			y_pos = 0
-			x_remaining = int(self.size[0])
-			y_remaining = int(self.size[1])
-			y_needed = 0
-			x_max = 0
-			y_max = 0
-			#The flow layout tries to fill a single row until no more children can be added because the element isn't
-			# wide enough, at which point a new row is used below it.
-			for child in self.children:
-				if child not in (self.v_scrollbar, self.h_scrollbar):
-					if self.layout == LAYOUT_FLOW:
-						#We need to determine this child's new size
-						size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-								max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-						new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
-						new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+			#First, we must check that all children exist:
+			if len(self.children) < 5:
+				raise LookupError("There must be at least 5 children for a split layout to function")
 
-						if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
-							x_pos = 0
+			#First, we take care of our left child, which fills the entire left side of the element
+			child = self.children[0]
+			if child != None:
+				size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
+										max(translate_size_to_pixels("100%",max_y-min_y),0))
+				new_pos = (int(0+child.margin[0]+child.padding[0]),int(0+child.margin[1]+child.padding[1]))
+				new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+				redo= False
+				if new_pos != child.pos:
+					redo = True
+					child.pos = new_pos
+				if new_size != child.size:
+					redo = True
+					child.size = new_size
+					child._setup_for_pack()
+				if redo:
+					child.update_rect()
+					child.flag_for_rerender()
+				min_x = child.pos[0]+new_size[0]+child.padding[2]+child.margin[2]
+			#next, we take care of our right child, which fills the entire right side of the element
+			child = self.children[2]
+			if child != None:
+				size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
+										max(translate_size_to_pixels("100%",max_y-min_y),0))
+				new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+				new_pos = (int(max_x - new_size[0] - child.margin[2]), int(0+child.margin[1]+child.padding[1]))
+				redo= False
+				if new_pos != child.pos:
+					redo = True
+					child.pos = new_pos
+				if new_size != child.size:
+					redo = True
+					child.size = new_size
+					child._setup_for_pack()
+				if redo:
+					child.update_rect()
+					child.flag_for_rerender()
+				max_x = child.pos[0]-child.padding[0]-child.margin[0]
+			#next we take care of our top child, which fills the top area between the left and right children
+			#next we take care of our bottom child, which fills the bottom area between the left and right children
+			#finally, we add in our last element which fills the gap between the first 4 children
 
-							x_remaining = int(self.size[0])
-							y_remaining -= y_needed
-							y_pos += y_needed
-							y_needed = 0
+		else:
+			offset = [0,0]
+			if self.h_scrollbar != None:
+				offset[0] = -self.h_scrollbar.scrolled_amount
+			if self.v_scrollbar != None:
+				offset[1] = -self.v_scrollbar.scrolled_amount
 
+			if self.needs_to_pack: # NECESSARY
+				self.needs_to_pack = False # NECESSARY
+				#In this case, our pack function will order our elements using a flow layout
+				x_pos = 0
+				y_pos = 0
+				x_remaining = int(self.size[0])
+				y_remaining = int(self.size[1])
+				y_needed = 0
+				x_max = 0
+				y_max = 0
+				#The flow layout tries to fill a single row until no more children can be added because the element isn't
+				# wide enough, at which point a new row is used below it.
+				for child in self.children:
+					if child is not None and child not in (self.v_scrollbar, self.h_scrollbar):
+						if self.layout == LAYOUT_FLOW:
+							#We need to determine this child's new size
 							size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-								max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+									max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
 							new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
 							new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 
-						x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-						x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-						y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
+							if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
+								x_pos = 0
 
-						x_max = max(x_max,x_pos)
-						y_max = max(y_max,y_pos+y_needed)
-					elif self.layout == LAYOUT_VERTICAL:
-						#We need to determine this child's new size
-						size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-								max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-						new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
-						new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
-						y_pos += new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3]
+								x_remaining = int(self.size[0])
+								y_remaining -= y_needed
+								y_pos += y_needed
+								y_needed = 0
 
-						x_max = max(x_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
-						y_max = max(y_max,y_pos)
+								size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+									max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+								new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+								new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 
-					new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
+							x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+							x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+							y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
 
-					redo= False
-					if new_pos != child.pos:
-						redo = True
-						child.pos = new_pos
-					if new_size != child.size:
-						redo = True
-						child.size = new_size
-						child._setup_for_pack()
-					if redo:
-						child.update_rect()
-						child.flag_for_rerender()
+							x_max = max(x_max,x_pos)
+							y_max = max(y_max,y_pos+y_needed)
+						elif self.layout == LAYOUT_VERTICAL:
+							#We need to determine this child's new size
+							size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+									max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+							new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+							new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+							y_pos += new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3]
 
-			#We setup our scroll bars now
-			if self.v_scrollable:
-				#We check if we've exceeded our vertical limit
-				v_dif = (self.size[1]-SCROLLBAR_WIDTH) - y_max
-				if v_dif < 0 or self.always_show_v_scroll:
-					#we will need the vertical scrollbar, so we check if one already exists, otherwise we create one
-					if self.v_scrollbar == None:
-						self.v_scrollbar = ScrollBar(self.main, self, None, None)
-						self.v_scrollbar.add_handler_scroll(self)
-					#we setup the scrollbar to scroll the proper amounts
-					self.v_scrollbar.set_scroll_range(0,max(-v_dif,0))
-					#we also set the scrollbar to be in the proper location
-					self.v_scrollbar.pos = (self.size[0]-SCROLLBAR_WIDTH,0)
-					new_size = (SCROLLBAR_WIDTH,self.size[1])
-					if new_size != self.v_scrollbar.size:
-						self.v_scrollbar.size = new_size
-						self.v_scrollbar.flag_for_rerender()
-					self.v_scrollbar.update_rect()
-					#we need to make sure that our scrollbar is at the top of the children list
-					self.children.remove(self.v_scrollbar)
-					self.children.append(self.v_scrollbar)
-				else:
-					#We no longer need the vertical scrollbar, so we remove it.
-					if self.v_scrollbar != None:
+							x_max = max(x_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
+							y_max = max(y_max,y_pos)
+
+						new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
+
+						redo= False
+						if new_pos != child.pos:
+							redo = True
+							child.pos = new_pos
+						if new_size != child.size:
+							redo = True
+							child.size = new_size
+							child._setup_for_pack()
+						if redo:
+							child.update_rect()
+							child.flag_for_rerender()
+
+				#We setup our scroll bars now
+				if self.v_scrollable:
+					#We check if we've exceeded our vertical limit
+					v_dif = (self.size[1]-SCROLLBAR_WIDTH) - y_max
+					if v_dif < 0 or self.always_show_v_scroll:
+						#we will need the vertical scrollbar, so we check if one already exists, otherwise we create one
+						if self.v_scrollbar == None:
+							self.v_scrollbar = ScrollBar(self.main, self, None, None)
+							self.v_scrollbar.add_handler_scroll(self)
+						#we setup the scrollbar to scroll the proper amounts
+						self.v_scrollbar.set_scroll_range(0,max(-v_dif,0))
+						#we also set the scrollbar to be in the proper location
+						self.v_scrollbar.pos = (self.size[0]-SCROLLBAR_WIDTH,0)
+						new_size = (SCROLLBAR_WIDTH,self.size[1])
+						if new_size != self.v_scrollbar.size:
+							self.v_scrollbar.size = new_size
+							self.v_scrollbar.flag_for_rerender()
+						self.v_scrollbar.update_rect()
+						#we need to make sure that our scrollbar is at the top of the children list
 						self.children.remove(self.v_scrollbar)
-						self.v_scrollbar = None
-						self._setup_for_pack()
+						self.children.append(self.v_scrollbar)
+					else:
+						#We no longer need the vertical scrollbar, so we remove it.
+						if self.v_scrollbar != None:
+							self.children.remove(self.v_scrollbar)
+							self.v_scrollbar = None
+							self._setup_for_pack()
 
-			if self.h_scrollable:
-				#We check if we've exceeded our horizontal limit
-				h_dif = (self.size[0]-SCROLLBAR_WIDTH) - x_max
-				if h_dif < 0 or self.always_show_h_scroll:
-					#we will need the horizontal scrollbar, so we check if one already exists, otherwise we create one
-					if self.h_scrollbar == None:
-						self.h_scrollbar = ScrollBar(self.main, self, None, None)
-						self.h_scrollbar.scroll_direction = SCROLLBAR_HORIZONTAL
-						self.h_scrollbar.add_handler_scroll(self)
-					#we setup the scrollbar to scroll the proper amounts
-					self.h_scrollbar.set_scroll_range(0,max(-h_dif,0))
-					#we also set the scrollbar to be in the proper location
-					self.h_scrollbar.pos = (0,self.size[1]-SCROLLBAR_WIDTH)
-					new_size = (self.size[0]-SCROLLBAR_WIDTH,SCROLLBAR_WIDTH)
-					if new_size != self.h_scrollbar.size:
-						self.h_scrollbar.size = new_size
-						self.h_scrollbar.flag_for_rerender()
-					self.h_scrollbar.update_rect()
-					#we need to make sure that our scrollbar is at the top of the children list
-					self.children.remove(self.h_scrollbar)
-					self.children.append(self.h_scrollbar)
-				else:
-					#We no longer need the horizontal scrollbar, so we remove it.
-					if self.h_scrollbar != None:
+				if self.h_scrollable:
+					#We check if we've exceeded our horizontal limit
+					h_dif = (self.size[0]-SCROLLBAR_WIDTH) - x_max
+					if h_dif < 0 or self.always_show_h_scroll:
+						#we will need the horizontal scrollbar, so we check if one already exists, otherwise we create one
+						if self.h_scrollbar == None:
+							self.h_scrollbar = ScrollBar(self.main, self, None, None)
+							self.h_scrollbar.scroll_direction = SCROLLBAR_HORIZONTAL
+							self.h_scrollbar.add_handler_scroll(self)
+						#we setup the scrollbar to scroll the proper amounts
+						self.h_scrollbar.set_scroll_range(0,max(-h_dif,0))
+						#we also set the scrollbar to be in the proper location
+						self.h_scrollbar.pos = (0,self.size[1]-SCROLLBAR_WIDTH)
+						new_size = (self.size[0]-SCROLLBAR_WIDTH,SCROLLBAR_WIDTH)
+						if new_size != self.h_scrollbar.size:
+							self.h_scrollbar.size = new_size
+							self.h_scrollbar.flag_for_rerender()
+						self.h_scrollbar.update_rect()
+						#we need to make sure that our scrollbar is at the top of the children list
 						self.children.remove(self.h_scrollbar)
-						self.h_scrollbar = None
-						self._setup_for_pack()
+						self.children.append(self.h_scrollbar)
+					else:
+						#We no longer need the horizontal scrollbar, so we remove it.
+						if self.h_scrollbar != None:
+							self.children.remove(self.h_scrollbar)
+							self.h_scrollbar = None
+							self._setup_for_pack()
+
 
 	def rerender_background(self):
 		if self.bg_color != None:
@@ -486,7 +546,8 @@ class Element(object):
 
 	def rerender_children(self):
 		for child in self.children:
-			child.render()
+			if child is not None:
+				child.render()
 
 	def rerender(self):
 		# this is redrawing it's elements to the rendered surface

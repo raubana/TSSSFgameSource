@@ -53,7 +53,8 @@ class GameStartingController(Controller):
 		elif message == "CLIENT_READY":
 			self.rerender = True
 			self.main.sound_connected.play()
-			self.main.controller = GameStartingController.GameStartingController(self.main)
+			import GameController
+			self.main.controller = GameController.GameController(self.main)
 		else:
 			return False
 		return True

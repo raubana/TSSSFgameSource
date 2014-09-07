@@ -74,7 +74,7 @@ class GameServer(object):
 					else:
 						name = message[len("CONNECT:"):]
 						self.server.sendto(key,"CONNECTED:"+name)
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has joined.")
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
 						if player != None:
 							#reconnect player
 							if self.controller != None:
@@ -104,6 +104,7 @@ class GameServer(object):
 				elif message == "DONE_LOADING":
 					player.is_loaded = True
 					self.server.sendto(player.address, "CLIENT_READY")
+					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has joined.")
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -148,9 +149,9 @@ class GameServer(object):
 			if kick_em:
 				print "= Player '"+pn+"' has been kicked."
 				self.server.disconnect(pa)
-				self.players.remove(player)
+				player.is_connected = False
+				player.time_of_disconnect = time.time()
 				self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
-				self.server.sendall("ALERT_NOT_READY")
 				if self.controller != None:
 					self.controller.triggerPlayerDisconnect(player)
 				self.send_playerlist()
