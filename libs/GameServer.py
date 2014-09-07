@@ -104,7 +104,7 @@ class GameServer(object):
 				elif message == "DONE_LOADING":
 					player.is_loaded = True
 					self.server.sendto(player.address, "CLIENT_READY")
-					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has joined.")
+					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has joined.")
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
