@@ -44,7 +44,8 @@ class GameServer(object):
 			self._check_player_status()
 
 	def _update(self):
-		self.controller.update()
+		if self.controller != None:
+			self.controller.update()
 
 	def _read_messages(self):
 		for key in self.server.clients.keys():
