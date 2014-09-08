@@ -3,6 +3,7 @@ __author__ = 'dylan_000'
 class Controller(object):
 	def __init__(self, main):
 		self.main = main
+		self.rerender = False
 		self.init()
 
 	def init(self):

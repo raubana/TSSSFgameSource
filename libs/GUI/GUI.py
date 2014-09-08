@@ -343,60 +343,114 @@ class Element(object):
 
 	def pack(self):
 		if self.layout == LAYOUT_SPLIT:
-			# This is a unique layout where the first 4 children fill the outside (left,top,right,bottom)
-			# and the 5th fills the center.
+			if self.needs_to_pack: # NECESSARY
+				self.needs_to_pack = False # NECESSARY
+				# This is a unique layout where the first 4 children fill the outside (left,top,right,bottom)
+				# and the 5th fills the center.
 
-			min_x = 0
-			min_y = 0
-			max_x = self.size[0]
-			max_y = self.size[1]
+				min_x = 0
+				min_y = 0
+				max_x = self.size[0]
+				max_y = self.size[1]
 
-			#First, we must check that all children exist:
-			if len(self.children) < 5:
-				raise LookupError("There must be at least 5 children for a split layout to function")
+				#First, we must check that all children exist:
+				if len(self.children) !=  5:
+					raise LookupError("There must be exactly 5 children for a split layout to function")
 
-			#First, we take care of our left child, which fills the entire left side of the element
-			child = self.children[0]
-			if child != None:
-				size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
-										max(translate_size_to_pixels("100%",max_y-min_y),0))
-				new_pos = (int(0+child.margin[0]+child.padding[0]),int(0+child.margin[1]+child.padding[1]))
-				new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
-				redo= False
-				if new_pos != child.pos:
-					redo = True
-					child.pos = new_pos
-				if new_size != child.size:
-					redo = True
-					child.size = new_size
-					child._setup_for_pack()
-				if redo:
-					child.update_rect()
-					child.flag_for_rerender()
-				min_x = child.pos[0]+new_size[0]+child.padding[2]+child.margin[2]
-			#next, we take care of our right child, which fills the entire right side of the element
-			child = self.children[2]
-			if child != None:
-				size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
-										max(translate_size_to_pixels("100%",max_y-min_y),0))
-				new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
-				new_pos = (int(max_x - new_size[0] - child.margin[2]), int(0+child.margin[1]+child.padding[1]))
-				redo= False
-				if new_pos != child.pos:
-					redo = True
-					child.pos = new_pos
-				if new_size != child.size:
-					redo = True
-					child.size = new_size
-					child._setup_for_pack()
-				if redo:
-					child.update_rect()
-					child.flag_for_rerender()
-				max_x = child.pos[0]-child.padding[0]-child.margin[0]
-			#next we take care of our top child, which fills the top area between the left and right children
-			#next we take care of our bottom child, which fills the bottom area between the left and right children
-			#finally, we add in our last element which fills the gap between the first 4 children
-
+				#First, we take care of our left child, which fills the entire left side of the element
+				child = self.children[0]
+				if child != None:
+					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
+											max(translate_size_to_pixels("100%",max_y-min_y),0))
+					new_pos = (int(0+child.margin[0]+child.padding[0]),int(0+child.margin[1]+child.padding[1]))
+					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+					redo= False
+					if new_pos != child.pos:
+						redo = True
+						child.pos = new_pos
+					if new_size != child.size:
+						redo = True
+						child.size = new_size
+						child._setup_for_pack()
+					if redo:
+						child.update_rect()
+						child.flag_for_rerender()
+					min_x = child.pos[0]+new_size[0]+child.padding[2]+child.margin[2]
+				#next, we take care of our right child, which fills the entire right side of the element
+				child = self.children[2]
+				if child != None:
+					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
+											max(translate_size_to_pixels("100%",max_y-min_y),0))
+					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+					new_pos = (int(max_x - new_size[0] - child.margin[2]), int(0+child.margin[1]+child.padding[1]))
+					redo= False
+					if new_pos != child.pos:
+						redo = True
+						child.pos = new_pos
+					if new_size != child.size:
+						redo = True
+						child.size = new_size
+						child._setup_for_pack()
+					if redo:
+						child.update_rect()
+						child.flag_for_rerender()
+					max_x = child.pos[0]-child.padding[0]-child.margin[0]
+				#next we take care of our top child, which fills the top area between the left and right children
+				child = self.children[1]
+				if child != None:
+					size = (max(translate_size_to_pixels("100%",max_x-min_x),0),
+											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y),0))
+					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+					new_pos = (int(min_x + child.padding[0] + child.margin[0]), int(min_y + child.padding[0] + child.margin[0]))
+					redo= False
+					if new_pos != child.pos:
+						redo = True
+						child.pos = new_pos
+					if new_size != child.size:
+						redo = True
+						child.size = new_size
+						child._setup_for_pack()
+					if redo:
+						child.update_rect()
+						child.flag_for_rerender()
+					min_y = child.pos[1]+child.size[1]+child.padding[3]+child.margin[3]
+				#next we take care of our bottom child, which fills the bottom area between the left and right children
+				child = self.children[3]
+				if child != None:
+					size = (max(translate_size_to_pixels("100%",max_x-min_x),0),
+											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y),0))
+					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+					new_pos = (int(min_x + child.padding[0] + child.margin[0]), int(max_y - new_size[1] - child.margin[3]))
+					redo= False
+					if new_pos != child.pos:
+						redo = True
+						child.pos = new_pos
+					if new_size != child.size:
+						redo = True
+						child.size = new_size
+						child._setup_for_pack()
+					if redo:
+						child.update_rect()
+						child.flag_for_rerender()
+					max_y = child.pos[1]-child.padding[1]-child.margin[1]
+				#finally, we add in our last element which fills the gap between the first 4 children
+				child = self.children[4]
+				if child != None:
+					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
+											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y),0))
+					new_pos = (int(min_x + child.padding[0] + child.margin[0]), int(min_y + child.padding[1] + child.margin[1]))
+					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+					redo= False
+					if new_pos != child.pos:
+						redo = True
+						child.pos = new_pos
+					if new_size != child.size:
+						redo = True
+						child.size = new_size
+						child._setup_for_pack()
+					if redo:
+						child.update_rect()
+						child.flag_for_rerender()
 		else:
 			offset = [0,0]
 			if self.h_scrollbar != None:
@@ -454,6 +508,16 @@ class Element(object):
 
 							x_max = max(x_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
 							y_max = max(y_max,y_pos)
+						elif self.layout == LAYOUT_HORIZONTAL:
+							#We need to determine this child's new size
+							size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+									max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+							new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+							new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+							x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+
+							x_max = max(x_max,x_pos)
+							y_max = max(y_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
 
 						new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
 
@@ -510,7 +574,10 @@ class Element(object):
 						self.h_scrollbar.set_scroll_range(0,max(-h_dif,0))
 						#we also set the scrollbar to be in the proper location
 						self.h_scrollbar.pos = (0,self.size[1]-SCROLLBAR_WIDTH)
-						new_size = (self.size[0]-SCROLLBAR_WIDTH,SCROLLBAR_WIDTH)
+						if self.v_scrollable:
+							new_size = (max(self.size[0]-SCROLLBAR_WIDTH,1),SCROLLBAR_WIDTH)
+						else:
+							new_size = (self.size[0],SCROLLBAR_WIDTH)
 						if new_size != self.h_scrollbar.size:
 							self.h_scrollbar.size = new_size
 							self.h_scrollbar.flag_for_rerender()
@@ -557,7 +624,11 @@ class Element(object):
 				self.rendered_surface = self.main.screen
 			else:
 				if self.rendered_surface == None or self.size != self.rendered_surface.get_size():
-					self.rendered_surface = pygame.Surface(self.size,pygame.SRCALPHA)
+					try:
+						self.rendered_surface = pygame.Surface(self.size,pygame.SRCALPHA)
+					except Exception, e:
+						print self.size
+						raise e
 			self.rerender_background()
 			self.rerender_foreground()
 			self.rerender_text()

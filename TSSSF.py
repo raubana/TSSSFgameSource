@@ -12,6 +12,7 @@ from libs.Deck import *
 from libs.locals import *
 
 from libs.Controllers.ConnectMenuController import *
+from libs.Sprite.ChatSprite import ChatSprite
 
 class Main(object):
 	def __init__(self):
@@ -33,6 +34,15 @@ class Main(object):
 		self.sound_connected = pygame.mixer.Sound("snds/app/connected.ogg")
 		self.sound_lost_connection = pygame.mixer.Sound("snds/app/lost_connection.ogg")
 		self.sound_game_timer = pygame.mixer.Sound("snds/game/misc/game_timer.ogg")
+		self.sound_add_card_to_deck = pygame.mixer.Sound("snds/card/add_card_to_deck.ogg")
+		self.sound_add_card_to_hand = pygame.mixer.Sound("snds/card/add_card_to_hand.ogg")
+		self.sound_add_card_to_table = pygame.mixer.Sound("snds/card/add_card_to_table.ogg")
+		self.sound_draw_card_from_deck = pygame.mixer.Sound("snds/card/draw_card_from_deck.ogg")
+		self.sound_draw_card_from_hand = pygame.mixer.Sound("snds/card/draw_card_from_hand.ogg")
+		self.sound_draw_card_from_table = pygame.mixer.Sound("snds/card/draw_card_from_table.ogg")
+		self.sound_place_deck = pygame.mixer.Sound("snds/card/place_deck.ogg")
+		self.sound_remove_deck = pygame.mixer.Sound("snds/card/remove_deck.ogg")
+		self.sound_shuffle_deck = pygame.mixer.Sound("snds/card/shuffle.ogg")
 
 		pygame.key.set_repeat(300, 30)
 
@@ -62,6 +72,8 @@ class Main(object):
 		#This function is used to clear out any game data that may remain from a previous game
 		self.name = None
 		self.master_deck = MasterDeck()
+
+		self.chat_sprites = []
 
 	def _setup_for_pack(self):
 		# THIS SHOULD NOT BE CALLED UNLESS YOU KNOW WHAT YOU'RE DOING!!
@@ -124,9 +136,26 @@ class Main(object):
 		if self.controller != None:
 			self.controller.update()
 
+		i = len(self.chat_sprites) - 1
+		while i >= 0:
+			s = self.chat_sprites[i]
+			s.update()
+			if s.dead:
+				self.chat_sprites.pop(i)
+				self.main_element.flag_for_rerender()
+			i -= 1
+
 	def move(self):
 		if self.controller != None:
 			self.controller.move()
+
+		y_pos = self.screen_size[1]
+		i = len(self.chat_sprites) - 1
+		while i >= 0:
+			s = self.chat_sprites[i]
+			y_pos -= s.size[1]
+			s.pos = (0,int(y_pos))
+			i -= 1
 
 	def ping_server(self):
 		#Ping
@@ -156,6 +185,15 @@ class Main(object):
 						self.client.send(PONG_MESSAGE)
 					elif message == PONG_MESSAGE:
 						pass
+					elif message.startswith("ADD_CHAT:"):
+						chat = message[len("ADD_CHAT:"):]
+						self.chat_sprites.append(ChatSprite(self,(0,0),(1,1),20))
+						if chat.startswith("SERVER:"):
+							chat = chat[len("SERVER:"):]
+							self.chat_sprites[-1].set_text(chat,(64,0,64,255),(255,127,255,127))
+						else:
+							self.chat_sprites[-1].set_text(chat)
+						self.main_element.flag_for_rerender()
 					else:
 						attempt = self.controller.read_message(message)
 						if not attempt:
@@ -186,10 +224,15 @@ class Main(object):
 				self.main_element.flag_for_rerender()
 
 	def render(self):
+		rerender = self.main_element.needs_to_rerender or (self.controller != None and self.controller.rerender)
 		self.main_element.render()
 
 		if self.controller != None:
 			self.controller.render()
+
+		if rerender:
+			for s in self.chat_sprites:
+				s.render()
 
 		pygame.display.flip()
 

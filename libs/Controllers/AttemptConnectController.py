@@ -48,3 +48,9 @@ class AttemptConnectController(Controller):
 			message = "Connecting"
 			message += "."*int(count)
 			self.main.main_element.set_text(message)
+			if self.client.connection_status:
+				self.client.close()
+				import ConnectMenuController
+				self.main.sound_lost_connection.play()
+				self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
+				self.main.controller.message_element.set_text(self.client.connection_status)
