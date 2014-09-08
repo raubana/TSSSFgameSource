@@ -116,6 +116,20 @@ class Main(object):
 				self.keys[e.key] = True
 				if self.focus != None:
 					self.focus.update_for_keydown(e.unicode, e.key)
+				message = None
+				if e.key == K_1: self.sound_add_card_to_deck.play(); message = "sound_add_card_to_deck"
+				if e.key == K_2: self.sound_add_card_to_hand.play(); message = "sound_add_card_to_hand"
+				if e.key == K_3: self.sound_add_card_to_table.play(); message = "sound_add_card_to_table"
+				if e.key == K_4: self.sound_draw_card_from_deck.play(); message = "sound_draw_card_from_deck"
+				if e.key == K_5: self.sound_draw_card_from_hand.play(); message = "sound_draw_card_from_hand"
+				if e.key == K_6: self.sound_draw_card_from_table.play(); message = "sound_draw_card_from_table"
+				if e.key == K_7: self.sound_place_deck.play(); message = "sound_place_deck"
+				if e.key == K_8: self.sound_remove_deck.play(); message = "sound_remove_deck"
+				if e.key == K_9: self.sound_shuffle_deck.play(); message = "sound_shuffle_deck"
+				if message != None:
+					self.chat_sprites.append(ChatSprite(self,(0,0),(1,1),3))
+					self.chat_sprites[-1].set_text("playing "+message,(255,255,255,255),(0,0,0,255))
+					self.main_element.flag_for_rerender()
 			elif e.type == KEYUP:
 				self.keys[e.key] = False
 				if self.focus != None:
