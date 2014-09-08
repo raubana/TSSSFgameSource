@@ -79,6 +79,10 @@ class Element(object):
 
 		self.needs_to_pack = False # This is True when this element's children need to be refitted.
 
+	def __del__(self):
+		if self.main.focus == self:
+			self.unfocus()
+
 	def init(self):
 		# Here you would do any other initialization stuff you might need to do.
 		#You'd want to setup this element for tick triggers in this function.
@@ -97,6 +101,8 @@ class Element(object):
 	def clear(self):
 		#This removes every child from this element.
 		while len(self.children) > 0:
+			if self.main.focus == self.children[0]:
+				self.children[0].unfocus()
 			del self.children[0]
 		self.layout = LAYOUT_FLOW
 
