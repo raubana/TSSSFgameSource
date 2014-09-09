@@ -32,10 +32,15 @@ class Main(object):
 
 		self.sounds = {}
 
-		self.sounds["chat"] = pygame.mixer.Sound("snds/app/chat.ogg")
 		self.sounds["connected"] = pygame.mixer.Sound("snds/app/connected.ogg")
 		self.sounds["lost_connection"] = pygame.mixer.Sound("snds/app/lost_connection.ogg")
+
 		self.sounds["game_timer"] = pygame.mixer.Sound("snds/game/misc/game_timer.ogg")
+
+		self.sounds["chat"] = pygame.mixer.Sound("snds/app/chat.ogg")
+		self.sounds["player_ready"] = pygame.mixer.Sound("snds/app/player_ready.ogg")
+		self.sounds["player_not_ready"] = pygame.mixer.Sound("snds/app/player_not_ready.ogg")
+
 		self.sounds["add_card_to_deck"] = pygame.mixer.Sound("snds/card/add_card_to_deck.ogg")
 		self.sounds["add_card_to_hand"] = pygame.mixer.Sound("snds/card/add_card_to_hand.ogg")
 		self.sounds["add_card_to_table"] = pygame.mixer.Sound("snds/card/add_card_to_table.ogg")
@@ -223,7 +228,7 @@ class Main(object):
 							self.chat_sprites[-1].set_text(chat)
 						self.main_element.flag_for_rerender()
 					elif message.startswith("ALERT:"):
-						sound_name = message[len("ALERT:")]
+						sound_name = message[len("ALERT:"):]
 						self.play_sound(sound_name)
 					else:
 						attempt = self.controller.read_message(message)

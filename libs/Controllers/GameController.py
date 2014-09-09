@@ -47,6 +47,10 @@ class GameController(Controller):
 		self.decks_element = Element(self.main, self.right_element, None, ("100%",75))
 		self.public_goals_element = Element(self.main, self.right_element, None, ("100%","100%"))
 
+		self.player_list_element.add_handler_keydown(self)
+		self.decks_element.add_handler_keydown(self)
+		self.public_goals_element.add_handler_keydown(self)
+
 		self.end_turn_button.add_handler_submit(self)
 		self.ready_button.add_handler_submit(self)
 
@@ -73,15 +77,11 @@ class GameController(Controller):
 
 	def read_message(self, message):
 		if message.startswith("PLAYERLIST:"):
-			print message
 			playerlist = message[len("PLAYERLIST:"):].split(",")
-			print playerlist
 			self.player_list_element.clear()
 			self.player_list_element.set_size(("100%",len(playerlist)*self.main.font.get_height()))
 			for player in playerlist:
-				print player
 				parts = player.split(":")
-				print parts
 				name = parts.pop()
 				color = (0,0,0)
 				bg_color = None
@@ -101,7 +101,7 @@ class GameController(Controller):
 		return True
 
 	def handle_event_keydown(self, widget, unicode, key):
-		if key == K_RETURN and widget in (self.main.main_element, self.left_element, self.top_element, self.right_element, self.bottom_element, self.table_element):
+		if key == K_RETURN:
 			self.chat_input_element = InputBox(self.main, self.main.main_element, (25,25), ("100%-50px",self.main.font.get_height()+2))
 			self.chat_input_element.max_characters = 100
 			self.chat_input_element.add_handler_submit(self)

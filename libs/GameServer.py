@@ -22,6 +22,9 @@ class GameServer(object):
 
 	def reset(self):
 		self.game_started = False
+		self.begun_gamestart_countdown = False
+		self.gamestart_countdown = 10
+		self.gamestart_countdown_time = 0
 		print "== loading the MasterDeck"
 		self.master_deck = Deck.MasterDeck()
 		self.master_deck.load_all_cards()  # Each game server will have only one deck for the duration of it's existence
@@ -44,6 +47,16 @@ class GameServer(object):
 			self._check_player_status()
 
 	def _update(self):
+		t = time.time()
+		if not self.game_started:
+			if self.begun_gamestart_countdown:
+				if t - self.gamestart_countdown_time >= 1:
+					self.server.sendall("ADD_CHAT:SERVER:..."+str(self.gamestart_countdown)+"...")
+					self.gamestart_countdown -= 1
+					self.gamestart_countdown_time = t
+					if self.gamestart_countdown <= 0:
+						self.setup_newgame()
+
 		if self.controller != None:
 			self.controller.update()
 
@@ -87,6 +100,7 @@ class GameServer(object):
 								self.controller.triggerNewPlayer(self.players[-1])
 							print "=Player '"+name+"'", key, "has joined the game."
 						self.send_playerlist()
+						self.check_ready()
 				elif message.startswith("CHAT:"):
 					if not player:
 						name = "???"
@@ -106,6 +120,7 @@ class GameServer(object):
 					self.server.sendto(player.address, "CLIENT_READY")
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has joined.")
 					self.send_playerlist()
+					self.check_ready()
 				elif message == "READY":
 					#toggle this player's "is_ready" variable
 					t = time.time()
@@ -168,11 +183,13 @@ class GameServer(object):
 					print "= Player '"+pn+"' has been kicked."
 					self.server.disconnect(pa)
 					player.is_connected = False
+					player.is_ready = False
 					player.time_of_disconnect = time.time()
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
 					if self.controller != None:
 						self.controller.triggerPlayerDisconnect(player)
 					self.send_playerlist()
+					self.check_ready()
 			else:
 				if not self.game_started or t - player.time_of_disconnect >= 60:
 					#TODO: Discard player's hand
@@ -181,10 +198,26 @@ class GameServer(object):
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has been removed from the game.")
 					del self.players[i]
 					self.send_playerlist()
+					self.check_ready()
 			i -= 1
 
 	def check_ready(self):
-		pass
+		if not self.game_started:
+			number_ready = 0
+			for player in self.players:
+				if player.is_connected and player.is_ready:
+					number_ready += 1
+
+			ready = number_ready >= MIN_PLAYERS and number_ready == len(self.players)
+
+			if ready and not self.begun_gamestart_countdown:
+				self.gamestart_countdown = 10
+				self.gamestart_countdown_time = time.time()
+				self.begun_gamestart_countdown = True
+				self.server.sendall("ADD_CHAT:SERVER: The game will start in...")
+			elif not ready and self.begun_gamestart_countdown:
+				self.begun_gamestart_countdown = False
+				self.server.sendall("ADD_CHAT:SERVER: ...Aborted.")
 
 	def send_playerlist(self):
 		s = "PLAYERLIST:"
@@ -205,3 +238,9 @@ class GameServer(object):
 				s += ","
 			i += 1
 		self.server.sendall(s)
+
+	def setup_newgame(self):
+		self.server.sendall("ADD_CHAT:SERVER:The game has begun!")
+
+		self.game_started = True
+		self.send_playerlist()
