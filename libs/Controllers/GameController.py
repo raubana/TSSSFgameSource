@@ -73,10 +73,12 @@ class GameController(Controller):
 
 	def read_message(self, message):
 		if message.startswith("PLAYERLIST:"):
+			print message
 			playerlist = message[len("PLAYERLIST:")].split(",")
 			self.player_list_element.clear()
 			self.player_list_element.set_size(("100%",len(playerlist)*self.main.font.get_height()))
 			for player in playerlist:
+				print player
 				parts = player.split(":")
 				name = parts.pop()
 				color = (0,0,0)
@@ -91,6 +93,7 @@ class GameController(Controller):
 				if "DC" in parts:
 					bg_color = (192,192,192)
 				element = Element(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
+				element.set_text(name)
 			return True
 
 		return False
