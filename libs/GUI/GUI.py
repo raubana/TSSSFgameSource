@@ -71,6 +71,7 @@ class Element(object):
 		self.mousepress_handlers = []
 		self.getfocus_handlers = []
 		self.losefocus_handlers = []
+		self.keydown_handlers = []
 
 		self.init()
 
@@ -115,10 +116,11 @@ class Element(object):
 			handler.handle_event_getfocus(self)
 
 	def unfocus(self):
-		self.main.focus = None
-		self.triggerLoseFocus()
-		for handler in self.losefocus_handlers:
-			handler.handle_event_losefocus(self)
+		if self.main.focus == self:
+			self.main.focus = None
+			self.triggerLoseFocus()
+			for handler in self.losefocus_handlers:
+				handler.handle_event_losefocus(self)
 
 	#Update For functions are called whenever this element's parent needs to update for a particular event
 	def update_for_mouse_move(self, mouse_pos_local, not_hover=False):
@@ -191,7 +193,8 @@ class Element(object):
 				pass
 			else:
 				#Nothing else caught the event, so we catch it.
-				self.give_focus()
+				if button in (1,2,3):
+					self.give_focus()
 				self.triggerMousePressed(mouse_pos_local, button)
 				for handler in self.mousepress_handlers:
 					handler.handle_event_mousepress(self, mouse_pos_local, button)
@@ -223,7 +226,9 @@ class Element(object):
 			return True
 
 	def update_for_keydown(self, unicode, key):
-		pass
+		self.triggerKeyDown(unicode, key)
+		for handler in self.keydown_handlers:
+			handler.handle_event_keydown(self, unicode, key)
 
 	def update_for_keyup(self, key):
 		pass
@@ -246,6 +251,9 @@ class Element(object):
 			self._setup_for_pack()
 
 	#Add Handler functions allow other elements to catch events that this element catches
+	def add_handler_keydown(self, handler):
+		self.keydown_handlers.append(handler)
+
 	def add_handler_mousehover(self, handler):
 		self.mousehover_handlers.append(handler)
 
@@ -259,6 +267,9 @@ class Element(object):
 		self.losefocus_handlers.append(handler)
 
 	#Triggers are called when an event is caught by this element
+	def triggerKeyDown(self, unicode, key):
+		pass
+
 	def triggerMouseMove(self, mouse_pos):
 		pass
 
@@ -352,7 +363,7 @@ class Element(object):
 			if self.needs_to_pack: # NECESSARY
 				self.needs_to_pack = False # NECESSARY
 				# This is a unique layout where the first 4 children fill the outside (left,top,right,bottom)
-				# and the 5th fills the center.
+				# and the 5th fills the center. Any other child after that is treated as a absolute element.
 
 				min_x = 0
 				min_y = 0
@@ -360,8 +371,8 @@ class Element(object):
 				max_y = self.size[1]
 
 				#First, we must check that all children exist:
-				if len(self.children) !=  5:
-					raise LookupError("There must be exactly 5 children for a split layout to function")
+				if len(self.children) < 5:
+					raise LookupError("There must be no less than 5 children for a split layout to function")
 
 				#First, we take care of our left child, which fills the entire left side of the element
 				child = self.children[0]
@@ -457,6 +468,28 @@ class Element(object):
 					if redo:
 						child.update_rect()
 						child.flag_for_rerender()
+				#lastly, we do absolute positioning for the remaining children
+				for child in self.children[5:]:
+					size = (max(translate_size_to_pixels(child.preferred_size[0],self.size[0]),0),
+											max(translate_size_to_pixels(child.preferred_size[1],self.size[0]),0))
+					if child.preferred_pos == None:
+						pos = (0,0)
+					else:
+						pos = child.preferred_pos
+					new_pos = (int(pos[0] + child.padding[0] + child.margin[0]), int(pos[1] + child.padding[1] + child.margin[1]))
+					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+					redo= False
+					if new_pos != child.pos:
+						redo = True
+						child.pos = new_pos
+					if new_size != child.size:
+						redo = True
+						child.size = new_size
+						child._setup_for_pack()
+					if redo:
+						child.update_rect()
+						child.flag_for_rerender()
+
 		else:
 			offset = [0,0]
 			if self.h_scrollbar != None:

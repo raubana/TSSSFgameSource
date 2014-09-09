@@ -114,9 +114,9 @@ class Main(object):
 
 			elif e.type == KEYDOWN:
 				self.keys[e.key] = True
-				if self.focus != None and self.focus != self.main_element:
+				if self.focus != None:
 					self.focus.update_for_keydown(e.unicode, e.key)
-				else:
+				if self.focus == None or self.focus == self.main_element:
 					message = None
 					if e.key == K_1: self.sound_add_card_to_deck.play(); message = "sound_add_card_to_deck"
 					if e.key == K_2: self.sound_add_card_to_hand.play(); message = "sound_add_card_to_hand"
@@ -206,6 +206,10 @@ class Main(object):
 						if chat.startswith("SERVER:"):
 							chat = chat[len("SERVER:"):]
 							self.chat_sprites[-1].set_text(chat,(64,0,64,255),(255,127,255,127))
+						elif chat.startswith("PLAYER:"):
+							chat = chat[len("PLAYER:"):]
+							self.sound_chat.play()
+							self.chat_sprites[-1].set_text(chat)
 						else:
 							self.chat_sprites[-1].set_text(chat)
 						self.main_element.flag_for_rerender()

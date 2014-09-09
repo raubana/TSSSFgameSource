@@ -9,6 +9,9 @@ class Controller(object):
 	def init(self):
 		pass
 
+	def handle_event_keydown(self, widget, unicode, key):
+		pass
+
 	def handle_event_mousehover(self, widget, mouse_pos_local):
 		pass
 

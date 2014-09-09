@@ -20,6 +20,11 @@ class GameController(Controller):
 		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.table_element = Element(self.main, self.main.main_element, None, ("100%","100%"))
 
+		self.top_element.add_handler_keydown(self)
+		self.right_element.add_handler_keydown(self)
+		self.bottom_element.add_handler_keydown(self)
+		self.table_element.add_handler_keydown(self)
+
 		self.top_element.set_bg_color((197,96,204))
 		self.right_element.set_bg_color(None)
 		self.bottom_element.set_bg_color((197,96,204))
@@ -62,8 +67,30 @@ class GameController(Controller):
 		self.public_goals_element.v_scrollable = True
 		self.public_goals_element.always_show_v_scroll = True
 
+		self.chat_input_element = None
+
+		self.bottom_element.give_focus()
+
+	def handle_event_keydown(self, widget, unicode, key):
+		if key == K_RETURN and widget in (self.main.main_element, self.left_element, self.top_element, self.right_element, self.bottom_element, self.table_element):
+			self.chat_input_element = InputBox(self.main, self.main.main_element, (25,25), ("100%-50px",self.main.font.get_height()+2))
+			self.chat_input_element.max_characters = 100
+			self.chat_input_element.add_handler_submit(self)
+			self.chat_input_element.add_handler_losefocus(self)
+			self.chat_input_element.give_focus()
+
 	def handle_event_submit(self, widget):
 		if widget == self.end_turn_button:
 			self.main.client.send("END_TURN")
 		elif widget == self.ready_button:
 			self.main.client.send("READY")
+		elif (not (self.chat_input_element == None)) and widget == self.chat_input_element:
+			message = self.chat_input_element.text.strip()
+			if len(message) > 0:
+				self.main.client.send("CHAT:"+self.chat_input_element.text)
+			self.bottom_element.give_focus()
+
+	def handle_event_losefocus(self, widget):
+		if (not (self.chat_input_element == None)) and widget == self.chat_input_element:
+			self.main.main_element._remove_child(self.chat_input_element)
+			self.chat_input_element = None
