@@ -1,4 +1,4 @@
-import ServerController.ServerController
+from ServerController import ServerController
 import time
 
 class SetupNewgameServerController(ServerController):
