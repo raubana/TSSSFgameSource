@@ -247,7 +247,7 @@ class GameServer(object):
 		self.send_playerlist()
 
 		self.server.sendall("ADD_CHAT:SERVER:The game has begun!")
-		time.sleep(1.0)
+		time.sleep(0.5)
 		self.server.sendall("ADD_CHAT:SERVER:Shuffling decks...")
 		self.server.sendall("ALERT:remove_deck")
 		time.sleep(0.5)
@@ -263,23 +263,23 @@ class GameServer(object):
 			if card.type == "ship": self.ship_deck.add_card_to_bottom(card)
 			if card.type == "goal": self.goal_deck.add_card_to_bottom(card)
 			else: print "ERROR! Unknown card type."
-		time.sleep(0.5)
-		self.server.sendall("ALERT:place_deck")
 		time.sleep(1.0)
+		self.server.sendall("ALERT:place_deck")
+		time.sleep(0.5)
 		self.server.sendall("ADD_CHAT:SERVER:Giving players their starting hands...")
-		for i in xrange(3):
+		for i in xrange(7):
 			self.server.sendall("ALERT:draw_card_from_deck")
-			time.sleep(0.25)
+			time.sleep(0.2)
 		#TODO: Make call to draw cards for each player and update the players.
 		self.server.sendall("ALERT:add_card_to_hand")
-		time.sleep(2.5)
+		time.sleep(3.0)
 		self.server.sendall("ADD_CHAT:SERVER:Drawing public goals...")
 		for i in xrange(3):
 			self.server.sendall("ALERT:draw_card_from_deck")
 			time.sleep(0.4)
 		self.server.sendall("ALERT:add_card_to_table")
 		#TODO: Make call to draw public goals and update the players.
-		time.sleep(2.5)
+		time.sleep(3.0)
 		self.server.sendall("ADD_CHAT:SERVER:Let's see who gets to go first!")
 		time.sleep(1.0)
 		#TODO: Make call to setup a random player to play the first turn.
