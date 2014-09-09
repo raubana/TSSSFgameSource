@@ -71,6 +71,30 @@ class GameController(Controller):
 
 		self.bottom_element.give_focus()
 
+	def read_message(self, message):
+		if message.startswith("PLAYERLIST:"):
+			playerlist = message[len("PLAYERLIST:")].split(",")
+			self.player_list_element.clear()
+			self.player_list_element.set_size(("100%",len(playerlist)*self.main.font.get_height()))
+			for player in playerlist:
+				parts = player.split(":")
+				name = parts.pop()
+				color = (0,0,0)
+				bg_color = None
+				if "L" in parts:
+					color = (96,96,96)
+				else:
+					if "R" in parts:
+						color = (0,127,0)
+					elif "NR" in parts:
+						color = (127,0,0)
+				if "DC" in parts:
+					bg_color = (192,192,192)
+				element = Element(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
+			return True
+
+		return False
+
 	def handle_event_keydown(self, widget, unicode, key):
 		if key == K_RETURN and widget in (self.main.main_element, self.left_element, self.top_element, self.right_element, self.bottom_element, self.table_element):
 			self.chat_input_element = InputBox(self.main, self.main.main_element, (25,25), ("100%-50px",self.main.font.get_height()+2))

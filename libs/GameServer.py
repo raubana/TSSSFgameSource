@@ -156,13 +156,31 @@ class GameServer(object):
 					if self.controller != None:
 						self.controller.triggerPlayerDisconnect(player)
 					self.send_playerlist()
+			else:
+				if t - player.time_of_disconnect >= 60:
+					#TODO: Discard player's hand
+					#TODO: Check if the game needs to reset
+					#TODO: Check if it was this player's turn. If it was, change whose turn it is
+					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has been removed from the game.")
+					del self.players[i]
+					self.send_playerlist()
 			i -= 1
 
 	def send_playerlist(self):
 		s = "PLAYERLIST:"
 		i = 0
 		while i < len(self.players):
-			s += self.players[i].name
+			player = self.players[i]
+			if not player.is_connected:
+				s += "DC:"
+			if not self.game_started:
+				if player.is_ready:
+					s += "R:"
+				else:
+					s += "NR:"
+			if not player.is_loaded:
+				s += "L:"
+			s += player.name
 			if i != len(self.players)-1:
 				s += ","
 			i += 1
