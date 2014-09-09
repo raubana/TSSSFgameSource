@@ -69,10 +69,10 @@ class SetupNewgameServerController(ServerController):
 	def SetupDecks(self, args):
 		pass
 
-	def GivePlayersStartHand(self, args):
+	def GivePlayersStartHands(self, args):
 		pass
 
-	def DrawPublicCards(self, args):
+	def DrawPublicGoals(self, args):
 		pass
 
 	def PickFirstPlayer(self, args):
