@@ -260,12 +260,12 @@ class GameServer(object):
 		self.public_goals = Deck.Deck()
 		for card in self.master_deck.cards:
 			if card.type == "pony": self.pony_deck.add_card_to_bottom(card)
-			if card.type == "ship": self.ship_deck.add_card_to_bottom(card)
-			if card.type == "goal": self.goal_deck.add_card_to_bottom(card)
+			elif card.type == "ship": self.ship_deck.add_card_to_bottom(card)
+			elif card.type == "goal": self.goal_deck.add_card_to_bottom(card)
 			else: print "ERROR! Unknown card type: "+card.type
 		time.sleep(0.5)
 		self.server.sendall("ALERT:place_deck")
-		time.sleep(1.0)
+		time.sleep(1.5)
 		self.server.sendall("ADD_CHAT:SERVER:Giving players their starting hands...")
 		for i in xrange(7):
 			self.server.sendall("ALERT:draw_card_from_deck")
