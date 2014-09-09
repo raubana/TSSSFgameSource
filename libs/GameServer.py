@@ -123,7 +123,7 @@ class GameServer(object):
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has joined.")
 					self.send_playerlist()
 					self.check_ready()
-				elif message == "READY":
+				elif not self.game_started and message == "READY":
 					#toggle this player's "is_ready" variable
 					t = time.time()
 					if t - player.last_toggled_ready < 3:
@@ -269,7 +269,8 @@ class GameServer(object):
 		self.server.sendall("ADD_CHAT:SERVER:Giving players their starting hands...")
 		for i in xrange(7):
 			self.server.sendall("ALERT:draw_card_from_deck")
-			time.sleep(0.2)
+			time.sleep(0.1)
+		time.sleep(0.25)
 		#TODO: Make call to draw cards for each player and update the players.
 		self.server.sendall("ALERT:add_card_to_hand")
 		time.sleep(3.0)
@@ -277,10 +278,11 @@ class GameServer(object):
 		for i in xrange(3):
 			self.server.sendall("ALERT:draw_card_from_deck")
 			time.sleep(0.4)
+		time.sleep(0.25)
 		self.server.sendall("ALERT:add_card_to_table")
 		#TODO: Make call to draw public goals and update the players.
 		time.sleep(3.0)
 		self.server.sendall("ADD_CHAT:SERVER:Let's see who gets to go first!")
-		time.sleep(1.0)
+		time.sleep(2.0)
 		#TODO: Make call to setup a random player to play the first turn.
 		self.server.sendall("ADD_CHAT:SERVER:This is as far as I've got with the code. You'll want to close the program now.")
