@@ -52,7 +52,7 @@ class GameStartingController(Controller):
 				self.main.client.send("REQUEST_CARDFILE:"+str(len(self.main.master_deck.cards)))
 		elif message == "CLIENT_READY":
 			self.rerender = True
-			self.main.sound_connected.play()
+			self.main.play_sound("connected")
 			import GameController
 			self.main.controller = GameController.GameController(self.main)
 		else:

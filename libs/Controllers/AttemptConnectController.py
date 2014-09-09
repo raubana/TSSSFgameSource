@@ -39,7 +39,7 @@ class AttemptConnectController(Controller):
 				elif self.main.time-self.connect_time > TIMEOUT_TIME:
 					self.client.close()
 					import ConnectMenuController
-					self.main.sound_lost_connection.play()
+					self.main.play_sound("lost_connection")
 					self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 					self.main.controller.message_element.set_text("Server Ignored Request")
 		else:
@@ -51,6 +51,6 @@ class AttemptConnectController(Controller):
 			if self.client.connection_status:
 				self.client.close()
 				import ConnectMenuController
-				self.main.sound_lost_connection.play()
+				self.main.play_sound("lost_connection")
 				self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 				self.main.controller.message_element.set_text(self.client.connection_status)

@@ -106,6 +106,22 @@ class GameServer(object):
 					self.server.sendto(player.address, "CLIENT_READY")
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has joined.")
 					self.send_playerlist()
+				elif message == "READY":
+					#toggle this player's "is_ready" variable
+					t = time.time()
+					if t - player.last_toggled_ready < 3:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too often.")
+					else:
+						player.is_ready = not player.is_ready
+						player.last_toggled_ready = t
+						if player.is_ready:
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
+							self.server.sendall("ALERT:player_ready")
+						else:
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
+							self.server.sendall("ALERT:player_not_ready")
+						self.send_playerlist()
+						self.check_ready()
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -158,7 +174,7 @@ class GameServer(object):
 						self.controller.triggerPlayerDisconnect(player)
 					self.send_playerlist()
 			else:
-				if t - player.time_of_disconnect >= 60:
+				if not self.game_started or t - player.time_of_disconnect >= 60:
 					#TODO: Discard player's hand
 					#TODO: Check if the game needs to reset
 					#TODO: Check if it was this player's turn. If it was, change whose turn it is
@@ -166,6 +182,9 @@ class GameServer(object):
 					del self.players[i]
 					self.send_playerlist()
 			i -= 1
+
+	def check_ready(self):
+		pass
 
 	def send_playerlist(self):
 		s = "PLAYERLIST:"

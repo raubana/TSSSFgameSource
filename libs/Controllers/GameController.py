@@ -74,12 +74,14 @@ class GameController(Controller):
 	def read_message(self, message):
 		if message.startswith("PLAYERLIST:"):
 			print message
-			playerlist = message[len("PLAYERLIST:")].split(",")
+			playerlist = message[len("PLAYERLIST:"):].split(",")
+			print playerlist
 			self.player_list_element.clear()
 			self.player_list_element.set_size(("100%",len(playerlist)*self.main.font.get_height()))
 			for player in playerlist:
 				print player
 				parts = player.split(":")
+				print parts
 				name = parts.pop()
 				color = (0,0,0)
 				bg_color = None
@@ -94,9 +96,9 @@ class GameController(Controller):
 					bg_color = (192,192,192)
 				element = Element(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
 				element.set_text(name)
-			return True
-
-		return False
+		else:
+			return False
+		return True
 
 	def handle_event_keydown(self, widget, unicode, key):
 		if key == K_RETURN and widget in (self.main.main_element, self.left_element, self.top_element, self.right_element, self.bottom_element, self.table_element):

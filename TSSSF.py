@@ -30,19 +30,21 @@ class Main(object):
 
 		self.font = pygame.font.SysFont("Tahoma",12)
 
-		self.sound_chat = pygame.mixer.Sound("snds/app/chat.ogg")
-		self.sound_connected = pygame.mixer.Sound("snds/app/connected.ogg")
-		self.sound_lost_connection = pygame.mixer.Sound("snds/app/lost_connection.ogg")
-		self.sound_game_timer = pygame.mixer.Sound("snds/game/misc/game_timer.ogg")
-		self.sound_add_card_to_deck = pygame.mixer.Sound("snds/card/add_card_to_deck.ogg")
-		self.sound_add_card_to_hand = pygame.mixer.Sound("snds/card/add_card_to_hand.ogg")
-		self.sound_add_card_to_table = pygame.mixer.Sound("snds/card/add_card_to_table.ogg")
-		self.sound_draw_card_from_deck = pygame.mixer.Sound("snds/card/draw_card_from_deck.ogg")
-		self.sound_draw_card_from_hand = pygame.mixer.Sound("snds/card/draw_card_from_hand.ogg")
-		self.sound_draw_card_from_table = pygame.mixer.Sound("snds/card/draw_card_from_table.ogg")
-		self.sound_place_deck = pygame.mixer.Sound("snds/card/place_deck.ogg")
-		self.sound_remove_deck = pygame.mixer.Sound("snds/card/remove_deck.ogg")
-		self.sound_shuffle_deck = pygame.mixer.Sound("snds/card/shuffle.ogg")
+		self.sounds = {}
+
+		self.sounds["chat"] = pygame.mixer.Sound("snds/app/chat.ogg")
+		self.sounds["connected"] = pygame.mixer.Sound("snds/app/connected.ogg")
+		self.sounds["lost_connection"] = pygame.mixer.Sound("snds/app/lost_connection.ogg")
+		self.sounds["game_timer"] = pygame.mixer.Sound("snds/game/misc/game_timer.ogg")
+		self.sounds["add_card_to_deck"] = pygame.mixer.Sound("snds/card/add_card_to_deck.ogg")
+		self.sounds["add_card_to_hand"] = pygame.mixer.Sound("snds/card/add_card_to_hand.ogg")
+		self.sounds["add_card_to_table"] = pygame.mixer.Sound("snds/card/add_card_to_table.ogg")
+		self.sounds["draw_card_from_deck"] = pygame.mixer.Sound("snds/card/draw_card_from_deck.ogg")
+		self.sounds["draw_card_from_hand"] = pygame.mixer.Sound("snds/card/draw_card_from_hand.ogg")
+		self.sounds["draw_card_from_table"] = pygame.mixer.Sound("snds/card/draw_card_from_table.ogg")
+		self.sounds["place_deck"] = pygame.mixer.Sound("snds/card/place_deck.ogg")
+		self.sounds["remove_deck"] = pygame.mixer.Sound("snds/card/remove_deck.ogg")
+		self.sounds["shuffle_deck"] = pygame.mixer.Sound("snds/card/shuffle.ogg")
 
 		pygame.key.set_repeat(300, 30)
 
@@ -67,6 +69,12 @@ class Main(object):
 
 		self.reset()
 		self.run()
+
+	def play_sound(self, soundname):
+		if soundname in self.sounds:
+			self.sounds[soundname].play()
+		else:
+			print "That sound doesn't appear to be in my list: '"+soundname+"'"
 
 	def reset(self):
 		#This function is used to clear out any game data that may remain from a previous game
@@ -118,18 +126,19 @@ class Main(object):
 					self.focus.update_for_keydown(e.unicode, e.key)
 				if self.focus == None or self.focus == self.main_element:
 					message = None
-					if e.key == K_1: self.sound_add_card_to_deck.play(); message = "sound_add_card_to_deck"
-					if e.key == K_2: self.sound_add_card_to_hand.play(); message = "sound_add_card_to_hand"
-					if e.key == K_3: self.sound_add_card_to_table.play(); message = "sound_add_card_to_table"
-					if e.key == K_4: self.sound_draw_card_from_deck.play(); message = "sound_draw_card_from_deck"
-					if e.key == K_5: self.sound_draw_card_from_hand.play(); message = "sound_draw_card_from_hand"
-					if e.key == K_6: self.sound_draw_card_from_table.play(); message = "sound_draw_card_from_table"
-					if e.key == K_7: self.sound_place_deck.play(); message = "sound_place_deck"
-					if e.key == K_8: self.sound_remove_deck.play(); message = "sound_remove_deck"
-					if e.key == K_9: self.sound_shuffle_deck.play(); message = "sound_shuffle_deck"
+					if e.key == K_1: message = "sound_add_card_to_deck"
+					if e.key == K_2: message = "sound_add_card_to_hand"
+					if e.key == K_3: message = "sound_add_card_to_table"
+					if e.key == K_4: message = "sound_draw_card_from_deck"
+					if e.key == K_5: message = "sound_draw_card_from_hand"
+					if e.key == K_6: message = "sound_draw_card_from_table"
+					if e.key == K_7: message = "sound_place_deck"
+					if e.key == K_8: message = "sound_remove_deck"
+					if e.key == K_9: message = "sound_shuffle_deck"
 					if message != None:
 						self.chat_sprites.append(ChatSprite(self,(0,0),(1,1),3))
 						self.chat_sprites[-1].set_text("playing "+message,(255,255,255,255),(0,0,0,255))
+						self.play_sound(message)
 						self.main_element.flag_for_rerender()
 			elif e.type == KEYUP:
 				self.keys[e.key] = False
@@ -208,11 +217,14 @@ class Main(object):
 							self.chat_sprites[-1].set_text(chat,(64,0,64,255),(255,127,255,127))
 						elif chat.startswith("PLAYER:"):
 							chat = chat[len("PLAYER:"):]
-							self.sound_chat.play()
+							self.play_sound("chat")
 							self.chat_sprites[-1].set_text(chat)
 						else:
 							self.chat_sprites[-1].set_text(chat)
 						self.main_element.flag_for_rerender()
+					elif message.startswith("ALERT:"):
+						sound_name = message[len("ALERT:")]
+						self.play_sound(sound_name)
 					else:
 						attempt = self.controller.read_message(message)
 						if not attempt:
@@ -220,7 +232,7 @@ class Main(object):
 			elif not self.connecting:
 				self.client.close()
 				self.client = None
-				self.sound_lost_connection.play()
+				self.play_sound("lost_connection")
 				self.controller = ConnectMenuController(self)
 				self.controller.message_element.set_text("Lost Connection")
 
