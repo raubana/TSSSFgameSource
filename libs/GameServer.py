@@ -52,7 +52,8 @@ class GameServer(object):
 			if self.begun_gamestart_countdown:
 				if t - self.gamestart_countdown_time >= 1:
 					if self.gamestart_countdown <= 0:
-						self.setup_newgame()
+						import libs.ServerControllers.SetupNewgameServerController as SetupNewgameServerController
+						self.controller = SetupNewgameServerController.SetupNewgameServerController(self)
 					else:
 						self.server.sendall("ADD_CHAT:SERVER:..."+str(self.gamestart_countdown)+"...")
 						self.server.sendall("ALERT:game_timer")
@@ -240,49 +241,3 @@ class GameServer(object):
 				s += ","
 			i += 1
 		self.server.sendall(s)
-
-	def setup_newgame(self):
-		#TODO: Make this function run like a thread.
-		self.game_started = True
-		self.send_playerlist()
-
-		self.server.sendall("ADD_CHAT:SERVER:The game has begun!")
-		time.sleep(0.5)
-		self.server.sendall("ADD_CHAT:SERVER:Shuffling decks...")
-		self.server.sendall("ALERT:remove_deck")
-		time.sleep(0.5)
-		self.server.sendall("ALERT:shuffle_deck")
-		self.pony_deck = Deck.Deck()
-		self.pony_discard = Deck.Deck()
-		self.ship_deck = Deck.Deck()
-		self.ship_discard = Deck.Deck()
-		self.goal_deck = Deck.Deck()
-		self.public_goals = Deck.Deck()
-		for card in self.master_deck.cards:
-			if card.type == "pony": self.pony_deck.add_card_to_bottom(card)
-			elif card.type == "ship": self.ship_deck.add_card_to_bottom(card)
-			elif card.type == "goal": self.goal_deck.add_card_to_bottom(card)
-			else: print "ERROR! Unknown card type: "+card.type
-		time.sleep(0.5)
-		self.server.sendall("ALERT:place_deck")
-		time.sleep(1.5)
-		self.server.sendall("ADD_CHAT:SERVER:Giving players their starting hands...")
-		for i in xrange(7):
-			self.server.sendall("ALERT:draw_card_from_deck")
-			time.sleep(0.1)
-		time.sleep(0.25)
-		#TODO: Make call to draw cards for each player and update the players.
-		self.server.sendall("ALERT:add_card_to_hand")
-		time.sleep(3.0)
-		self.server.sendall("ADD_CHAT:SERVER:Drawing public goals...")
-		for i in xrange(3):
-			self.server.sendall("ALERT:draw_card_from_deck")
-			time.sleep(0.4)
-		time.sleep(0.25)
-		self.server.sendall("ALERT:add_card_to_table")
-		#TODO: Make call to draw public goals and update the players.
-		time.sleep(3.0)
-		self.server.sendall("ADD_CHAT:SERVER:Let's see who gets to go first!")
-		time.sleep(2.0)
-		#TODO: Make call to setup a random player to play the first turn.
-		self.server.sendall("ADD_CHAT:SERVER:This is as far as I've got with the code. You'll want to close the program now.")
