@@ -136,15 +136,15 @@ class Main(object):
 					self.focus.update_for_keydown(e.unicode, e.key)
 				if self.focus == None or self.focus == self.main_element:
 					message = None
-					if e.key == K_1: message = "sound_add_card_to_deck"
-					if e.key == K_2: message = "sound_add_card_to_hand"
-					if e.key == K_3: message = "sound_add_card_to_table"
-					if e.key == K_4: message = "sound_draw_card_from_deck"
-					if e.key == K_5: message = "sound_draw_card_from_hand"
-					if e.key == K_6: message = "sound_draw_card_from_table"
-					if e.key == K_7: message = "sound_place_deck"
-					if e.key == K_8: message = "sound_remove_deck"
-					if e.key == K_9: message = "sound_shuffle_deck"
+					if e.key == K_1: message = "add_card_to_deck"
+					if e.key == K_2: message = "add_card_to_hand"
+					if e.key == K_3: message = "add_card_to_table"
+					if e.key == K_4: message = "draw_card_from_deck"
+					if e.key == K_5: message = "draw_card_from_hand"
+					if e.key == K_6: message = "draw_card_from_table"
+					if e.key == K_7: message = "place_deck"
+					if e.key == K_8: message = "remove_deck"
+					if e.key == K_9: message = "shuffle_deck"
 					if message != None:
 						self.chat_sprites.append(ChatSprite(self,(0,0),(1,1),3))
 						self.chat_sprites[-1].set_text("playing "+message,(255,255,255,255),(0,0,0,255))
