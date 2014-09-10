@@ -51,6 +51,7 @@ class ConnectMenuController(Controller):
 		self.connect_button = Button(self.main, self.main.main_element, None, (self.main.font.size("CONNECT")[0]+15,self.main.font.get_height()+15), (255,255,255))
 		self.connect_button.text = "CONNECT"
 		self.connect_button.margin = [10,0,0,2]
+		self.connect_button.tooltip = "This is a tooltip!"
 
 		self.message_element = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(127,0,0))
 		self.message_element.text = ""

@@ -50,6 +50,8 @@ class Element(object):
 		self.text_align = ALIGN_TOPLEFT
 		self.font = self.main.font
 
+		self.tooltip = None # This is the text that is shown when this element is hovered over
+
 		self.v_scrollable = False
 		self.h_scrollable = False
 
@@ -156,6 +158,7 @@ class Element(object):
 				else:
 					#Nothing else caught the event, so we catch it.
 					self_hover = True
+					self.main.set_tooltip_text(self.tooltip)
 			else:
 				for c in self.children:
 					if c is not None:

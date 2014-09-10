@@ -29,6 +29,7 @@ class Main(object):
 		self.last_still = time.time() - self.still_freq
 
 		self.font = pygame.font.SysFont("Tahoma",12)
+		self.tiny_font = pygame.font.SysFont("Tahoma",9)
 
 		self.sounds = {}
 
@@ -61,6 +62,10 @@ class Main(object):
 
 		self.needs_to_pack = False
 		self.focus = None
+		self.tooltip_text = None
+		self.hover_focus_time = 0
+		self.tooltip_surface = None
+
 		self.main_element = Element(self, self, (0,0), self.screen_size, bg_color=(210,180,220))
 		self.main_element.set_text_align(ALIGN_MIDDLE)
 
@@ -159,6 +164,9 @@ class Main(object):
 		for element in self.updated_elements:
 			element.update()
 
+		if self.tooltip_text != None and self.tooltip_surface == None and self.time - self.hover_focus_time >= 0.5:
+			self.create_tooltip_surface()
+
 		self.ping_server()
 		self.read_messages()
 
@@ -173,6 +181,30 @@ class Main(object):
 				self.chat_sprites.pop(i)
 				self.main_element.flag_for_rerender()
 			i -= 1
+
+	def set_tooltip_text(self, text):
+		if text != self.tooltip_text:
+			if type(text) in (str,unicode):
+				self.tooltip_text = str(text)
+			else:
+				self.tooltip_text = None
+			self.hover_focus_time = float(self.time)
+			self.tooltip_surface = None
+			self.main_element.flag_for_rerender()
+
+	def create_tooltip_surface(self):
+		c1 = (255,255,196)
+		c2 = (127,64,64)
+
+		size = self.tiny_font.size(self.tooltip_text)
+		size = (size[0]+3,size[1]+2)
+		self.tooltip_surface = pygame.Surface(size)
+		self.tooltip_surface.fill(c1)
+		pygame.draw.rect(self.tooltip_surface,c2,(0,0,size[0],size[1]),1)
+		text_img = self.tiny_font.render(self.tooltip_text,True,c2)
+		self.tooltip_surface.blit(text_img,(2,1))
+
+		self.main_element.flag_for_rerender()
 
 	def move(self):
 		if self.controller != None:
@@ -261,14 +293,23 @@ class Main(object):
 
 	def render(self):
 		rerender = self.main_element.needs_to_rerender or (self.controller != None and self.controller.rerender)
+		if rerender: self.controller.rerender = True
+
+		#Main Element (the GUI)
 		self.main_element.render()
 
+		#Controller
 		if self.controller != None:
 			self.controller.render()
 
+		#Chat
 		if rerender:
 			for s in self.chat_sprites:
 				s.render()
+
+		#Tooltip
+		if rerender and self.tooltip_surface != None:
+			self.screen.blit(self.tooltip_surface, self.mouse_pos)
 
 		pygame.display.flip()
 
