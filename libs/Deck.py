@@ -61,19 +61,17 @@ class MasterDeck(object):
 			for f in files:
 				if f.endswith(".tsssf") or f.endswith(".tsf"):
 					print("loading '" + f + "'")
-					pc_f = open("cards/" + f, "rb")
-					org_pc = pc_f.read()
-					self.pc_cards.append(org_pc)
-					pc_f.close()
-
-					pc = open_pickledcard("cards/" + f)
-					pc.filename = "cards/" + f
+					pc = open_pickledcard("data/default_cards/" + f)
 					pc_list.append(pc)
-			for pc in pc_list:
-				print "parsing " + pc.filename
-				c = Card()
-				c.parsePickledCard(pc)
-				self.cards.append(c)
+		for pc in pc_list:
+			print "parsing " + pc.filename
+			pc_f = open(pc.filename, "rb")
+			org_pc = pc_f.read()
+			self.pc_cards.append(org_pc)
+			pc_f.close()
+			c = Card()
+			c.parsePickledCard(pc)
+			self.cards.append(c)
 
 	def unpickle_and_add_card(self, s):
 		self.pc_cards.append(s)

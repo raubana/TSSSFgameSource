@@ -40,4 +40,9 @@ def open_pickledcard(f):
 	img = t.extractfile("image.png").read()  # we get our attributes
 	attr = t.extractfile("attributes").read()
 	# we return our card
-	return PickledCard(img, attr)
+	pc = PickledCard(img, attr)
+	if type(f) in (str,unicode):
+		pc.filename = f
+	else:
+		pc.filename = None
+	return pc

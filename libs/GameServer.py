@@ -5,6 +5,8 @@ import thread
 import time
 
 from ServerPlayer import Player
+import CustomDeck
+from PickledCard import open_pickledcard
 
 class GameServer(object):
 	def __init__(self, port=DEFAULT_PORT):
@@ -26,9 +28,39 @@ class GameServer(object):
 		self.gamestart_countdown = 10
 		self.gamestart_countdown_time = 0
 		print "== loading the MasterDeck"
-		self.master_deck = Deck.MasterDeck()
-		self.master_deck.load_all_cards()  # Each game server will have only one deck for the duration of it's existence
+		self.load_custom_deck()
 		print "== the MasterDeck is now fully loaded."
+
+	def load_custom_deck(self):
+		self.master_deck = Deck.MasterDeck()
+		custom = CustomDeck.CustomDeck()
+		try:
+			f = open("your_deck.txt")
+		except:
+			print("Couldn't find 'your_deck.txt' so we're going to load the default cards only.")
+			self.master_deck.load_all_cards()
+			return
+		instr = f.read()
+		f.close()
+		print
+		print " == READING CUSTOM DECK INSTRUCTIONS == "
+		print
+		custom.follow_instructions(instr)
+		print
+		print " == DONE == "
+		print
+		pc_list = []
+		defaults = os.listdir("data/default_cards")
+		for card in custom.list:
+			if card.startswith("R:"):
+				pc = open_pickledcard("cards/"+card[2:])
+			else:
+				if card in defaults:
+					pc = open_pickledcard("data/default_cards/"+card)
+				else:
+					pc = open_pickledcard("cards/"+card)
+			pc_list.append(pc)
+		self.master_deck.load_all_cards(pc_list)
 
 	def run_main_loop(self):
 		# Call this function to get the server running.
