@@ -1,19 +1,23 @@
-import Tkinter
-from PIL import Image, ImageTk
-from tkFileDialog import askopenfilename, asksaveasfilename
+try:
+	import Tkinter
+	from PIL import Image, ImageTk
+	from tkFileDialog import askopenfilename, asksaveasfilename
 
-import pickle
-import pygame.image, pygame.transform
-import gzip
-import tempfile
-import os
-import io
-import string
+	import pickle
+	import pygame.image, pygame.transform
+	import gzip
+	import tempfile
+	import os
+	import io
+	import string
 
-import libs.PickledCard
-from libs.locals import *
-import libs.Deck
-
+	import libs.PickledCard
+	from libs.locals import *
+	import libs.Deck
+except Exception, e:
+	import ctypes
+	MessageBox = ctypes.windll.user32.MessageBoxA
+	MessageBox(None, str(e), 'FUUUUUUUU-', 0)
 
 class Main(object):
 	def __init__(self):
@@ -223,5 +227,9 @@ class Main(object):
 		import webbrowser
 		webbrowser.open("http://tsssfgame.wikia.com/wiki/.tsssf")
 
-
-main = Main()
+try:
+	main = Main()
+except Exception, e:
+	import ctypes
+	MessageBox = ctypes.windll.user32.MessageBoxA
+	MessageBox(None, str(e), 'FUUUUUUUU-', 0)

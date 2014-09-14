@@ -1,18 +1,23 @@
-import pygame
-from pygame.locals import *
-pygame.mixer.pre_init(buffer = 2**9)
-pygame.init()
+try:
+	import pygame
+	from pygame.locals import *
+	pygame.mixer.pre_init(buffer = 2**9)
+	pygame.init()
 
-#import numpy
+	#import numpy
 
-import math, random, time
+	import math, random, time
 
-from libs.GUI.GUI import *
-from libs.Deck import *
-from libs.locals import *
+	from libs.GUI.GUI import *
+	from libs.Deck import *
+	from libs.locals import *
 
-from libs.Controllers.ConnectMenuController import *
-from libs.Sprite.ChatSprite import ChatSprite
+	from libs.Controllers.ConnectMenuController import *
+	from libs.Sprite.ChatSprite import ChatSprite
+except Exception, e:
+	import ctypes
+	MessageBox = ctypes.windll.user32.MessageBoxA
+	MessageBox(None, str(e), 'FUUUUUUUU-', 0)
 
 class Main(object):
 	def __init__(self):
@@ -353,5 +358,9 @@ class Main(object):
 		print "GOODBYE!!"
 		pygame.quit()
 
-
-main = Main()
+try:
+	main = Main()
+except Exception, e:
+	import ctypes
+	MessageBox = ctypes.windll.user32.MessageBoxA
+	MessageBox(None, str(e), 'FUUUUUUUU-', 0)
