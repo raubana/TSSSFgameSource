@@ -724,14 +724,15 @@ class InputBox(Element):
 				self.flag_for_rerender()
 
 		#we check if our cursor is still visible
-		while True:
-			self.cursor_pos = self.main.font.size(self.text[:self.index])[0] - self.main.font.size(self.text[:self.offset])[0]
-			if self.cursor_pos < 0:
-				self.offset -= 1
-			elif self.cursor_pos > self.size[0]-4:
-				self.offset += 1
-			else:
-				break
+		if self.size != None:
+			while True:
+				self.cursor_pos = self.main.font.size(self.text[:self.index])[0] - self.main.font.size(self.text[:self.offset])[0]
+				if self.cursor_pos < 0:
+					self.offset -= 1
+				elif self.cursor_pos > self.size[0]-4:
+					self.offset += 1
+				else:
+					break
 
 		if prev_value != self.text:
 			self.update_for_valuechange()
