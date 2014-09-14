@@ -33,7 +33,7 @@ class GameServer(object):
 
 	def load_custom_deck(self):
 		self.master_deck = Deck.MasterDeck()
-		custom = CustomDeck.CustomDeck()
+		self.custom_deck = CustomDeck.CustomDeck()
 		try:
 			f = open("your_deck.txt")
 		except:
@@ -45,13 +45,13 @@ class GameServer(object):
 		print
 		print " == READING CUSTOM DECK INSTRUCTIONS == "
 		print
-		custom.follow_instructions(instr)
+		self.custom_deck.follow_instructions(instr)
 		print
 		print " == DONE == "
 		print
 		pc_list = []
 		defaults = os.listdir("data/default_cards")
-		for card in custom.list:
+		for card in self.custom_deck.list:
 			if card.startswith("R:"):
 				pc = open_pickledcard("cards/"+card[2:])
 			else:
@@ -143,12 +143,27 @@ class GameServer(object):
 						name = player.name
 					chat = message[len("CHAT:"):]
 					self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
-				elif message == "REQUEST_DECKSIZE":
-					self.server.sendto(player.address,"DECKSIZE:"+str(len(self.master_deck.cards)))
+				elif message == "REQUEST_DECK":
+					s = ""
+					i = 0
+					while i < len(self.custom_deck.list):
+						card = self.custom_deck.list[i]
+						if card.startswith("R:"):
+							card = card[2:]
+						s += card
+						i += 1
+						if i < len(self.custom_deck.list):
+							s += ","
+					self.server.sendto(player.address,"DECK:"+s)
 				elif message.startswith("REQUEST_CARDFILE:"):
 					index = int(message[len("REQUEST_CARDFILE:"):])
 					data = "CARDFILE:"+str(index)+":"+self.master_deck.pc_cards[index]
 					print "SENDING CARD: "+data[:100]
+					self.server.sendto(player.address,data)
+				elif message.startswith("REQUEST_CARDFILE_ATTRIBUTES:"):
+					index = int(message[len("REQUEST_CARDFILE_ATTRIBUTES:"):])
+					data = "CARDFILE_ATTRIBUTES:"+str(index)+":"+self.master_deck.cards[index].attributes
+					print "SENDING CARD ATTRIBUTES: "+data[:100]
 					self.server.sendto(player.address,data)
 				elif message == "DONE_LOADING":
 					player.is_loaded = True

@@ -86,11 +86,13 @@ class Card(object):
 		self.image = pygame.Surface(CARDSIZE, pygame.SRCALPHA)
 		self.name = None
 		self.type = None
+		self.attributes = ""
 
 	def parsePickledCard(self, pc):
 		# first we need our image
 		self.image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
 		#next we need to parse each attribute individually in preparation for proper parsing.
+		self.attributes = str(pc.attr)
 		attributes = pc.attr.split("\n")
 		i = 0
 		while i < len(attributes):

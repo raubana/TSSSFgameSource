@@ -18,19 +18,42 @@ class GameStartingController(Controller):
 
 		self.card_size = (int(0.7*200),200)
 		self.card_img = pygame.Surface(self.card_size)
-		self.current_message = "REQUESTING DECK SIZE"
+		self.current_message = "REQUESTING DECK"
 
-		self.number_of_cards = None
+		self.card_index = 0
+		self.card_filename = ""
+		self.cards_to_load = []
 		self.main.master_deck = MasterDeck()
 
-		self.main.client.send("REQUEST_DECKSIZE")
+		self.main.client.send("REQUEST_DECK")
+
+	def check_current(self):
+		#first we check if this card is in our defaults or customs
+		card_name = self.cards_to_load[self.card_index]
+		match = None
+		if os.path.isfile("data/default_cards/"+card_name):
+			match = "data/default_cards/"+card_name
+		elif os.path.isfile("cards/"+card_name):
+			match = "cards/"+card_name
+		if match:# we need to check if our card matches theirs
+			self.card_filename = match
+			self.main.client.send("REQUEST_CARDFILE_ATTRIBUTES:"+str(self.card_index))
+		else:# we need to download the entire file
+			self.main.client.send("REQUEST_CARDFILE:"+str(self.card_index))
+
+	def check_next(self):
+		self.card_index += 1
+		if self.card_index >= len(self.cards_to_load):
+			self.main.client.send("DONE_LOADING")
+		else:
+			self.check_current()
 
 	def read_message(self, message):
-		if message.startswith("DECKSIZE:"):
+		if message.startswith("DECK:"):
 			self.rerender = True
-			self.number_of_cards = int(message[len("DECKSIZE:"):])
-			if self.number_of_cards > 0:
-				self.main.client.send("REQUEST_CARDFILE:0")
+			self.cards_to_load = message[len("DECK:"):].split(",")
+			if len(self.cards_to_load) > 0:
+				self.check_next_card()
 			else:
 				print "EMPTY DECK!!"
 				self.main.client.close()
@@ -45,11 +68,23 @@ class GameStartingController(Controller):
 			#print s3[:1000]
 			self.main.master_deck.unpickle_and_add_card(s3)
 			self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
-			if len(self.main.master_deck.cards) == self.number_of_cards:
-				self.main.client.send("DONE_LOADING")
-				self.current_message = "Done loading!"
+			self.check_next()
+		elif message.startswith("CARDFILE_ATTRIBUTES:"):
+			self.rerender = True
+			s1 = message[len("CARDFILE_ATTRIBUTES:"):]
+			s2 = s1[:s1.index(":")]
+			print "RECEIVED CARD ATTRIBUTES "+s2+"/"+str(self.number_of_cards)
+			self.current_message = s2+"/"+str(self.number_of_cards)
+			index = int(s2)
+			s3 = s1[len(s2)+1:]
+			pc_card = open_pickledcard(self.card_filename)
+			if pc_card.attr != s3:
+				#Our attributes file varies from theirs, so we have to download the entire card... poop.
+				self.main.client.send("REQUEST_CARDFILE:"+str(self.card_index))
 			else:
-				self.main.client.send("REQUEST_CARDFILE:"+str(len(self.main.master_deck.cards)))
+				self.main.master_deck.unpickle_and_add_card(pc_card)
+				self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
+				self.check_next()
 		elif message == "CLIENT_READY":
 			self.rerender = True
 			self.main.play_sound("connected")
