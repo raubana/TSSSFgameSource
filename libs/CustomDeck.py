@@ -97,6 +97,8 @@ class CustomDeck(object):
 	def _add(self, args):
 		if len(args) != 1:
 			raise TypeError("'add' needs exactly 1 argument")
+		if not (args[0].endswith(".tsssf") or args[0].endswith(".tsf")):
+			raise RuntimeError("'"+args[0]+"' is not of an appropriate file type")
 		if args[0] in self.list:
 			raise RuntimeError("'"+args[0]+"' is already in the list")
 		if "R:"+args[0] in self.list:
@@ -137,6 +139,8 @@ class CustomDeck(object):
 	def _remove(self, args):
 		if len(args) != 1:
 			raise TypeError("'add' needs exactly 1 argument")
+		if not (args[0].endswith(".tsssf") or args[0].endswith(".tsf")):
+			raise RuntimeError("'"+args[0]+"' is not of an appropriate file type")
 		if args[0] not in self.list:
 			raise LookupError("'"+args[0]+"' is not in the list")
 		self.list.remove(args[0])
@@ -144,6 +148,8 @@ class CustomDeck(object):
 	def _replace(self, args):
 		if len(args) != 1:
 			raise TypeError("'replace' needs exactly 1 argument")
+		if not (args[0].endswith(".tsssf") or args[0].endswith(".tsf")):
+			raise RuntimeError("'"+args[0]+"' is not of an appropriate file type")
 		if "R:"+args[0] in self.list:
 			raise RuntimeError("A replacement for '"+args[0]+"' is already in the list")
 		files = os.listdir("data/default_cards")
