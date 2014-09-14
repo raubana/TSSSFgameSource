@@ -1,3 +1,5 @@
+import traceback
+
 try:
 	import Tkinter
 	from PIL import Image, ImageTk
@@ -15,9 +17,8 @@ try:
 	from libs.locals import *
 	import libs.Deck
 except Exception, e:
-	import ctypes
-	MessageBox = ctypes.windll.user32.MessageBoxA
-	MessageBox(None, str(e), 'FUUUUUUUU-', 0)
+	print traceback.format_exc()
+	input("Press enter to quit.")
 
 class Main(object):
 	def __init__(self):
@@ -230,6 +231,5 @@ class Main(object):
 try:
 	main = Main()
 except Exception, e:
-	import ctypes
-	MessageBox = ctypes.windll.user32.MessageBoxA
-	MessageBox(None, str(e), 'FUUUUUUUU-', 0)
+	print traceback.format_exc()
+	input("Press enter to quit.")
