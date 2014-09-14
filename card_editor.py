@@ -168,7 +168,7 @@ class Main(object):
 	def prompt_save_file(self):
 		if self.img_data != None:
 			suggested_filename = self.getSuggestedFilename()
-			self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf')], initialfile=suggested_filename,
+			self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf'),('Old Card files', '.tsssf')], initialfile=suggested_filename,
 											  initialdir="cards")
 			self.save_file()
 
