@@ -158,12 +158,12 @@ class GameServer(object):
 				elif message.startswith("REQUEST_CARDFILE:"):
 					index = int(message[len("REQUEST_CARDFILE:"):])
 					data = "CARDFILE:"+str(index)+":"+self.master_deck.pc_cards[index]
-					print "SENDING CARD: "+data[:100]
+					#print "SENDING CARD: "+data[:100]
 					self.server.sendto(player.address,data)
 				elif message.startswith("REQUEST_CARDFILE_ATTRIBUTES:"):
 					index = int(message[len("REQUEST_CARDFILE_ATTRIBUTES:"):])
 					data = "CARDFILE_ATTRIBUTES:"+str(index)+":"+self.master_deck.cards[index].attributes
-					print "SENDING CARD ATTRIBUTES: "+data[:100]
+					#print "SENDING CARD ATTRIBUTES: "+data[:100]
 					self.server.sendto(player.address,data)
 				elif message == "DONE_LOADING":
 					player.is_loaded = True

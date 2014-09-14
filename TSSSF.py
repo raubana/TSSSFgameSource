@@ -350,7 +350,8 @@ class Main(object):
 					print "Normal quit."
 					self.running = False
 
-			self.clock.tick(self.framerate)
+			if self.controller != None and not self.controller.disable_framerate:
+				self.clock.tick(self.framerate)
 
 		for i in xrange(len(self.stills)):
 			pygame.image.save(self.stills[i], "stills/" + str(len(self.stills) - i) + ".bmp")

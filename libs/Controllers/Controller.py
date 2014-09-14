@@ -4,6 +4,7 @@ class Controller(object):
 	def __init__(self, main):
 		self.main = main
 		self.rerender = False
+		self.disable_framerate = False
 		self.init()
 
 	def init(self):

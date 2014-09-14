@@ -15,6 +15,7 @@ class GameStartingController(Controller):
 
 		self.rerender = True
 		self.last_rerendered = 0
+		self.disable_framerate = True
 
 		self.card_size = (int(0.7*200),200)
 		self.card_img = pygame.Surface(self.card_size)
@@ -24,6 +25,8 @@ class GameStartingController(Controller):
 		self.card_filename = ""
 		self.cards_to_load = []
 		self.main.master_deck = MasterDeck()
+
+		self.start_time = float(self.main.time)
 
 		self.main.client.send("REQUEST_DECK")
 
@@ -61,7 +64,7 @@ class GameStartingController(Controller):
 			self.rerender = True
 			s1 = message[len("CARDFILE:"):]
 			s2 = s1[:s1.index(":")]
-			print "RECEIVED CARD "+s2+"/"+str(len(self.cards_to_load))
+			#print "RECEIVED CARD "+s2+"/"+str(len(self.cards_to_load))
 			self.current_message = s2+"/"+str(len(self.cards_to_load))
 			index = int(s2)
 			s3 = s1[len(s2)+1:]
@@ -73,7 +76,7 @@ class GameStartingController(Controller):
 			self.rerender = True
 			s1 = message[len("CARDFILE_ATTRIBUTES:"):]
 			s2 = s1[:s1.index(":")]
-			print "RECEIVED CARD ATTRIBUTES "+s2+"/"+str(len(self.cards_to_load))
+			#print "RECEIVED CARD ATTRIBUTES "+s2+"/"+str(len(self.cards_to_load))
 			self.current_message = s2+"/"+str(len(self.cards_to_load))
 			index = int(s2)
 			s3 = s1[len(s2)+1:]
@@ -88,6 +91,7 @@ class GameStartingController(Controller):
 				self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
 				self.check_next()
 		elif message == "CLIENT_READY":
+			print "DURATION:",round(self.main.time - self.start_time,3)
 			self.rerender = True
 			self.main.play_sound("connected")
 			import GameController
