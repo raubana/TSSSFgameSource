@@ -53,7 +53,7 @@ class GameStartingController(Controller):
 			self.rerender = True
 			self.cards_to_load = message[len("DECK:"):].split(",")
 			if len(self.cards_to_load) > 0:
-				self.check_next_card()
+				self.check_current()
 			else:
 				print "EMPTY DECK!!"
 				self.main.client.close()
@@ -61,8 +61,8 @@ class GameStartingController(Controller):
 			self.rerender = True
 			s1 = message[len("CARDFILE:"):]
 			s2 = s1[:s1.index(":")]
-			print "RECEIVED CARD "+s2+"/"+str(self.number_of_cards)
-			self.current_message = s2+"/"+str(self.number_of_cards)
+			print "RECEIVED CARD "+s2+"/"+str(len(self.cards_to_load))
+			self.current_message = s2+"/"+str(len(self.cards_to_load))
 			index = int(s2)
 			s3 = s1[len(s2)+1:]
 			#print s3[:1000]
@@ -73,8 +73,8 @@ class GameStartingController(Controller):
 			self.rerender = True
 			s1 = message[len("CARDFILE_ATTRIBUTES:"):]
 			s2 = s1[:s1.index(":")]
-			print "RECEIVED CARD ATTRIBUTES "+s2+"/"+str(self.number_of_cards)
-			self.current_message = s2+"/"+str(self.number_of_cards)
+			print "RECEIVED CARD ATTRIBUTES "+s2+"/"+str(len(self.cards_to_load))
+			self.current_message = s2+"/"+str(len(self.cards_to_load))
 			index = int(s2)
 			s3 = s1[len(s2)+1:]
 			pc_card = open_pickledcard(self.card_filename)
@@ -82,7 +82,9 @@ class GameStartingController(Controller):
 				#Our attributes file varies from theirs, so we have to download the entire card... poop.
 				self.main.client.send("REQUEST_CARDFILE:"+str(self.card_index))
 			else:
-				self.main.master_deck.unpickle_and_add_card(pc_card)
+				card = Card()
+				card.parsePickledCard(pc_card)
+				self.main.master_deck.cards.append(card)
 				self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
 				self.check_next()
 		elif message == "CLIENT_READY":
