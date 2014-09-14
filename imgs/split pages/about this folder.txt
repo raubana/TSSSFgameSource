@@ -1,2 +1,0 @@
-This folder is where split pages (individual card images) are placed after
-they've been split by the page_splitter.py program.

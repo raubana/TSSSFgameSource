@@ -1,2 +1,0 @@
-This is the folder where you put custom cards, including
-cards that are really just modifications of default cards.
