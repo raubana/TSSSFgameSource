@@ -3,3 +3,9 @@
 *.xml
 *.iml
 imgs/split pages
+card_load_test.py
+gui_test2.py
+page_splitter.py
+test_client.py
+test_server.py
+tsssf_gui.py
