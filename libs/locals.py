@@ -35,7 +35,5 @@ SCROLLBAR_WIDTH = 15
 SCROLLBAR_BAR_MINSIZE = 10
 
 #MISC.
-PRINTABLE_CHARS = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_+-={}|:\"<>?[]\\;',./ "
-for i in xrange(1024,1279):
-	PRINTABLE_CHARS += unichr(i)
+PRINTABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_+-={}|:\"<>?[]\\;',./ "
 PLAYERNAME_MAX_LENGTH = 15
