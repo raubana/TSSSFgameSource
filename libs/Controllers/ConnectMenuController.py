@@ -152,7 +152,7 @@ class ConnectMenuController(Controller):
 			if legal:
 				#TODO: Attempt to make connection
 				self.save_to_appdata()
-				self.main.connect_data = (str(self.ip_inputbox.text), int(self.port_inputbox.text), str(self.name_inputbox.text), str(self.key_inputbox))
+				self.main.connect_data = (str(self.ip_inputbox.text), int(self.port_inputbox.text), str(self.name_inputbox.text), str(self.key_inputbox.text))
 				import AttemptConnectController
 				self.main.controller = AttemptConnectController.AttemptConnectController(self.main)
 				print "IS ALL LEGAL"

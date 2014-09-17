@@ -125,8 +125,8 @@ class GameServer(object):
 						if len(data) < 2:
 							self.server.disconnect(key)
 						else:
-							name = data[0]
-							player_key = data[1]
+							player_key = data[0]
+							name = data[1]
 							self.server.sendto(key,"CONNECTED:"+name)
 							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
 							if player == None:
