@@ -130,6 +130,8 @@ class Main(object):
 				self.mouse_pos = e.pos
 				self.main_element.update_for_mouse_move(e.pos)
 			elif e.type == MOUSEBUTTONDOWN:
+				if DEBUG_MOUSEBUTTONPRESS_TRACE:
+					print ""
 				if e.button <= 3: self.mouse_button[e.button-1] = True
 				self.main_element.update_for_mouse_button_press(e.pos, e.button)
 			elif e.type == MOUSEBUTTONUP:
@@ -363,5 +365,6 @@ class Main(object):
 try:
 	main = Main()
 except Exception, e:
+	pygame.quit()
 	print traceback.format_exc()
 	input("Press enter to quit.")

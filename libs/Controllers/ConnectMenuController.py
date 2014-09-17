@@ -10,8 +10,10 @@ class ConnectMenuController(Controller):
 		self.main.updated_elements = []
 		self.main.main_element.clear()
 		self.main.main_element.set_text("")
+
+		self.main.main_element.layout = LAYOUT_VERTICAL
 		
-		element1 = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(96,96,96))
+		element1 = Element(self.main, self.main.main_element, None, self.main.font.size("IP ADDRESS"), None, text_color=(96,96,96))
 		element1.text = "IP ADDRESS"
 		element1.margin = [10,10,0,2]
 
@@ -20,7 +22,7 @@ class ConnectMenuController(Controller):
 		self.ip_inputbox.legal_characters = "1234567890."
 		self.ip_inputbox.max_characters = len("000_000_000_000")
 
-		element2 = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(96,96,96))
+		element2 = Element(self.main, self.main.main_element, None, self.main.font.size("PORT"), None, text_color=(96,96,96))
 		element2.text = "PORT"
 		element2.margin = [10,0,0,2]
 
@@ -29,14 +31,11 @@ class ConnectMenuController(Controller):
 		self.port_inputbox.legal_characters = "1234567890"
 		self.port_inputbox.max_characters = len("00000")
 
-		element3 = Element(self.main, self.main.main_element, None, ("100%",0), None)
-		element3.margin = [0,0,0,25]
-
 		self.paste_button = Button(self.main, self.main.main_element, None, (self.main.font.size("PASTE ADDRESS")[0]+5,self.main.font.get_height()+5), (255,255,255))
 		self.paste_button.text = "PASTE ADDRESS"
 		self.paste_button.margin = [10,0,0,2]
 
-		element4 = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(96,96,96))
+		element4 = Element(self.main, self.main.main_element, None, self.main.font.size("NAME"), None, text_color=(96,96,96))
 		element4.text = "NAME"
 		element4.margin = [10,0,0,2]
 
@@ -44,9 +43,6 @@ class ConnectMenuController(Controller):
 		self.name_inputbox.margin = [10,0,0,2]
 		self.name_inputbox.legal_characters = string.letters + string.digits + " "
 		self.name_inputbox.max_characters = len("123456789012345")
-
-		element5 = Element(self.main, self.main.main_element, None, ("100%",0), None)
-		element5.margin = [0,0,0,22]
 
 		self.connect_button = Button(self.main, self.main.main_element, None, (self.main.font.size("CONNECT")[0]+15,self.main.font.get_height()+15), (255,255,255))
 		self.connect_button.text = "CONNECT"

@@ -29,6 +29,7 @@ class Element(object):
 	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg_color=(255, 255, 255), text_color=(0,0,0), always_count_hover=False):
 		self.main = main
 		self.element_level = parent.element_level + 1
+		self.name = None
 
 		self.preferred_pos = preferred_pos
 		self.preferred_size = preferred_size
@@ -86,6 +87,11 @@ class Element(object):
 		if self.main.focus == self:
 			self.unfocus()
 
+	def __str__(self):
+		if self.name != None:
+			return self.name
+		return super.__str__(self)
+
 	def init(self):
 		# Here you would do any other initialization stuff you might need to do.
 		#You'd want to setup this element for tick triggers in this function.
@@ -111,7 +117,11 @@ class Element(object):
 
 	def give_focus(self):
 		if self.main.focus != None:
+			if self.main.focus == self:
+				return
 			self.main.focus.unfocus()
+		if DEBUG_FOCUS_TRACE:
+			print ("-"*self.element_level) + " " + str(self) + " - gained focus"
 		self.main.focus = self
 		self.triggerGetFocus()
 		for handler in self.losefocus_handlers:
@@ -119,6 +129,8 @@ class Element(object):
 
 	def unfocus(self):
 		if self.main.focus == self:
+			if DEBUG_FOCUS_TRACE:
+				print ("-"*self.element_level) + " " + str(self) + " - lost focus"
 			self.main.focus = None
 			self.triggerLoseFocus()
 			for handler in self.losefocus_handlers:
@@ -175,6 +187,8 @@ class Element(object):
 		return self_hover or child_hover
 
 	def update_for_mouse_button_press(self, mouse_pos_local, button):
+		if DEBUG_MOUSEBUTTONPRESS_TRACE:
+			print ("-"*self.element_level) + " " + str(self)
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
 		if self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
@@ -196,6 +210,8 @@ class Element(object):
 				pass
 			else:
 				#Nothing else caught the event, so we catch it.
+				if DEBUG_FOCUS_TRACE:
+					print ("-"*self.element_level) + " " + str(self) + " - caught mouse button pressed event"
 				if button in (1,2,3):
 					self.give_focus()
 				self.triggerMousePressed(mouse_pos_local, button)
