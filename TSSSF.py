@@ -300,7 +300,7 @@ class Main(object):
 				self.main_element.flag_for_rerender()
 
 	def render(self):
-		rerender = self.main_element.needs_to_rerender# or (self.controller != None and self.controller.rerender)
+		rerender = self.main_element.needs_to_rerender or (self.controller != None and self.controller.rerender)
 		if rerender: self.controller.rerender = True
 
 		#Main Element (the GUI)

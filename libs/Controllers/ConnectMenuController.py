@@ -2,7 +2,7 @@ from Controller import*
 
 from ..GUI.GUI import *
 
-import string, os
+import string, os, random
 
 class ConnectMenuController(Controller):
 	def init(self):
@@ -12,10 +12,40 @@ class ConnectMenuController(Controller):
 		self.main.main_element.set_text("")
 
 		self.main.main_element.layout = LAYOUT_VERTICAL
+
+		element2 = Element(self.main, self.main.main_element, None, self.main.font.size("Please note that elements have been moved around."), None, text_color=(0,96,0))
+		element2.text = "Please note that elements have been moved around."
+		element2.margin = [10,10,0,10]
+
+		element4 = Element(self.main, self.main.main_element, None, self.main.font.size("NAME"), None, text_color=(96,96,96))
+		element4.text = "NAME"
+		element4.margin = [10,0,0,2]
+
+		self.name_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("123456789012345")[0]+4, self.main.font.get_height()+4), (255,255,255))
+		self.name_inputbox.margin = [10,0,0,2]
+		self.name_inputbox.legal_characters = string.letters + string.digits + " "
+		self.name_inputbox.max_characters = len("123456789012345")
+
+		tooltip = "This is what allows you to reconnect to games.\nDO NOT TELL ANYONE."
+
+		element5 = Element(self.main, self.main.main_element, None, self.main.font.size("KEY"), None, text_color=(96,96,96))
+		element5.text = "KEY"
+		element5.margin = [10,0,0,2]
+		element5.tooltip = tooltip
+
+		self.key_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("MMMMM")[0]+4, self.main.font.get_height()+4), (255,255,255))
+		self.key_inputbox.margin = [10,0,0,2]
+		self.key_inputbox.legal_characters = string.letters + string.digits
+		self.key_inputbox.max_characters = len("00000")
+		self.key_inputbox.tooltip = tooltip
+
+		self.genkey_button = Button(self.main, self.main.main_element, None, (self.main.font.size("generate new key")[0]+5,self.main.font.get_height()+5), (255,255,255))
+		self.genkey_button.text = "generate new key"
+		self.genkey_button.margin = [10,0,0,25]
 		
 		element1 = Element(self.main, self.main.main_element, None, self.main.font.size("IP ADDRESS"), None, text_color=(96,96,96))
 		element1.text = "IP ADDRESS"
-		element1.margin = [10,10,0,2]
+		element1.margin = [10,0,0,2]
 
 		self.ip_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("000000000000000")[0]+4,self.main.font.get_height()+4), (255,255,255))
 		self.ip_inputbox.margin = [10,0,0,2]
@@ -33,21 +63,11 @@ class ConnectMenuController(Controller):
 
 		self.paste_button = Button(self.main, self.main.main_element, None, (self.main.font.size("PASTE ADDRESS")[0]+5,self.main.font.get_height()+5), (255,255,255))
 		self.paste_button.text = "PASTE ADDRESS"
-		self.paste_button.margin = [10,0,0,2]
-
-		element4 = Element(self.main, self.main.main_element, None, self.main.font.size("NAME"), None, text_color=(96,96,96))
-		element4.text = "NAME"
-		element4.margin = [10,0,0,2]
-
-		self.name_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("123456789012345")[0]+4, self.main.font.get_height()+4), (255,255,255))
-		self.name_inputbox.margin = [10,0,0,2]
-		self.name_inputbox.legal_characters = string.letters + string.digits + " "
-		self.name_inputbox.max_characters = len("123456789012345")
+		self.paste_button.margin = [10,0,0,25]
 
 		self.connect_button = Button(self.main, self.main.main_element, None, (self.main.font.size("CONNECT")[0]+15,self.main.font.get_height()+15), (255,255,255))
 		self.connect_button.text = "CONNECT"
 		self.connect_button.margin = [10,0,0,2]
-		self.connect_button.tooltip = "This is a tooltip!"
 
 		self.message_element = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(127,0,0))
 		self.message_element.text = ""
@@ -66,6 +86,7 @@ class ConnectMenuController(Controller):
 		self.port_inputbox.add_handler_submit(self)
 		self.paste_button.add_handler_submit(self)
 		self.name_inputbox.add_handler_submit(self)
+		self.genkey_button.add_handler_submit(self)
 		self.connect_button.add_handler_submit(self)
 
 		self.load_from_appdata()
@@ -79,19 +100,26 @@ class ConnectMenuController(Controller):
 			filename = "connectmenu.data"
 			if filename in files:
 				f = open(DATA_LOCATION+"/"+filename)
-				data = f.read().split("\n")
-				ip = data[0]
-				port = data[1]
-				name = data[2]
-				self.ip_inputbox.set_text(ip)
-				self.port_inputbox.set_text(port)
-				self.name_inputbox.set_text(name)
-				f.close()
+				try:
+					data = f.read().split("\n")
+					ip = data[0]
+					port = data[1]
+					name = data[2]
+					key = data[3]
+					self.ip_inputbox.set_text(ip)
+					self.port_inputbox.set_text(port)
+					self.name_inputbox.set_text(name)
+					self.key_inputbox.set_text(key)
+					f.close()
+				except:
+					f.close()
+					os.remove(DATA_LOCATION+"/"+filename)
+					print "ERROR! Failed to parse 'connectmenu.data'. File is deleted."
 
 	def save_to_appdata(self):
 		filename = DATA_LOCATION+"/connectmenu.data"
 		f = open(filename,"w")
-		data = self.ip_inputbox.text+"\n"+self.port_inputbox.text+"\n"+self.name_inputbox.text
+		data = self.ip_inputbox.text+"\n"+self.port_inputbox.text+"\n"+self.name_inputbox.text+"\n"+self.key_inputbox.text
 		f.write(data)
 		f.close()
 
@@ -124,7 +152,7 @@ class ConnectMenuController(Controller):
 			if legal:
 				#TODO: Attempt to make connection
 				self.save_to_appdata()
-				self.main.connect_data = (str(self.ip_inputbox.text), int(self.port_inputbox.text), str(self.name_inputbox.text))
+				self.main.connect_data = (str(self.ip_inputbox.text), int(self.port_inputbox.text), str(self.name_inputbox.text), str(self.key_inputbox))
 				import AttemptConnectController
 				self.main.controller = AttemptConnectController.AttemptConnectController(self.main)
 				print "IS ALL LEGAL"
@@ -137,6 +165,15 @@ class ConnectMenuController(Controller):
 			else:
 				message = "There doesn't appear to be any text on the clipboard."
 			self.message_element.set_text(message)
+		elif widget == self.genkey_button:
+			self.key_inputbox.set_text(self.generate_new_key())
+
+	def generate_new_key(self):
+		legal_characters = string.letters + string.digits
+		key = ""
+		for i in xrange(5):
+			key += random.choice(legal_characters)
+		return key
 
 	def check_widget(self, widget):
 		message = None

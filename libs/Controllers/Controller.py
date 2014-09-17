@@ -41,4 +41,4 @@ class Controller(object):
 		pass
 
 	def render(self):
-		pass
+		self.rerender = False

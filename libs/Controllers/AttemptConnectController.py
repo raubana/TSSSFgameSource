@@ -26,7 +26,7 @@ class AttemptConnectController(Controller):
 				self.prev_connected = True
 				self.connect_time = float(self.main.time)
 				self.main.main_element.set_text("Connected. Sending client data...")
-				self.client.send("CONNECT:"+self.main.connect_data[2])
+				self.client.send("CONNECT:"+self.main.connect_data[3]+":"+self.main.connect_data[2])
 			else:
 				#we look for the permission to join the server
 				if len(self.client.received_messages) > 0:

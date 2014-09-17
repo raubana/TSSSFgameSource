@@ -120,22 +120,34 @@ class GameServer(object):
 					if False:
 						pass
 					else:
-						name = message[len("CONNECT:"):]
-						self.server.sendto(key,"CONNECTED:"+name)
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
-						if player != None:
-							#reconnect player
-							if self.controller != None:
-								self.controller.triggerRejoinPlayer(player)
-							print "=Player '"+name+"'", key, "has rejoined the game."
+						data = message[len("CONNECT:"):]
+						data = data.split(":")
+						if len(data) < 2:
+							self.server.disconnect(key)
 						else:
-							#connect new player
-							self.players.append(Player(key, name))
-							if self.controller != None:
-								self.controller.triggerNewPlayer(self.players[-1])
-							print "=Player '"+name+"'", key, "has joined the game."
-						self.send_playerlist()
-						self.check_ready()
+							name = data[0]
+							player_key = data[1]
+							self.server.sendto(key,"CONNECTED:"+name)
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
+							if player == None:
+								for pl in self.players:
+									if pl.name == name and pl.player_key == player_key:
+										player = pl
+										break
+							if player != None:
+								#reconnect player
+								player.address = key
+								if self.controller != None:
+									self.controller.triggerRejoinPlayer(player)
+								print "=Player '"+name+"'", key, "has rejoined the game."
+							else:
+								#connect new player
+								self.players.append(Player(key, name, player_key))
+								if self.controller != None:
+									self.controller.triggerNewPlayer(self.players[-1])
+								print "=Player '"+name+"'", key, "has joined the game."
+							self.send_playerlist()
+							self.check_ready()
 				elif message.startswith("CHAT:"):
 					if not player:
 						name = "???"

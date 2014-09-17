@@ -1,9 +1,11 @@
 import Deck
 
 class Player(object):
-	def __init__(self,address,name):
+	def __init__(self,address,name,player_key):
 		self.address = address
 		self.name = name
+		self.player_key = player_key
+
 		self.hand = Deck.Deck()
 
 		self.is_connected = True # This is for a player who may have disconnected and has a chance to reconnect
