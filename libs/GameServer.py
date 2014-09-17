@@ -127,8 +127,6 @@ class GameServer(object):
 						else:
 							player_key = data[0]
 							name = data[1]
-							self.server.sendto(key,"CONNECTED:"+name)
-							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
 							if player == None:
 								for pl in self.players:
 									if pl.name == name and pl.player_key == player_key:
@@ -137,6 +135,8 @@ class GameServer(object):
 							if player != None:
 								#reconnect player
 								if not player.is_connected:
+									self.server.sendto(key,"CONNECTED:"+name)
+									self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has reconnected.")
 									player.is_connected = True
 									player.address = key
 									if self.controller != None:
@@ -147,6 +147,8 @@ class GameServer(object):
 									self.server.disconnect(key)
 							else:
 								#connect new player
+								self.server.sendto(key,"CONNECTED:"+name)
+								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
 								self.players.append(Player(key, name, player_key))
 								if self.controller != None:
 									self.controller.triggerNewPlayer(self.players[-1])
