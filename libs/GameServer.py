@@ -136,10 +136,15 @@ class GameServer(object):
 										break
 							if player != None:
 								#reconnect player
-								player.address = key
-								if self.controller != None:
-									self.controller.triggerRejoinPlayer(player)
-								print "=Player '"+name+"'", key, "has rejoined the game."
+								if not player.is_connected:
+									player.is_connected = True
+									player.address = key
+									if self.controller != None:
+										self.controller.triggerRejoinPlayer(player)
+									print "=Player '"+name+"'", key, "has rejoined the game."
+								else:
+									#we kick this one, since the player is already connected.
+									self.server.disconnect(key)
 							else:
 								#connect new player
 								self.players.append(Player(key, name, player_key))
