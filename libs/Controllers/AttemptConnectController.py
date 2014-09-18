@@ -36,6 +36,13 @@ class AttemptConnectController(Controller):
 						self.main.name = message[len("CONNECTED:"):]
 						self.main.client = self.client
 						self.main.controller = GameStartingController.GameStartingController(self.main)
+					elif message.startswith("KICK:"):
+						chat = message[len("KICK:"):]
+						self.client.close()
+						self.client = None
+						self.main.play_sound("lost_connection")
+						self.main.controller = ConnectMenuController(self)
+						self.main.controller.message_element.set_text("You were kicked: "+chat)
 				elif self.main.time-self.connect_time > TIMEOUT_TIME:
 					self.client.close()
 					import ConnectMenuController
