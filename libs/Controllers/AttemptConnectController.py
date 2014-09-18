@@ -39,17 +39,18 @@ class AttemptConnectController(Controller):
 					elif message.startswith("KICK:"):
 						chat = message[len("KICK:"):]
 						self.client.close()
-						self.client = None
+						import ConnectMenuController
 						self.main.play_sound("lost_connection")
-						self.main.controller = ConnectMenuController(self)
+						self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 						self.main.controller.message_element.set_text("You were kicked: "+chat)
+						self.client = None
 				elif self.main.time-self.connect_time > TIMEOUT_TIME:
 					self.client.close()
-					self.client = None
 					import ConnectMenuController
 					self.main.play_sound("lost_connection")
 					self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 					self.main.controller.message_element.set_text("Server Ignored Request")
+					self.client = None
 		else:
 			p = self.main.time%1.0
 			count = p*4
