@@ -86,7 +86,7 @@ class Server(object):
 							sent = clientsocket.send(message)
 							message = message[sent:]
 						if kick:
-							clientsocket.close()
+							self.disconnect(address)
 				except:
 					print "-Failed to transmit message to",address
 					print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
