@@ -81,11 +81,14 @@ class Server(object):
 					if len(self.messages_to_send[address]) > 0:
 						message = self.messages_to_send[address].pop(0) + ESCAPE_CHARACTER
 						kick = message.startswith("KICK:")
+						if kick:
+							print "-KICK recognised. sending kick message..."
 						#print "-Sending message: "+message[0:100]
 						while len(message) > 0:
 							sent = clientsocket.send(message)
 							message = message[sent:]
 						if kick:
+							print "-Kick message sent. Disconnecting..."
 							self.disconnect(address)
 				except:
 					print "-Failed to transmit message to",address
