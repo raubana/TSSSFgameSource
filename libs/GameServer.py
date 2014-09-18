@@ -31,8 +31,8 @@ class GameServer(object):
 		self.gamestart_countdown_time = 0
 		for pl in self.players:
 			pl.reset()
-
-		self.send_playerlist()
+		if self.server != None:
+			self.send_playerlist()
 
 	def load_custom_deck(self):
 		print "== loading the MasterDeck"
