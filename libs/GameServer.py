@@ -20,9 +20,7 @@ class GameServer(object):
 
 		self.players = []
 
-		print "== loading the MasterDeck"
 		self.load_custom_deck()
-		print "== the MasterDeck is now fully loaded."
 
 		self.reset()
 
@@ -37,6 +35,7 @@ class GameServer(object):
 		self.send_playerlist()
 
 	def load_custom_deck(self):
+		print "== loading the MasterDeck"
 		self.master_deck = Deck.MasterDeck()
 		self.custom_deck = CustomDeck.CustomDeck()
 		try:
@@ -48,12 +47,13 @@ class GameServer(object):
 		instr = f.read()
 		f.close()
 		print
-		print " == READING CUSTOM DECK INSTRUCTIONS == "
+		print " --- READING CUSTOM DECK INSTRUCTIONS --- "
 		print
 		self.custom_deck.follow_instructions(instr)
 		print
-		print " == DONE == "
+		print " --- DONE --- "
 		print
+		print "=== loading cards..."
 		pc_list = []
 		defaults = os.listdir("data/default_cards")
 		for card in self.custom_deck.list:
@@ -66,6 +66,7 @@ class GameServer(object):
 					pc = open_pickledcard("cards/"+card)
 			pc_list.append(pc)
 		self.master_deck.load_all_cards(pc_list)
+		print "== MasterDeck loaded."
 
 	def run_main_loop(self):
 		# Call this function to get the server running.
