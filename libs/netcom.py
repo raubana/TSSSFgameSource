@@ -103,8 +103,7 @@ class Server(object):
 			if not recv:
 				print "-Connection at",address,"dropped."
 				#clientsocket.shutdown(socket.SHUT_RDWR)
-				clientsocket.close()
-				del self.clients[address]
+				self.disconnect(address)
 			else:
 				self.client_last_got_message[address] = time.time()
 				if self.client_accept_messages[address]:
@@ -119,9 +118,6 @@ class Server(object):
 						while len(data) > 1:
 							self.received_messages[address].append(str(data.pop(0)))
 						message = data.pop()
-		del self.received_messages[address]
-		del self.messages_to_send[address]
-		del self.client_accept_messages[address]
 		del clientsocket
 		print "-LISTEN THREAD FOR '"+address+"' EXITING..."
 		thread.exit()
@@ -153,8 +149,16 @@ class Server(object):
 	def disconnect(self, address):
 		print "-Killing connection with",address,"..."
 		if address in self.clients:
-			self.clients[address].close()
-			del self.clients[address]
+			try: self.clients[address].close()
+			except: pass
+			try: del self.clients[address]
+			except: pass
+			try: del self.received_messages[address]
+			except: pass
+			try: del self.messages_to_send[address]
+			except: pass
+			try: del self.client_accept_messages[address]
+			except: pass
 		else:
 			print "-Sorry, that client doesn't exist."
 
