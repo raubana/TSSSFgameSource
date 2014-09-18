@@ -95,7 +95,7 @@ class Server(object):
 	def listen(self,address):
 		clientsocket = self.clients[address]
 		message = ""
-		while True:
+		while address in self.clients:
 			try:
 				recv = clientsocket.recv(self.buffersize)
 			except:
@@ -105,12 +105,6 @@ class Server(object):
 				#clientsocket.shutdown(socket.SHUT_RDWR)
 				clientsocket.close()
 				del self.clients[address]
-				del self.received_messages[address]
-				del self.messages_to_send[address]
-				del self.client_accept_messages[address]
-				del clientsocket
-				print "-LISTEN THREAD FOR '"+address+"' EXITING..."
-				thread.exit()
 			else:
 				self.client_last_got_message[address] = time.time()
 				if self.client_accept_messages[address]:
@@ -125,6 +119,12 @@ class Server(object):
 						while len(data) > 1:
 							self.received_messages[address].append(str(data.pop(0)))
 						message = data.pop()
+		del self.received_messages[address]
+		del self.messages_to_send[address]
+		del self.client_accept_messages[address]
+		del clientsocket
+		print "-LISTEN THREAD FOR '"+address+"' EXITING..."
+		thread.exit()
 
 	def sendall(self,message):
 		for key in self.clients:
