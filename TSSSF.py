@@ -20,6 +20,8 @@ except Exception, e:
 	print traceback.format_exc()
 	input("Press enter to quit.")
 
+
+
 class Main(object):
 	def __init__(self):
 		self.screen_size = (854, 480)
@@ -270,6 +272,13 @@ class Main(object):
 					elif message.startswith("ALERT:"):
 						sound_name = message[len("ALERT:"):]
 						self.play_sound(sound_name)
+					elif message.startswith("KICK:"):
+						chat = message[len("KICK:"):]
+						self.client.close()
+						self.client = None
+						self.play_sound("lost_connection")
+						self.controller = ConnectMenuController(self)
+						self.controller.message_element.set_text("You were kicked: "+chat)
 					else:
 						attempt = self.controller.read_message(message)
 						if not attempt:
@@ -361,6 +370,8 @@ class Main(object):
 			self.client.close()
 		print "GOODBYE!!"
 		pygame.quit()
+
+
 
 try:
 	main = Main()

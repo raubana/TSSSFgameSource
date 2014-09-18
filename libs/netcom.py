@@ -37,6 +37,7 @@ class Server(object):
 		self.client_listen_threads = {}
 		self.client_transmit_threads = {}
 		self.client_last_got_message = {}
+		self.client_accept_messages = {}
 
 		self.received_messages = {}
 		self.messages_to_send = {}
@@ -62,6 +63,7 @@ class Server(object):
 				self.clients[address] = clientsocket
 				self.client_listen_threads[address] = thread.start_new_thread(self.listen, tuple([str(address)]))
 				self.client_transmit_threads[address] = thread.start_new_thread(self.transmit, tuple([str(address)]))
+				self.client_accept_messages[address] = True
 				self.received_messages[address] = []
 				self.messages_to_send[address] = []
 				self.client_last_got_message[address] = time.time()
@@ -78,10 +80,13 @@ class Server(object):
 				try:
 					if len(self.messages_to_send[address]) > 0:
 						message = self.messages_to_send[address].pop(0) + ESCAPE_CHARACTER
+						kick = message.startswith("KICK:")
 						#print "-Sending message: "+message[0:100]
 						while len(message) > 0:
 							sent = clientsocket.send(message)
 							message = message[sent:]
+						if kick:
+							clientsocket.close()
 				except:
 					print "-Failed to transmit message to",address
 					print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
@@ -102,22 +107,24 @@ class Server(object):
 				del self.clients[address]
 				del self.received_messages[address]
 				del self.messages_to_send[address]
+				del self.client_accept_messages[address]
 				del clientsocket
 				print "-LISTEN THREAD FOR '"+address+"' EXITING..."
 				thread.exit()
 			else:
 				self.client_last_got_message[address] = time.time()
-				message += recv
-				i = -min((len(ESCAPE_CHARACTER)+len(recv)),len(message))
-				m2 = message[i:]
-				if ESCAPE_CHARACTER in m2:
-					m1 = message[:i]
-					data = m2.split(ESCAPE_CHARACTER)
-					m1 += data.pop(0)
-					self.received_messages[address].append(str(m1))
-					while len(data) > 1:
-						self.received_messages[address].append(str(data.pop(0)))
-					message = data.pop()
+				if self.client_accept_messages[address]:
+					message += recv
+					i = -min((len(ESCAPE_CHARACTER)+len(recv)),len(message))
+					m2 = message[i:]
+					if ESCAPE_CHARACTER in m2:
+						m1 = message[:i]
+						data = m2.split(ESCAPE_CHARACTER)
+						m1 += data.pop(0)
+						self.received_messages[address].append(str(m1))
+						while len(data) > 1:
+							self.received_messages[address].append(str(data.pop(0)))
+						message = data.pop()
 
 	def sendall(self,message):
 		for key in self.clients:
@@ -148,6 +155,13 @@ class Server(object):
 		if address in self.clients:
 			self.clients[address].close()
 			del self.clients[address]
+		else:
+			print "-Sorry, that client doesn't exist."
+
+	def kick(self, address, message = "Disconnect."):
+		if address in self.clients:
+			self.client_accept_messages[address] = False
+			self.messages_to_send[address] = "KICK:"+message
 		else:
 			print "-Sorry, that client doesn't exist."
 

@@ -20,6 +20,10 @@ class GameServer(object):
 
 		self.players = []
 
+		print "== loading the MasterDeck"
+		self.load_custom_deck()
+		print "== the MasterDeck is now fully loaded."
+
 		self.reset()
 
 	def reset(self):
@@ -27,9 +31,10 @@ class GameServer(object):
 		self.begun_gamestart_countdown = False
 		self.gamestart_countdown = 10
 		self.gamestart_countdown_time = 0
-		print "== loading the MasterDeck"
-		self.load_custom_deck()
-		print "== the MasterDeck is now fully loaded."
+		for pl in self.players:
+			pl.reset()
+
+		self.send_playerlist()
 
 	def load_custom_deck(self):
 		self.master_deck = Deck.MasterDeck()
@@ -116,14 +121,14 @@ class GameServer(object):
 					pass
 				elif message.startswith("CONNECT:"):
 					#We get the clients name now and add them to the game.
-					#TODO: Kick the client if their name sucks.
-					if False:
-						pass
+					#TODO: Kick the client if their name sucks or if the game's already started
+					if self.game_started:
+						self.server.kick(key,"The game's already started. Please come back later.")
 					else:
 						data = message[len("CONNECT:"):]
 						data = data.split(":")
 						if len(data) < 2:
-							self.server.disconnect(key)
+							self.server.kick(key,"You seem to be running an older version. Please go updated.")
 						else:
 							player_key = data[0]
 							name = data[1]
@@ -144,7 +149,7 @@ class GameServer(object):
 									print "=Player '"+name+"'", key, "has rejoined the game."
 								else:
 									#we kick this one, since the player is already connected.
-									self.server.disconnect(key)
+									self.server.kick(key,"This player is already connected.")
 							else:
 								#connect new player
 								self.server.sendto(key,"CONNECTED:"+name)
@@ -250,7 +255,7 @@ class GameServer(object):
 					kick_em = True
 				if kick_em:
 					print "= Player '"+pn+"' has been kicked."
-					self.server.disconnect(pa)
+					self.server.kick(pa)
 					player.is_connected = False
 					player.is_ready = False
 					player.time_of_disconnect = time.time()
