@@ -69,8 +69,8 @@ class Server(object):
 				self.client_last_got_message[address] = time.time()
 
 	def transmit(self, address):
-		clientsocket = self.clients[address]
-		while True:
+		while address in self.clients:
+			clientsocket = self.clients[address]
 			time.sleep(MESSAGE_DELAY)
 			if address not in self.messages_to_send:
 				print "-missing",address
@@ -93,9 +93,9 @@ class Server(object):
 					thread.exit()
 
 	def listen(self,address):
-		clientsocket = self.clients[address]
 		message = ""
 		while address in self.clients:
+			clientsocket = self.clients[address]
 			try:
 				recv = clientsocket.recv(self.buffersize)
 			except:
