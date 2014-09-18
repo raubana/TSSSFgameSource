@@ -168,7 +168,7 @@ class Server(object):
 	def kick(self, address, message = "Disconnect."):
 		if address in self.clients:
 			self.client_accept_messages[address] = False
-			self.messages_to_send[address] = "KICK:"+message
+			self.sendto(address,"KICK:"+message)
 		else:
 			print "-Sorry, that client doesn't exist."
 
