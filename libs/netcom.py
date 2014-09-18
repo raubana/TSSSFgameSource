@@ -201,7 +201,7 @@ class Client(object):
 			self.connection_status = str(e)
 
 	def transmit(self):
-		while True:
+		while self.connected:
 			time.sleep(MESSAGE_DELAY)
 			if len(self.messages_to_send) > 0:
 				message = self.messages_to_send.pop(0) + ESCAPE_CHARACTER
@@ -211,13 +211,13 @@ class Client(object):
 						message = message[sent:]
 				except:
 					print "-Failed to transmit message."
-					print "-TRANSMIT THREAD EXITING..."
 					self.connected = False
-					thread.exit()
+		print "-TRANSMIT THREAD EXITING..."
+		thread.exit()
 
 	def listen(self):
 		message = ""
-		while True:
+		while self.connected:
 			try:
 				recv = self.serversocket.recv(self.buffersize)
 			except:
@@ -225,9 +225,7 @@ class Client(object):
 			if not recv:
 				print "-Connection dropped."
 				self.serversocket.close()
-				print "-LISTEN THREAD EXITING..."
 				self.connected = False
-				thread.exit()
 			else:
 				#print "-recv: "+recv
 				self.server_last_got_message = time.time()
@@ -242,6 +240,8 @@ class Client(object):
 					while len(data) > 1:
 						self.received_messages.append(str(data.pop(0)))
 					message = data.pop()
+		print "-LISTEN THREAD EXITING..."
+		thread.exit()
 
 	def send(self, message):
 		self.messages_to_send.append(message)
@@ -251,4 +251,5 @@ class Client(object):
 		#self.serversocket.shutdown(socket.SHUT_RDWR)
 		self.connected = False
 		self.serversocket.close()
+		del self.serversocket
 
