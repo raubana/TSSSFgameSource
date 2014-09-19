@@ -152,7 +152,7 @@ class Server(object):
 	def disconnect(self, address):
 		print "-Killing connection with",address,"..."
 		if address in self.clients:
-			try: self.clients[address].close()
+			try: self.clients[address].shutdown(socket.SHUT_RDWR)
 			except: pass
 			try: del self.clients[address]
 			except: pass
