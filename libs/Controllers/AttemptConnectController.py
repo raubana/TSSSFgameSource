@@ -14,6 +14,8 @@ class AttemptConnectController(Controller):
 		self.main.main_element.set_text("Connecting...")
 		self.main.connecting = True
 
+		self.start_time = float(self.main.time)
+
 		self.client = Client(self.main.connect_data[0],self.main.connect_data[1])
 		self.connect_time = 0
 		self.prev_connected = False
@@ -64,3 +66,11 @@ class AttemptConnectController(Controller):
 				self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
 				self.main.controller.message_element.set_text(str(self.client.connection_status))
 				self.client = None
+			elif self.main.time >= self.start_time + TIMEOUT_TIME:
+				self.client.close()
+				import ConnectMenuController
+				self.main.play_sound("lost_connection")
+				self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
+				self.main.controller.message_element.set_text("Failed to connect.")
+				self.client = None
+
