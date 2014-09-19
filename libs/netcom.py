@@ -253,6 +253,8 @@ class Client(object):
 		#self.listen_thread.exit()
 		#self.serversocket.shutdown(socket.SHUT_RDWR)
 		self.connected = False
-		self.serversocket.close()
-		del self.serversocket
+		try: self.serversocket.shutdown(socket.SHUT_RDWR)
+		except: pass
+		try: del self.serversocket
+		except: pass
 
