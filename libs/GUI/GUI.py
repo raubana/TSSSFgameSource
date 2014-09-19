@@ -50,6 +50,7 @@ def create_context_menu(main, element, pos, menu_list):
 		button = Button(main,cme,None,("100%",main.font.get_height()))
 		button.add_handler_submit(cme)
 		button.set_text(item[0])
+		button.set_bg_color((255,255,255))
 
 
 
@@ -132,9 +133,10 @@ class Element(object):
 		self.flag_for_rerender()
 
 	def _remove_child(self, child):
-		self.children.remove(child)
-		self._setup_for_pack()
-		self.flag_for_rerender()
+		if child in self.children:
+			self.children.remove(child)
+			self._setup_for_pack()
+			self.flag_for_rerender()
 
 	def clear(self):
 		#This removes every child from this element.
@@ -173,12 +175,15 @@ class Element(object):
 		self_hover = False
 		child_hover = False
 		self.triggerMouseMove(mouse_pos_local)
-		if not_hover:
+		if not_hover or (not self.size) or (not self.pos):
 			# This is here so that the children can still get their update without
 			# wasting time checking if the mouse is hovering over the element or not.
 			for c in self.children:
 				if c is not None:
-					c.update_for_mouse_move((mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), True)
+					if not self.pos:
+						c.update_for_mouse_move((mouse_pos_local[0], mouse_pos_local[1]), True)
+					else:
+						c.update_for_mouse_move((mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), True)
 		else:
 			if self.rect != None and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
 				#We know that at least the mouse was inside this element when it clicked.
@@ -255,7 +260,7 @@ class Element(object):
 	def update_for_mouse_button_release(self, mouse_pos_local, button):
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
-		if self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
+		if self.rect and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
 			#We know that at least the mouse was inside this element when it clicked.
 			#The question is, did something inside of this element get clicked?
 			#In order to properly test this, we need to iterate in reverse order.
@@ -804,13 +809,20 @@ class InputBox(Element):
 
 	def triggerMousePressed(self, mouse_pos, button):
 		def do_nothing():
-			pass
+			print "Doop!"
 
 		if button == 3:
 			#for testing purposes, lets make this open a context menu
-			create_context_menu(self.main, self.main.main_element, [("Context menu!", do_nothing),
-																	("Test", do_nothing),
-																	("Wut", do_nothing)])
+			#corner = self.get_world_pos()
+			create_context_menu(self.main,
+								self.main.main_element,
+								(mouse_pos[0]+10, mouse_pos[1]+10),#(mouse_pos[0]+corner[0], mouse_pos[1]+corner[1]),
+									[
+									("Context menu!", do_nothing),
+									("Test", do_nothing),
+									("Wut", do_nothing)
+									]
+								)
 
 	def triggerGetFocus(self):
 		self.flag_for_rerender()
@@ -855,6 +867,8 @@ class Button(Element):
 		self.add_handler_mousehover(self)
 		self.add_handler_mouseout(self)
 
+		self.set_bg_color((192,192,192))
+
 	def add_handler_submit(self, handler):
 		self.submit_handlers.append(handler)
 
@@ -867,7 +881,8 @@ class Button(Element):
 		pass
 
 	def triggerMousePressed(self, mouse_pos, button):
-		self.update_for_submit()
+		if button == 1:
+			self.update_for_submit()
 
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)

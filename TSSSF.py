@@ -326,7 +326,17 @@ class Main(object):
 
 		#Tooltip
 		if rerender and self.tooltip_surface != None:
-			self.screen.blit(self.tooltip_surface, self.mouse_pos)
+			pos = [self.mouse_pos[0]+10, self.mouse_pos[1]+10]
+			size = self.tooltip_surface.get_size()
+			if size[0] > self.screen_size[0]:
+				pos[0] = 0
+			elif pos[0] + size[0] > self.screen_size[0]:
+				pos[0] = self.screen_size[0] - size[0]
+			if size[1] > self.screen_size[1]:
+				pos[1] = 0
+			elif pos[1] + size[1] > self.screen_size[1]:
+				pos[1] = self.screen_size[1] - size[1]
+			self.screen.blit(self.tooltip_surface, pos)
 
 		pygame.display.flip()
 
