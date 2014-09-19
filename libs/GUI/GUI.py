@@ -847,8 +847,8 @@ class InputBox(Element):
 			handler.handle_event_submit(self)
 
 	def rerender_foreground(self):
-		pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/4,self.bg_color[1]/4,self.bg_color[2]/4), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
-		pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
+		pygame.draw.lines(self.rendered_surface, (int(self.bg_color[0]*0.75),int(self.bg_color[1]*0.75),int(self.bg_color[2]*0.75)), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
+		pygame.draw.lines(self.rendered_surface, (int(self.bg_color[0]*0.9),int(self.bg_color[1]*0.9),int(self.bg_color[2]*0.9)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
 
 	def rerender_text(self):
 		img = self.main.font.render(self.text[max(self.offset,0):],True,self.text_color)
@@ -901,14 +901,14 @@ class Button(Element):
 	def rerender_background(self):
 		if self.bg_color != None:
 			if self.hover:
-				color = (int(self.bg_color[0]*0.85),int(self.bg_color[1]*0.85),int(self.bg_color[2]*0.85))
+				color = (int(self.bg_color[0]*0.90),int(self.bg_color[1]*0.90),int(self.bg_color[2]*0.90))
 			else:
-				color = (int(self.bg_color[0]*0.75),int(self.bg_color[1]*0.75),int(self.bg_color[2]*0.75))
+				color = (int(self.bg_color[0]*0.80),int(self.bg_color[1]*0.80),int(self.bg_color[2]*0.80))
 			self.rendered_surface.fill(color)
 
 	def rerender_foreground(self):
-		pygame.draw.lines(self.rendered_surface, (self.bg_color[0],self.bg_color[1],self.bg_color[2]), False, [(0,self.size[1]),(0,0),(self.size[0],0)], 1)
-		pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/4,self.bg_color[1]/4,self.bg_color[2]/4), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)], 1)
+		pygame.draw.lines(self.rendered_surface, (int(self.bg_color[0]*1),int(self.bg_color[1]*1),int(self.bg_color[2]*1)), False, [(0,self.size[1]),(0,0),(self.size[0],0)], 1)
+		pygame.draw.lines(self.rendered_surface, (int(self.bg_color[0]*0.75),int(self.bg_color[1]*0.75),int(self.bg_color[2]*0.75)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)], 1)
 
 
 class ScrollBar(Element):
