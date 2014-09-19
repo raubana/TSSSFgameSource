@@ -26,7 +26,7 @@ class ConnectMenuController(Controller):
 		self.name_inputbox.legal_characters = string.letters + string.digits + " "
 		self.name_inputbox.max_characters = len("123456789012345")
 
-		tooltip = "This is what allows you to reconnect to games.\nDO NOT TELL ANYONE."
+		tooltip = "Right click for more options."
 
 		element5 = Element(self.main, self.main.main_element, None, self.main.font.size("KEY"), None, text_color=(96,96,96))
 		element5.text = "KEY"
@@ -38,10 +38,11 @@ class ConnectMenuController(Controller):
 		self.key_inputbox.legal_characters = string.letters + string.digits
 		self.key_inputbox.max_characters = len("00000")
 		self.key_inputbox.tooltip = tooltip
+		self.key_inputbox.menu_info.append(("generate new key",self.generate_new_key))
 
-		self.genkey_button = Button(self.main, self.main.main_element, None, (self.main.font.size("generate new key")[0]+5,self.main.font.get_height()+5), (255,255,255))
-		self.genkey_button.text = "generate new key"
-		self.genkey_button.margin = [10,0,0,25]
+		#self.genkey_button = Button(self.main, self.main.main_element, None, (self.main.font.size("generate new key")[0]+5,self.main.font.get_height()+5), (255,255,255))
+		#self.genkey_button.text = "generate new key"
+		#self.genkey_button.margin = [10,0,0,25]
 		
 		element1 = Element(self.main, self.main.main_element, None, self.main.font.size("IP ADDRESS"), None, text_color=(96,96,96))
 		element1.text = "IP ADDRESS"
@@ -60,10 +61,6 @@ class ConnectMenuController(Controller):
 		self.port_inputbox.margin = [10,0,0,2]
 		self.port_inputbox.legal_characters = "1234567890"
 		self.port_inputbox.max_characters = len("00000")
-
-		self.paste_button = Button(self.main, self.main.main_element, None, (self.main.font.size("PASTE ADDRESS")[0]+5,self.main.font.get_height()+5), (255,255,255))
-		self.paste_button.text = "PASTE ADDRESS"
-		self.paste_button.margin = [10,0,0,25]
 
 		self.connect_button = Button(self.main, self.main.main_element, None, (self.main.font.size("CONNECT")[0]+15,self.main.font.get_height()+15), (255,255,255))
 		self.connect_button.text = "CONNECT"
@@ -84,9 +81,8 @@ class ConnectMenuController(Controller):
 
 		self.ip_inputbox.add_handler_submit(self)
 		self.port_inputbox.add_handler_submit(self)
-		self.paste_button.add_handler_submit(self)
 		self.name_inputbox.add_handler_submit(self)
-		self.genkey_button.add_handler_submit(self)
+		#self.genkey_button.add_handler_submit(self)
 		self.connect_button.add_handler_submit(self)
 
 		self.load_from_appdata()
@@ -156,24 +152,13 @@ class ConnectMenuController(Controller):
 				import AttemptConnectController
 				self.main.controller = AttemptConnectController.AttemptConnectController(self.main)
 				print "IS ALL LEGAL"
-		elif widget == self.paste_button:
-			#first we need to get the data off of the clipboard
-			data = pygame.scrap.get(SCRAP_TEXT)
-			message = "Address pasted from clipboard"
-			if data:
-				message = "Oh... uh, this doesn't work yet lol."
-			else:
-				message = "There doesn't appear to be any text on the clipboard."
-			self.message_element.set_text(message)
-		elif widget == self.genkey_button:
-			self.key_inputbox.set_text(self.generate_new_key())
 
 	def generate_new_key(self):
 		legal_characters = string.letters + string.digits
 		key = ""
 		for i in xrange(5):
 			key += random.choice(legal_characters)
-		return key
+		self.key_inputbox.set_text(key)
 
 	def check_widget(self, widget):
 		message = None

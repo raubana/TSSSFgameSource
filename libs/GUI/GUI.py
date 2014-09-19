@@ -764,6 +764,8 @@ class InputBox(Element):
 		self.valuechange_handlers = []
 		self.submit_handlers = []
 
+		self.menu_info = []
+
 	def add_handler_valuechange(self, handler):
 		self.valuechange_handlers.append(handler)
 
@@ -811,18 +813,12 @@ class InputBox(Element):
 					break
 
 	def generate_context_menu(self, pos):
-		def do_nothing():
-			print "Doop!"
-
-		create_context_menu(self.main,
-								self.main.main_element,
-								pos,
-									[
-									("Context menu!", do_nothing),
-									("Test", do_nothing),
-									("Wut", do_nothing)
-									]
-								)
+		if self.menu_info and len(self.menu_info) > 0:
+			create_context_menu(self.main,
+									self.main.main_element,
+									pos,
+									self.menu_info
+									)
 
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
@@ -857,8 +853,13 @@ class InputBox(Element):
 						i += 1
 				if i != self.index:
 					self.index = i
-					self.update_cursor_pos()
-					self.flag_for_rerender()
+		elif button in (4,5):
+			if self.main.focus == self:
+				if button == 5: self.index -= 1
+				else: self.index += 1
+				self.index = min(max(self.index,0),len(self.text))
+		self.update_cursor_pos()
+		self.flag_for_rerender()
 
 	def triggerGetFocus(self):
 		self.flag_for_rerender()
