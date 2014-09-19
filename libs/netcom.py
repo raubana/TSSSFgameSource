@@ -140,19 +140,17 @@ class Server(object):
 
 	def close(self):
 		print "-Killing ACCEPT connection..."
-		self.serversocket.close()
+		self.serversocket.shutdown(socket.SHUT_RDWR)
 		print "-Killing all client connections..."
 		addresses = self.clients.keys()
 		for address in addresses:
-			print "--"+address
-			self.clients[address].close()
-			del self.clients[address]
+			self.disconnect(address)
 		print "-SERVER CLOSED. FECK OFF."
 
 	def disconnect(self, address):
 		print "-Killing connection with",address,"..."
 		if address in self.clients:
-			try: self.clients[address].close()#shutdown(socket.SHUT_RDWR)
+			try: self.clients[address].shutdown(socket.SHUT_RDWR)
 			except: pass
 			try: del self.clients[address]
 			except: pass
@@ -252,7 +250,7 @@ class Client(object):
 		#self.listen_thread.exit()
 		#self.serversocket.shutdown(socket.SHUT_RDWR)
 		self.connected = False
-		try: self.serversocket.close()#shutdown(socket.SHUT_RDWR)
+		try: self.serversocket.shutdown(socket.SHUT_RDWR)
 		except: pass
 		try: del self.serversocket
 		except: pass
