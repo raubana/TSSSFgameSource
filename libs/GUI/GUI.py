@@ -25,6 +25,34 @@ def translate_size_to_pixels(size,remaining):
 	return pixels
 
 
+def create_context_menu(main, element, pos, menu_list):
+	#'menu_list' is a list of (name, function) pairs
+	#first we determine the size of our context menu.
+	size = (0,0)
+	pos = list(pos)
+	for item in menu_list:
+		s = main.font.size(item[0])
+		size = (max(size[0],s[0]),size[1]+s[1])
+	#next we determine if our menu will go off of the screen
+	if size[0] > main.screen_size[0]:
+		pos[0] = 0
+	elif pos[0] + size[0] > main.screen_size[0]:
+		pos[0] = main.screen_size[0] - size[0]
+	if size[1] > main.screen_size[1]:
+		pos[1] = 0
+	elif pos[1] + size[1] > main.screen_size[1]:
+		pos[1] = main.screen_size[1] - size[1]
+	#next we create our context menu element
+	cme = ContextMenuElement(main, element, pos, size, bg_color=None)
+	cme.menu_list = menu_list
+	#finally we create our buttons to fill the context menu
+	for item in menu_list:
+		button = Button(main,cme,None,("100%",main.font.get_height()))
+		button.add_handler_submit(cme)
+		button.set_text(item[0])
+
+
+
 class Element(object):
 	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg_color=(255, 255, 255), text_color=(0,0,0), always_count_hover=False):
 		self.main = main
@@ -258,6 +286,9 @@ class Element(object):
 		pass
 
 	#Handle functions are called when something handles another element's caught events.
+	def handle_event_keydown(self, widget, unicode, key):
+		pass
+
 	def handle_event_mousehover(self, widget, mouse_pos_local):
 		pass
 
@@ -519,7 +550,6 @@ class Element(object):
 					if redo:
 						child.update_rect()
 						child.flag_for_rerender()
-
 		else:
 			offset = [0,0]
 			if self.h_scrollbar != None:
@@ -541,54 +571,60 @@ class Element(object):
 				# wide enough, at which point a new row is used below it.
 				for child in self.children:
 					if child is not None and child not in (self.v_scrollbar, self.h_scrollbar):
-						if self.layout == LAYOUT_FLOW:
-							#We need to determine this child's new size
-							size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-									max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-							new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
-							new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
-
-							if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
-								x_pos = 0
-
-								x_remaining = int(self.size[0])
-								y_remaining -= y_needed
-								y_pos += y_needed
-								y_needed = 0
-
+						if child.preferred_pos == None:
+							if self.layout == LAYOUT_FLOW:
+								#We need to determine this child's new size
 								size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-									max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+										max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
 								new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
 								new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 
-							x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-							x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-							y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
+								if new_pos[0] + new_size[0] + child.margin[0] + child.margin[2] + child.padding[2] > self.size[0]:
+									x_pos = 0
 
-							x_max = max(x_max,x_pos)
-							y_max = max(y_max,y_pos+y_needed)
-						elif self.layout == LAYOUT_VERTICAL:
-							#We need to determine this child's new size
-							size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-									max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-							new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+									x_remaining = int(self.size[0])
+									y_remaining -= y_needed
+									y_pos += y_needed
+									y_needed = 0
+
+									size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+										max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+									new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+									new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+
+								x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+								x_remaining -= new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+								y_needed = max(new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3], y_needed)
+
+								x_max = max(x_max,x_pos)
+								y_max = max(y_max,y_pos+y_needed)
+							elif self.layout == LAYOUT_VERTICAL:
+								#We need to determine this child's new size
+								size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+										max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+								new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+								new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+								y_pos += new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3]
+
+								x_max = max(x_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
+								y_max = max(y_max,y_pos)
+							elif self.layout == LAYOUT_HORIZONTAL:
+								#We need to determine this child's new size
+								size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
+										max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
+								new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
+								new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+								x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
+
+								x_max = max(x_max,x_pos)
+								y_max = max(y_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
+
+							new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
+						else:
+							size = (max(translate_size_to_pixels(child.preferred_size[0],self.size[0]),0),
+										max(translate_size_to_pixels(child.preferred_size[1],self.size[1]),0))
+							new_pos = (int(child.preferred_pos[0]+child.margin[0]+child.padding[0]),int(child.preferred_pos[1]+child.margin[1]+child.padding[1]))
 							new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
-							y_pos += new_size[1] + child.margin[1] + child.margin[3] + child.padding[1] + child.padding[3]
-
-							x_max = max(x_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
-							y_max = max(y_max,y_pos)
-						elif self.layout == LAYOUT_HORIZONTAL:
-							#We need to determine this child's new size
-							size = (max(translate_size_to_pixels(child.preferred_size[0],x_remaining),0),
-									max(translate_size_to_pixels(child.preferred_size[1],y_remaining),0))
-							new_pos = (int(x_pos+child.margin[0]+child.padding[0]),int(y_pos+child.margin[1]+child.padding[1]))
-							new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
-							x_pos += new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2]
-
-							x_max = max(x_max,x_pos)
-							y_max = max(y_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
-
-						new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
 
 						redo= False
 						if new_pos != child.pos:
@@ -766,6 +802,16 @@ class InputBox(Element):
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
 
+	def triggerMousePressed(self, mouse_pos, button):
+		def do_nothing():
+			pass
+
+		if button == 3:
+			#for testing purposes, lets make this open a context menu
+			create_context_menu(self.main, self.main.main_element, [("Context menu!", do_nothing),
+																	("Test", do_nothing),
+																	("Wut", do_nothing)])
+
 	def triggerGetFocus(self):
 		self.flag_for_rerender()
 
@@ -931,3 +977,29 @@ class ScrollBar(Element):
 				pos = (1,int(lerp(1,self.size[1]-bar_size-1,invlerp(self.min_scroll,self.max_scroll,float(self.scrolled_amount)))))
 			pygame.draw.rect(self.rendered_surface,self.bg_color,(pos[0],pos[1],size[0],size[1]))
 
+
+class ContextMenuElement(Element):
+	def init(self):
+		self.layout = LAYOUT_VERTICAL
+
+		self.menu_list = {}
+
+		self.give_focus()
+
+	def delete_me(self):
+		self.clear()
+		self.parent._remove_child(self)
+
+	def triggerKeyDown(self, unicode, key):
+		self.delete_me()
+
+	def triggerLoseFocus(self):
+		self.delete_me()
+
+	def handle_event_submit(self, widget):
+		fnc = None
+		for item in self.menu_list:
+			if item[0] == widget.text:
+				fnc = item[1]
+		if fnc:
+			fnc()
