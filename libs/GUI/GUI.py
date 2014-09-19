@@ -357,6 +357,9 @@ class Element(object):
 	def triggerLoseFocus(self):
 		pass
 
+	def generate_context_menu(self, pos):
+		pass
+
 	def update(self):
 		pass
 
@@ -807,13 +810,24 @@ class InputBox(Element):
 				else:
 					break
 
+	def generate_context_menu(self, pos):
+		def do_nothing():
+			print "Doop!"
+
+		create_context_menu(self.main,
+								self.main.main_element,
+								pos,
+									[
+									("Context menu!", do_nothing),
+									("Test", do_nothing),
+									("Wut", do_nothing)
+									]
+								)
+
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
 
 	def triggerMousePressed(self, mouse_pos, button):
-		def do_nothing():
-			print "Doop!"
-
 		if self.parent:
 			corner = self.parent.get_world_pos()
 		else:
@@ -821,15 +835,7 @@ class InputBox(Element):
 
 		if button == 3:
 			#for testing purposes, lets make this open a context menu
-			create_context_menu(self.main,
-								self.main.main_element,
-								(mouse_pos[0]+corner[0]+10, mouse_pos[1]+corner[1]+10),
-									[
-									("Context menu!", do_nothing),
-									("Test", do_nothing),
-									("Wut", do_nothing)
-									]
-								)
+			self.generate_context_menu((mouse_pos[0]+corner[0]+10, mouse_pos[1]+corner[1]+10))
 		elif button == 1:
 			if self.pos:
 				local_pos = (mouse_pos[0]-self.pos[0], mouse_pos[1]-self.pos[1])
@@ -977,6 +983,7 @@ class ScrollBar(Element):
 				self.set_scrolled_amount(int(lerp(self.min_scroll,self.max_scroll,invlerp(0,size,pos))))
 			if not self.main.mouse_button[0]:
 				self.grabbed = False
+				self.unfocus()
 
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
