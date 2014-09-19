@@ -791,6 +791,12 @@ class InputBox(Element):
 				self.flag_for_rerender()
 
 		#we check if our cursor is still visible
+		self.update_cursor_pos()
+
+		if prev_value != self.text:
+			self.update_for_valuechange()
+
+	def update_cursor_pos(self):
 		if self.size != None:
 			while True:
 				self.cursor_pos = self.main.font.size(self.text[:self.index])[0] - self.main.font.size(self.text[:self.offset])[0]
@@ -801,9 +807,6 @@ class InputBox(Element):
 				else:
 					break
 
-		if prev_value != self.text:
-			self.update_for_valuechange()
-
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
 
@@ -811,18 +814,45 @@ class InputBox(Element):
 		def do_nothing():
 			print "Doop!"
 
+		if self.parent:
+			corner = self.parent.get_world_pos()
+		else:
+			corner = (0,0)
+
 		if button == 3:
 			#for testing purposes, lets make this open a context menu
-			#corner = self.get_world_pos()
 			create_context_menu(self.main,
 								self.main.main_element,
-								(mouse_pos[0]+10, mouse_pos[1]+10),#(mouse_pos[0]+corner[0], mouse_pos[1]+corner[1]),
+								(mouse_pos[0]+corner[0]+10, mouse_pos[1]+corner[1]+10),
 									[
 									("Context menu!", do_nothing),
 									("Test", do_nothing),
 									("Wut", do_nothing)
 									]
 								)
+		elif button == 1:
+			if self.pos:
+				local_pos = (mouse_pos[0]-self.pos[0], mouse_pos[1]-self.pos[1])
+				i = int(self.offset)
+				if local_pos[0] < 2:
+					pass
+				else:
+					i = int(self.offset)
+					size = 0 + 2
+					part_size = 0
+					while i < len(self.text):
+						part = self.text[i]
+						part_size = self.font.size(part)[0]
+						if size <= local_pos[0] and size + part_size > local_pos[0]:
+							if local_pos[0] > size + part_size/2:
+								i += 1
+							break
+						size += part_size
+						i += 1
+				if i != self.index:
+					self.index = i
+					self.update_cursor_pos()
+					self.flag_for_rerender()
 
 	def triggerGetFocus(self):
 		self.flag_for_rerender()
