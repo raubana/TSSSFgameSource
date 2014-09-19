@@ -74,8 +74,7 @@ class Server(object):
 			time.sleep(MESSAGE_DELAY)
 			if address not in self.messages_to_send:
 				print "-missing",address
-				print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
-				thread.exit()
+				break
 			else:
 				try:
 					if len(self.messages_to_send[address]) > 0:
@@ -92,8 +91,9 @@ class Server(object):
 							self.disconnect(address)
 				except:
 					print "-Failed to transmit message to",address
-					print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
-					thread.exit()
+					break
+		print "-TRANSMIT THREAD FOR '"+address+"' EXITING..."
+		thread.exit()
 
 	def listen(self,address):
 		message = ""
@@ -152,7 +152,7 @@ class Server(object):
 	def disconnect(self, address):
 		print "-Killing connection with",address,"..."
 		if address in self.clients:
-			try: self.clients[address].shutdown(socket.SHUT_RDWR)
+			try: self.clients[address].close()#shutdown(socket.SHUT_RDWR)
 			except: pass
 			try: del self.clients[address]
 			except: pass
@@ -227,8 +227,7 @@ class Client(object):
 				recv = None
 			if not recv:
 				print "-Connection dropped."
-				self.serversocket.close()
-				self.connected = False
+				self.close()
 			else:
 				#print "-recv: "+recv
 				self.server_last_got_message = time.time()
@@ -253,7 +252,7 @@ class Client(object):
 		#self.listen_thread.exit()
 		#self.serversocket.shutdown(socket.SHUT_RDWR)
 		self.connected = False
-		try: self.serversocket.shutdown(socket.SHUT_RDWR)
+		try: self.serversocket.close()#shutdown(socket.SHUT_RDWR)
 		except: pass
 		try: del self.serversocket
 		except: pass
