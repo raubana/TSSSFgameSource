@@ -123,8 +123,8 @@ class GameServer(object):
 				elif message.startswith("CONNECT:"):
 					#We get the clients name now and add them to the game.
 					#TODO: Kick the client if their name sucks or if the game's already started
-					if self.game_started:
-						self.server.kick(key,"The game's already started. Please come back later.")
+					if False:
+						pass
 					else:
 						data = message[len("CONNECT:"):]
 						data = data.split(":")
@@ -152,13 +152,16 @@ class GameServer(object):
 									#we kick this one, since the player is already connected.
 									self.server.kick(key,"This player is already connected.")
 							else:
-								#connect new player
-								self.server.sendto(key,"CONNECTED:"+name)
-								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
-								self.players.append(Player(key, name, player_key))
-								if self.controller != None:
-									self.controller.triggerNewPlayer(self.players[-1])
-								print "=Player '"+name+"'", key, "has joined the game."
+								if not self.game_started:
+									#connect new player
+									self.server.sendto(key,"CONNECTED:"+name)
+									self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
+									self.players.append(Player(key, name, player_key))
+									if self.controller != None:
+										self.controller.triggerNewPlayer(self.players[-1])
+									print "=Player '"+name+"'", key, "has joined the game."
+								else:
+									self.server.kick(key,"The game's already started. Please come back later.")
 							self.send_playerlist()
 							self.check_ready()
 				elif message.startswith("CHAT:"):
