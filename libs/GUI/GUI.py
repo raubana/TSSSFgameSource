@@ -71,6 +71,7 @@ class Element(object):
 		self.always_count_hover = always_count_hover # This is true when it detects hovers, even when we hover over it's children.
 
 		self.mousehover_handlers = []
+		self.mouseout_handlers = []
 		self.mousepress_handlers = []
 		self.getfocus_handlers = []
 		self.losefocus_handlers = []
@@ -145,6 +146,8 @@ class Element(object):
 		child_hover = False
 		self.triggerMouseMove(mouse_pos_local)
 		if not_hover:
+			# This is here so that the children can still get their update without
+			# wasting time checking if the mouse is hovering over the element or not.
 			for c in self.children:
 				if c is not None:
 					c.update_for_mouse_move((mouse_pos_local[0] - self.pos[0], mouse_pos_local[1] - self.pos[1]), True)
@@ -178,6 +181,8 @@ class Element(object):
 		if self.hover and not self_hover:
 			self.hover = False
 			self.triggerMouseOut(mouse_pos_local)
+			for handler in self.mousehover_handlers:
+				handler.handle_event_mouseout(self, mouse_pos_local)
 		elif not self.hover and self_hover:
 			self.hover = True
 			pygame.mouse.set_cursor(*pygame.cursors.arrow)
@@ -256,6 +261,9 @@ class Element(object):
 	def handle_event_mousehover(self, widget, mouse_pos_local):
 		pass
 
+	def handle_event_mouseout(self, widget, mouse_pos_local):
+		pass
+
 	def handle_event_mousepress(self, widget, mouse_pos_local, button):
 		pass
 
@@ -275,6 +283,9 @@ class Element(object):
 
 	def add_handler_mousehover(self, handler):
 		self.mousehover_handlers.append(handler)
+
+	def add_handler_mouseout(self, handler):
+		self.mouseout_handlers.append(handler)
 
 	def add_handler_mousepress(self, handler):
 		self.mousepress_handlers.append(handler)
@@ -650,7 +661,6 @@ class Element(object):
 							self.h_scrollbar = None
 							self._setup_for_pack()
 
-
 	def rerender_background(self):
 		if self.bg_color != None:
 			self.rendered_surface.fill(self.bg_color)
@@ -796,6 +806,9 @@ class Button(Element):
 		self.submit_handlers = []
 		self.text_align = ALIGN_MIDDLE
 
+		self.add_handler_mousehover(self)
+		self.add_handler_mouseout(self)
+
 	def add_handler_submit(self, handler):
 		self.submit_handlers.append(handler)
 
@@ -813,6 +826,12 @@ class Button(Element):
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
 
+	def handle_event_mousehover(self, widget, mouse_pos_local):
+		self.flag_for_rerender()
+
+	def handle_event_mouseout(self, widget, mouse_pos_local):
+		self.flag_for_rerender()
+
 	def rerender_text(self):
 		img = self.main.font.render(self.text, True, self.text_color)
 		rect = img.get_rect(center = (self.size[0]/2,self.size[1]/2))
@@ -820,7 +839,11 @@ class Button(Element):
 
 	def rerender_background(self):
 		if self.bg_color != None:
-			self.rendered_surface.fill((self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2))
+			if self.hover:
+				color = (int(self.bg_color[0]*0.85),int(self.bg_color[1]*0.85),int(self.bg_color[2]*0.85))
+			else:
+				color = (int(self.bg_color[0]*0.75),int(self.bg_color[1]*0.75),int(self.bg_color[2]*0.75))
+			self.rendered_surface.fill(color)
 
 	def rerender_foreground(self):
 		pygame.draw.lines(self.rendered_surface, (self.bg_color[0],self.bg_color[1],self.bg_color[2]), False, [(0,self.size[1]),(0,0),(self.size[0],0)], 1)
