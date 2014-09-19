@@ -264,8 +264,23 @@ class Main(object):
 							self.chat_sprites[-1].set_text(chat,(64,0,64,255),(255,127,255,127))
 						elif chat.startswith("PLAYER:"):
 							chat = chat[len("PLAYER:"):]
+							i = chat.find(":")
+							if i != -1:
+								name = chat[:i]
+								msg = chat[i+1:]
+							else:
+								name = "?"
+								msg = chat
+							msg = msg.strip()
+							if msg.startswith("/me "):
+								msg = msg[len("/me "):]
+								self.chat_sprites[-1].set_text(name+" "+msg,(64,64,64,255))
+							elif msg.startswith(">"):
+								msg = msg[len(">"):]
+								self.chat_sprites[-1].set_text("> "+name+": "+msg,(0,96,0,255))
+							else:
+								self.chat_sprites[-1].set_text(chat)
 							self.play_sound("chat")
-							self.chat_sprites[-1].set_text(chat)
 						else:
 							self.chat_sprites[-1].set_text(chat)
 						self.main_element.flag_for_rerender()
