@@ -28,7 +28,7 @@ class Deck(object):
 	def __init__(self):
 		self.cards = []
 
-	def draw_card(self):
+	def draw(self):
 		if len(self.cards) == 0: return None
 		return self.cards.pop(0)
 
@@ -46,6 +46,16 @@ class Deck(object):
 
 	def shuffle(self):
 		random.shuffle(self.cards)
+
+	def get_transmit(self, master_deck):
+		s = ""
+		i = 0
+		while i < len(self.cards):
+			s += str(master_deck.cards.index(self.cards[i]))
+			i += 1
+			if i < len(self.cards):
+				s +=","
+		return s
 
 
 

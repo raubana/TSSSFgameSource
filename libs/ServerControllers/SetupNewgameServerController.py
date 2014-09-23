@@ -1,4 +1,5 @@
 from ServerController import ServerController
+from ..Deck import *
 import time
 
 class SetupNewgameServerController(ServerController):
@@ -67,10 +68,29 @@ class SetupNewgameServerController(ServerController):
 		self.wait_start_time = time.time()
 
 	def SetupDecks(self, args):
-		pass
+		self.gameserver.pony_deck = Deck()
+		self.gameserver.ship_deck = Deck()
+		self.gameserver.goal_deck = Deck()
+		self.gameserver.pony_discard = Deck()
+		self.gameserver.ship_discard = Deck()
+		self.gameserver.public_goals = Deck()
+
+		for card in self.gameserver.master_deck.cards:
+			if card.type == "pony": self.gameserver.pony_deck.add_card_to_top(card)
+			elif card.type == "ship": self.gameserver.ship_deck.add_card_to_top(card)
+			elif card.type == "goal": self.gameserver.goal_deck.add_card_to_top(card)
+			else: print "ERROR! Got card of unknown type:",card.type
+
+		self.gameserver.pony_deck.shuffle()
+		self.gameserver.ship_deck.shuffle()
+		self.gameserver.goal_deck.shuffle()
 
 	def GivePlayersStartHands(self, args):
-		pass
+		for player in self.gameserver.players:
+			for i in xrange(4):
+				player.hand.add_card_to_top(self.gameserver.pony_deck.draw())
+			for i in xrange(3):
+				player.hand.add_card_to_top(self.gameserver.ship_deck.draw())
 
 	def DrawPublicGoals(self, args):
 		pass
