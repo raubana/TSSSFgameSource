@@ -320,7 +320,7 @@ class GameServer(object):
 		self.server.sendall(s)
 
 	def send_playerhand(self, player):
-		self.gameserver.server.sendto(player.address,"PLAYERHAND:"+player.hand.get_transmit(self.gameserver.master_deck))
+		self.server.sendto(player.address,"PLAYERHAND:"+player.hand.get_transmit(self.master_deck))
 
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)
