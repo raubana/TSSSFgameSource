@@ -91,7 +91,7 @@ class SetupNewgameServerController(ServerController):
 				player.hand.add_card_to_top(self.gameserver.pony_deck.draw())
 			for i in xrange(3):
 				player.hand.add_card_to_top(self.gameserver.ship_deck.draw())
-			self.gameserver.server.sendto(player.address,"PLAYERHAND:"+player.hand.get_transmit(self.gameserver.master_deck))
+			self.gameserver.send_playerhand(player)
 
 	def DrawPublicGoals(self, args):
 		pass

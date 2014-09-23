@@ -199,6 +199,8 @@ class GameServer(object):
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has joined.")
 					self.send_playerlist()
 					self.check_ready()
+					if self.game_started:
+						self.give_fullupdate(player)
 				elif not self.game_started and message == "READY":
 					#toggle this player's "is_ready" variable
 					t = time.time()
@@ -316,3 +318,9 @@ class GameServer(object):
 				s += ","
 			i += 1
 		self.server.sendall(s)
+
+	def send_playerhand(self, player):
+		self.gameserver.server.sendto(player.address,"PLAYERHAND:"+player.hand.get_transmit(self.gameserver.master_deck))
+
+	def give_fullupdate(self, player):
+		self.send_playerhand(player)
