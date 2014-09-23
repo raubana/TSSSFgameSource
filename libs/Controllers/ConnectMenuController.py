@@ -204,9 +204,9 @@ class ConnectMenuController(Controller):
 					legal = False
 					break
 		if len(text) == 0 or legal:
-			self.ip_inputbox.set_bg_color((255,255,255))
+			self.ip_inputbox.set_bg((255,255,255))
 		else:
-			self.ip_inputbox.set_bg_color((255,192,192))
+			self.ip_inputbox.set_bg((255,192,192))
 		return message
 
 	def check_port_is_legal(self):
@@ -223,9 +223,9 @@ class ConnectMenuController(Controller):
 			message = "PORT: Port number is too large."
 			legal = False
 		if len(text) == 0 or legal:
-			self.port_inputbox.set_bg_color((255,255,255))
+			self.port_inputbox.set_bg((255,255,255))
 		else:
-			self.port_inputbox.set_bg_color((255,192,192))
+			self.port_inputbox.set_bg((255,192,192))
 		return message
 
 	def check_name_is_legal(self):
@@ -270,7 +270,7 @@ class ConnectMenuController(Controller):
 					legal = False
 					break
 		if len(text) == 0 or legal:
-			self.name_inputbox.set_bg_color((255,255,255))
+			self.name_inputbox.set_bg((255,255,255))
 		else:
-			self.name_inputbox.set_bg_color((255,192,192))
+			self.name_inputbox.set_bg((255,192,192))
 		return message

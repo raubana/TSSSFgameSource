@@ -50,12 +50,27 @@ def create_context_menu(main, element, pos, menu_list):
 		button = Button(main,cme,None,("100%",main.font.get_height()))
 		button.add_handler_submit(cme)
 		button.set_text(item[0])
-		button.set_bg_color((255,255,255))
+		button.set_bg((255,255,255))
 
+
+class ScaleImage(object):
+	def __init__(self, img):
+		self.image = img.copy()
+		self.scaled_image = None
+		self.current_size = None
+
+	def get_img(self, size, copy = False):
+		if size != self.current_size:
+			self.current_size = size
+			self.scaled_image = pygame.transform.smoothscale(self.image, size)
+		if copy:
+			return self.scaled_image.copy()
+		else:
+			return self.scaled_image
 
 
 class Element(object):
-	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg_color=(255, 255, 255), text_color=(0,0,0), always_count_hover=False):
+	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg=(255, 255, 255), text_color=(0,0,0), always_count_hover=False):
 		self.main = main
 		self.element_level = parent.element_level + 1
 		self.name = None
@@ -73,7 +88,7 @@ class Element(object):
 
 		self.rendered_surface = None
 
-		self.bg_color = bg_color
+		self.bg = bg
 		self.text_color = text_color
 
 		self.text = ""
@@ -399,9 +414,9 @@ class Element(object):
 			offset = self.parent.get_world_pos()
 		return (self.pos[0] + offset[0], self.pos[1] + offset[1])
 
-	def set_bg_color(self, new_bg_color):
-		if new_bg_color != self.bg_color:
-			self.bg_color = new_bg_color
+	def set_bg(self, new_bg):
+		if new_bg != self.bg:
+			self.bg = new_bg
 			self.flag_for_rerender()
 
 	def update_rect(self):
@@ -706,8 +721,11 @@ class Element(object):
 							self._setup_for_pack()
 
 	def rerender_background(self):
-		if self.bg_color != None:
-			self.rendered_surface.fill(self.bg_color)
+		if self.bg != None:
+			if type(self.bg) == ScaleImage:
+				self.rendered_surface = self.bg.get_img(self.size,True)
+			else:
+				self.rendered_surface.fill(self.bg)
 		else:
 			self.rendered_surface.fill((0,0,0,0))
 
@@ -884,8 +902,8 @@ class InputBox(Element):
 			handler.handle_event_submit(self)
 
 	def rerender_foreground(self):
-		pygame.draw.lines(self.rendered_surface, (int(self.bg_color[0]*0.75),int(self.bg_color[1]*0.75),int(self.bg_color[2]*0.75)), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
-		pygame.draw.lines(self.rendered_surface, (int(self.bg_color[0]*0.9),int(self.bg_color[1]*0.9),int(self.bg_color[2]*0.9)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
+		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*0.75),int(self.bg[1]*0.75),int(self.bg[2]*0.75)), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
+		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*0.9),int(self.bg[1]*0.9),int(self.bg[2]*0.9)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
 
 	def rerender_text(self):
 		img = self.main.font.render(self.text[max(self.offset,0):],True,self.text_color)
@@ -904,7 +922,7 @@ class Button(Element):
 		self.add_handler_mousehover(self)
 		self.add_handler_mouseout(self)
 
-		self.set_bg_color((192,192,192))
+		self.set_bg((192,192,192))
 
 	def add_handler_submit(self, handler):
 		self.submit_handlers.append(handler)
@@ -936,16 +954,16 @@ class Button(Element):
 		self.rendered_surface.blit(img, rect)
 
 	def rerender_background(self):
-		if self.bg_color != None:
+		if self.bg != None:
 			if self.hover:
-				color = (int(self.bg_color[0]*0.90),int(self.bg_color[1]*0.90),int(self.bg_color[2]*0.90))
+				color = (int(self.bg[0]*0.90),int(self.bg[1]*0.90),int(self.bg[2]*0.90))
 			else:
-				color = (int(self.bg_color[0]*0.80),int(self.bg_color[1]*0.80),int(self.bg_color[2]*0.80))
+				color = (int(self.bg[0]*0.80),int(self.bg[1]*0.80),int(self.bg[2]*0.80))
 			self.rendered_surface.fill(color)
 
 	def rerender_foreground(self):
-		pygame.draw.lines(self.rendered_surface, (int(self.bg_color[0]*1),int(self.bg_color[1]*1),int(self.bg_color[2]*1)), False, [(0,self.size[1]),(0,0),(self.size[0],0)], 1)
-		pygame.draw.lines(self.rendered_surface, (int(self.bg_color[0]*0.75),int(self.bg_color[1]*0.75),int(self.bg_color[2]*0.75)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)], 1)
+		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*1),int(self.bg[1]*1),int(self.bg[2]*1)), False, [(0,self.size[1]),(0,0),(self.size[0],0)], 1)
+		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*0.75),int(self.bg[1]*0.75),int(self.bg[2]*0.75)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)], 1)
 
 
 class ScrollBar(Element):
@@ -1013,11 +1031,11 @@ class ScrollBar(Element):
 		pass
 
 	def rerender_background(self):
-		if self.bg_color != None:
-			self.rendered_surface.fill((self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2,127))
+		if self.bg != None:
+			self.rendered_surface.fill((self.bg[0]/2,self.bg[1]/2,self.bg[2]/2,127))
 
 	def rerender_foreground(self):
-		pygame.draw.rect(self.rendered_surface,(self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2),(0,0,self.size[0],self.size[1]),1)
+		pygame.draw.rect(self.rendered_surface,(self.bg[0]/2,self.bg[1]/2,self.bg[2]/2),(0,0,self.size[0],self.size[1]),1)
 		#pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/4,self.bg_color[1]/4,self.bg_color[2]/4), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
 		#pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/2,self.bg_color[1]/2,self.bg_color[2]/2), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
 		if self.min_scroll < self.max_scroll:
@@ -1028,7 +1046,7 @@ class ScrollBar(Element):
 			else:
 				size = (SCROLLBAR_WIDTH-2,bar_size)
 				pos = (1,int(lerp(1,self.size[1]-bar_size-1,invlerp(self.min_scroll,self.max_scroll,float(self.scrolled_amount)))))
-			pygame.draw.rect(self.rendered_surface,self.bg_color,(pos[0],pos[1],size[0],size[1]))
+			pygame.draw.rect(self.rendered_surface,self.bg,(pos[0],pos[1],size[0],size[1]))
 
 
 class ContextMenuElement(Element):

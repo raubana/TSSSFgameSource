@@ -74,7 +74,7 @@ class Main(object):
 		self.hover_focus_time = 0
 		self.tooltip_surface = None
 
-		self.main_element = Element(self, self, (0,0), self.screen_size, bg_color=(210,180,220))
+		self.main_element = Element(self, self, (0,0), self.screen_size, bg=(210,180,220))
 		self.main_element.set_text_align(ALIGN_MIDDLE)
 
 		self.client = None
