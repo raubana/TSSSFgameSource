@@ -96,6 +96,14 @@ class GameController(Controller):
 					bg_color = (192,192,192)
 				element = Element(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
 				element.set_text(name)
+		elif message.startswith("PLAYERHAND:"):
+			hand = message[len("PLAYERHAND:"):].split(",")
+			self.bottom_element.clear()
+			size = (CARDSIZE[0]/5,CARDSIZE[1]/5)
+			for s in hand:
+				i = int(s)
+				card = self.main.master_deck.cards[i]
+				element = Element(self.main,self.bottom_element,None,size,bg=ScaleImage(card.image))
 		else:
 			return False
 		return True
