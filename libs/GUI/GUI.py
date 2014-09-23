@@ -159,6 +159,8 @@ class Element(object):
 			if self.main.focus == self.children[0]:
 				self.children[0].unfocus()
 			del self.children[0]
+		self.h_scrollbar = None
+		self.v_scrollbar = None
 		self.layout = LAYOUT_FLOW
 
 	def give_focus(self):

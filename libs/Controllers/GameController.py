@@ -99,11 +99,13 @@ class GameController(Controller):
 		elif message.startswith("PLAYERHAND:"):
 			hand = message[len("PLAYERHAND:"):].split(",")
 			self.bottom_element.clear()
-			size = (CARDSIZE[0]/5,CARDSIZE[1]/5)
+			self.bottom_element.layout = LAYOUT_HORIZONTAL
+			size = (CARDSIZE[0]/2,CARDSIZE[1]/2)
 			for s in hand:
 				i = int(s)
 				card = self.main.master_deck.cards[i]
 				element = Element(self.main,self.bottom_element,None,size,bg=ScaleImage(card.image))
+				element.padding = (3,3,3,3)
 		else:
 			return False
 		return True
