@@ -102,7 +102,7 @@ class GameController(Controller):
 			hand = message[len("PLAYERHAND:"):].split(",")
 			self.bottom_element.clear()
 			self.bottom_element.layout = LAYOUT_HORIZONTAL
-			scale = 0.35
+			scale = 0.325
 			size = (int(CARDSIZE[0]*scale),int(CARDSIZE[1]*scale))
 			for s in hand:
 				i = int(s)
