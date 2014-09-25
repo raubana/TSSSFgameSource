@@ -25,12 +25,12 @@ class GameServer(object):
 		self.reset()
 
 	def reset(self):
-		self.pony_deck = Deck()
-		self.ship_deck = Deck()
-		self.goal_deck = Deck()
-		self.pony_discard = Deck()
-		self.ship_discard = Deck()
-		self.public_goals = Deck()
+		self.pony_deck = Deck.Deck()
+		self.ship_deck = Deck.Deck()
+		self.goal_deck = Deck.Deck()
+		self.pony_discard = Deck.Deck()
+		self.ship_discard = Deck.Deck()
+		self.public_goals = Deck.Deck()
 		self.game_started = False
 		self.begun_gamestart_countdown = False
 		self.gamestart_countdown = 10
