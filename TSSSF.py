@@ -25,7 +25,6 @@ except Exception, e:
 class Main(object):
 	def __init__(self):
 		icon = pygame.image.load("imgs/window_icon.bmp")
-
 		pygame.display.set_icon(icon)
 
 		self.screen_size = (854, 480)
