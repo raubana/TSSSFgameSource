@@ -113,7 +113,7 @@ class GameController(Controller):
 			hand = message[len("PUBLICGOALS:"):].split(",")
 			self.public_goals_element.clear()
 			self.public_goals_element.layout = LAYOUT_VERTICAL
-			scale = 0.4
+			scale = 0.45
 			size = (int(CARDSIZE[0]*scale),int(CARDSIZE[1]*scale))
 			for s in hand:
 				i = int(s)

@@ -994,19 +994,20 @@ class ScrollBar(Element):
 
 	def triggerMouseMove(self, mouse_pos):
 		if self.grabbed:
-			if self.min_scroll < self.max_scroll:
-				if self.scroll_direction == SCROLLBAR_HORIZONTAL:
-					size = self.size[0]
-					pos = mouse_pos[0]
-				else:
-					size = self.size[1]
-					pos = mouse_pos[1]
-				pos = min(max(pos,0),size)
-				size = float(size)
-				self.set_scrolled_amount(int(lerp(self.min_scroll,self.max_scroll,invlerp(0,size,pos))))
 			if not self.main.mouse_button[0]:
 				self.grabbed = False
 				self.unfocus()
+			else:
+				if self.min_scroll < self.max_scroll:
+					if self.scroll_direction == SCROLLBAR_HORIZONTAL:
+						size = self.size[0]
+						pos = mouse_pos[0]
+					else:
+						size = self.size[1]
+						pos = mouse_pos[1]
+					pos = min(max(pos,0),size)
+					size = float(size)
+					self.set_scrolled_amount(int(lerp(self.min_scroll,self.max_scroll,invlerp(0,size,pos))))
 
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
