@@ -24,8 +24,14 @@ except Exception, e:
 
 class Main(object):
 	def __init__(self):
+		icon = pygame.image.load("imgs/window_icon.bmp")
+
+		pygame.display.set_icon(icon)
+
 		self.screen_size = (854, 480)
 		self.screen = pygame.display.set_mode(self.screen_size, RESIZABLE)
+
+		pygame.display.set_caption("TSSSF - Computer Game","TSSSF")
 
 		pygame.scrap.init()
 
@@ -36,7 +42,7 @@ class Main(object):
 		self.still_freq = 1 / 10.0
 		self.last_still = time.time() - self.still_freq
 
-		self.font = pygame.font.SysFont("Tahoma",12)
+		self.font = pygame.font.Font("data/fonts/Ubahn-Light.ttf",14)
 		self.tiny_font = pygame.font.SysFont("Tahoma",9)
 
 		self.sounds = {}
