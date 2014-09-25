@@ -25,6 +25,12 @@ class GameServer(object):
 		self.reset()
 
 	def reset(self):
+		self.pony_deck = Deck()
+		self.ship_deck = Deck()
+		self.goal_deck = Deck()
+		self.pony_discard = Deck()
+		self.ship_discard = Deck()
+		self.public_goals = Deck()
 		self.game_started = False
 		self.begun_gamestart_countdown = False
 		self.gamestart_countdown = 10
@@ -32,7 +38,7 @@ class GameServer(object):
 		for pl in self.players:
 			pl.reset()
 		if self.server != None:
-			self.send_playerlist()
+			self.send_playerlist_all()
 
 	def load_custom_deck(self):
 		print "== loading the MasterDeck"
@@ -162,7 +168,7 @@ class GameServer(object):
 									print "=Player '"+name+"'", key, "has joined the game."
 								else:
 									self.server.kick(key,"The game's already started. Please come back later.")
-							self.send_playerlist()
+							self.send_playerlist_all()
 							self.check_ready()
 				elif message.startswith("CHAT:"):
 					if not player:
@@ -197,7 +203,7 @@ class GameServer(object):
 					player.is_loaded = True
 					self.server.sendto(player.address, "CLIENT_READY")
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has joined.")
-					self.send_playerlist()
+					self.send_playerlist_all()
 					self.check_ready()
 					if self.game_started:
 						self.give_fullupdate(player)
@@ -215,7 +221,7 @@ class GameServer(object):
 						else:
 							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
 							self.server.sendall("ALERT:player_not_ready")
-						self.send_playerlist()
+						self.send_playerlist_all()
 						self.check_ready()
 				else:
 					if self.controller != None:
@@ -268,7 +274,7 @@ class GameServer(object):
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
 					if self.controller != None:
 						self.controller.triggerPlayerDisconnect(player)
-					self.send_playerlist()
+					self.send_playerlist_all()
 					self.check_ready()
 			else:
 				if not self.game_started or t - player.time_of_disconnect >= 60:
@@ -277,7 +283,7 @@ class GameServer(object):
 					#TODO: Check if it was this player's turn. If it was, change whose turn it is
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has been removed from the game.")
 					del self.players[i]
-					self.send_playerlist()
+					self.send_playerlist_all()
 					self.check_ready()
 			i -= 1
 
@@ -299,7 +305,7 @@ class GameServer(object):
 				self.begun_gamestart_countdown = False
 				self.server.sendall("ADD_CHAT:SERVER: ...Aborted.")
 
-	def send_playerlist(self):
+	def send_playerlist_all(self):
 		s = "PLAYERLIST:"
 		i = 0
 		while i < len(self.players):
@@ -319,8 +325,15 @@ class GameServer(object):
 			i += 1
 		self.server.sendall(s)
 
+	def send_public_goals_all(self):
+		self.server.sendall("PUBLICGOALS:"+self.public_goals.get_transmit(self.master_deck))
+
+	def send_public_goals(self, player):
+		self.server.sendto(player.address, "PUBLICGOALS:"+self.public_goals.get_transmit(self.master_deck))
+
 	def send_playerhand(self, player):
 		self.server.sendto(player.address,"PLAYERHAND:"+player.hand.get_transmit(self.master_deck))
 
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)
+		self.send_public_goals(player)

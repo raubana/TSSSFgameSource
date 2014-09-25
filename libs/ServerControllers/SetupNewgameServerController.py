@@ -68,13 +68,6 @@ class SetupNewgameServerController(ServerController):
 		self.wait_start_time = time.time()
 
 	def SetupDecks(self, args):
-		self.gameserver.pony_deck = Deck()
-		self.gameserver.ship_deck = Deck()
-		self.gameserver.goal_deck = Deck()
-		self.gameserver.pony_discard = Deck()
-		self.gameserver.ship_discard = Deck()
-		self.gameserver.public_goals = Deck()
-
 		for card in self.gameserver.master_deck.cards:
 			if card.type == "pony": self.gameserver.pony_deck.add_card_to_top(card)
 			elif card.type == "ship": self.gameserver.ship_deck.add_card_to_top(card)
@@ -94,7 +87,9 @@ class SetupNewgameServerController(ServerController):
 			self.gameserver.send_playerhand(player)
 
 	def DrawPublicGoals(self, args):
-		pass
+		for i in xrange(3):
+			self.gameserver.public_goals.add_card_to_top(self.gameserver.goal_deck.draw())
+		self.gameserver.send_public_goals_all()
 
 	def PickFirstPlayer(self, args):
 		pass

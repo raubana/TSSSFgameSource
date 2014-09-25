@@ -106,6 +106,16 @@ class GameController(Controller):
 				card = self.main.master_deck.cards[i]
 				element = Element(self.main,self.bottom_element,None,size,bg=ScaleImage(card.image))
 				element.padding = (3,3,3,3)
+		elif message.startswith("PUBLICGOALS:"):
+			hand = message[len("PUBLICGOALS:"):].split(",")
+			self.public_goals_element.clear()
+			self.public_goals_element.layout = LAYOUT_HORIZONTAL
+			size = (CARDSIZE[0]/2,CARDSIZE[1]/2)
+			for s in hand:
+				i = int(s)
+				card = self.main.master_deck.cards[i]
+				element = Element(self.main,self.public_goals_element,None,size,bg=ScaleImage(card.image))
+				element.padding = (3,3,3,3)
 		else:
 			return False
 		return True
