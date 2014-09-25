@@ -42,6 +42,8 @@ class Server(object):
 		self.received_messages = {}
 		self.messages_to_send = {}
 
+		self.throttled = False
+
 		print "-Server running."
 
 	def accept(self):
@@ -71,7 +73,8 @@ class Server(object):
 	def transmit(self, address):
 		while address in self.clients:
 			clientsocket = self.clients[address]
-			time.sleep(MESSAGE_DELAY)
+			if self.throttled:
+				time.sleep(MESSAGE_DELAY)
 			if address not in self.messages_to_send:
 				print "-missing",address
 				break
@@ -183,6 +186,8 @@ class Client(object):
 		self.connected = False
 		self.connection_status = ""
 
+		self.throttled = False
+
 	def connect(self):
 		try:
 			print "-Connecting..."
@@ -205,7 +210,8 @@ class Client(object):
 
 	def transmit(self):
 		while self.connected:
-			time.sleep(MESSAGE_DELAY)
+			if self.throttled:
+				time.sleep(MESSAGE_DELAY)
 			if len(self.messages_to_send) > 0:
 				message = self.messages_to_send.pop(0) + ESCAPE_CHARACTER
 				try:

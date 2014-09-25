@@ -6,6 +6,8 @@ import string, os
 
 class GameController(Controller):
 	def init(self):
+		self.main.client.throttled = True
+
 		#Clear the gui
 		self.main.updated_elements = []
 		self.main.main_element.clear()
@@ -100,7 +102,8 @@ class GameController(Controller):
 			hand = message[len("PLAYERHAND:"):].split(",")
 			self.bottom_element.clear()
 			self.bottom_element.layout = LAYOUT_HORIZONTAL
-			size = (CARDSIZE[0]/2,CARDSIZE[1]/2)
+			scale = 0.35
+			size = (int(CARDSIZE[0]*scale),int(CARDSIZE[1]*scale))
 			for s in hand:
 				i = int(s)
 				card = self.main.master_deck.cards[i]
@@ -109,8 +112,9 @@ class GameController(Controller):
 		elif message.startswith("PUBLICGOALS:"):
 			hand = message[len("PUBLICGOALS:"):].split(",")
 			self.public_goals_element.clear()
-			self.public_goals_element.layout = LAYOUT_HORIZONTAL
-			size = (CARDSIZE[0]/2,CARDSIZE[1]/2)
+			self.public_goals_element.layout = LAYOUT_VERTICAL
+			scale = 0.4
+			size = (int(CARDSIZE[0]*scale),int(CARDSIZE[1]*scale))
 			for s in hand:
 				i = int(s)
 				card = self.main.master_deck.cards[i]
