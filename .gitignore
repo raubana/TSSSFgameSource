@@ -8,4 +8,6 @@ page_splitter.py
 test_client.py
 test_server.py
 tsssf_gui.py
+templatizer_test.py
 your_deck.txt
+example.png
