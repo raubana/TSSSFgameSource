@@ -44,6 +44,8 @@ class Main(object):
 		menubar = Tkinter.Menu(self.top)
 		filemenu = Tkinter.Menu(menubar, tearoff=0)
 		filemenu.add_command(label="Generate (F5)", command=self.update_image)
+		filemenu.add_command(label="Export Image", command=self.export_image)
+		filemenu.add_separator()
 		filemenu.add_command(label="New", command=self.close_file)
 		filemenu.add_command(label="Import image", command=self.prompt_import_image)
 		filemenu.add_command(label="Open", command=self.prompt_open_file)
@@ -85,6 +87,22 @@ class Main(object):
 		self.canvas = Tkinter.Canvas(left_frame, width=CARDSIZE[0], height=CARDSIZE[1])
 		self.canvas.pack()
 
+	def export_image(self):
+		if self.imported_image:
+			data = str(self.attributes.get("1.0", "1000000000.0"))
+			data = data.strip()
+			L = data.split("\n")
+			attr = {}
+			for l in L:
+				try:
+					spl = libs.Deck.break_apart_line(l)
+					attr[spl[0]] = spl[1]
+				except:
+					pass
+			if "template" in attr and attr["template"] == "True":
+				template = libs.Templatizer.create_template_from_attributes(attr, self.imported_image)
+				pygame.image.save(template.generate_image(),self.filename+".EXPORT.png")
+
 	def handle_update_image(self, event):
 		self.update_image()
 
@@ -99,7 +117,13 @@ class Main(object):
 		self.attributes.insert(Tkinter.INSERT, "power = \n")
 		self.attributes.insert(Tkinter.INSERT, "power_activates_on = default\n")
 		self.attributes.insert(Tkinter.INSERT, "power_is_mandatory = False\n")
-		self.attributes.insert(Tkinter.INSERT, "power_is_copyable = ")
+		self.attributes.insert(Tkinter.INSERT, "power_is_copyable = \n")
+		self.attributes.insert(Tkinter.INSERT, "\n")
+		self.attributes.insert(Tkinter.INSERT, "#Delete everything after this line, if you're not using card templates.\n")
+		self.attributes.insert(Tkinter.INSERT, "template = False\n")
+		self.attributes.insert(Tkinter.INSERT, "power_description = \n")
+		self.attributes.insert(Tkinter.INSERT, "quote = \n")
+		self.attributes.insert(Tkinter.INSERT, "copyright = ")
 
 	def set_template_ship(self):
 		self.attributes.delete(1.0, Tkinter.END)
@@ -108,6 +132,12 @@ class Main(object):
 		self.attributes.insert(Tkinter.INSERT, "power = \n")
 		self.attributes.insert(Tkinter.INSERT, "power_activates_on = default\n")
 		self.attributes.insert(Tkinter.INSERT, "power_is_mandatory = False")
+		self.attributes.insert(Tkinter.INSERT, "\n")
+		self.attributes.insert(Tkinter.INSERT, "#Delete everything after this line, if you're not using card templates.\n")
+		self.attributes.insert(Tkinter.INSERT, "template = False\n")
+		self.attributes.insert(Tkinter.INSERT, "power_description = \n")
+		self.attributes.insert(Tkinter.INSERT, "quote = \n")
+		self.attributes.insert(Tkinter.INSERT, "copyright = ")
 
 	def set_template_goal(self):
 		self.attributes.delete(1.0, Tkinter.END)
@@ -116,6 +146,12 @@ class Main(object):
 		self.attributes.insert(Tkinter.INSERT, "condition = \n")
 		self.attributes.insert(Tkinter.INSERT, "worth = \n")
 		self.attributes.insert(Tkinter.INSERT, "modifiers = None")
+		self.attributes.insert(Tkinter.INSERT, "\n")
+		self.attributes.insert(Tkinter.INSERT, "#Delete everything after this line, if you're not using card templates.\n")
+		self.attributes.insert(Tkinter.INSERT, "template = False\n")
+		self.attributes.insert(Tkinter.INSERT, "power_description = \n")
+		self.attributes.insert(Tkinter.INSERT, "quote = \n")
+		self.attributes.insert(Tkinter.INSERT, "copyright = ")
 
 	def getSuggestedFilename(self):
 		# we need to get the text from the attributes widget
