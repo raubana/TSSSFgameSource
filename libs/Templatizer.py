@@ -183,7 +183,8 @@ class Templatizer(object):
 
 	def generate_image(self):
 		# starts with the surface we'll be blitting to
-		img = pygame.Surface((788, 1088))
+		img = pygame.Surface((788, 1088), pygame.SRCALPHA)
+		img.fill((0,0,0,0))
 
 		TITLE_FONT = pygame.font.Font("data/fonts/Barth_Regular.ttf",self.title_font_size)
 		KEYWORDS_FONT = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",40)
@@ -210,7 +211,8 @@ class Templatizer(object):
 			color = (18,57,98)
 			second_color = None#this doesn't have a second color because goals don't have keywords
 		else:
-			cardback = pygame.Surface((788, 1088))
+			cardback = pygame.Surface((788, 1088), pygame.SRCALPHA)
+			cardback.fill((0,0,0,0))
 			color = (0,0,0)
 			second_color = (64,64,64)
 
