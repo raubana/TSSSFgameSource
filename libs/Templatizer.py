@@ -2,6 +2,9 @@ import pygame
 import string
 from common import*
 
+pygame.font.init()
+
+CARDBACK_NULL = -1
 CARDBACK_START = 0
 CARDBACK_PONY = 1
 CARDBACK_SHIP = 2
@@ -49,6 +52,120 @@ def autowrap_text(text, font, max_width):
 		if line != "":
 			lines.append(line)
 	return lines
+
+
+def create_template_from_attributes(attr, image):
+	card_type = CARDBACK_NULL
+	card_img = image
+	title = ""
+	keywords = []
+	power_description = ""
+	quote = ""
+	card_copyright = ""
+	card_sprites = []
+	title_font_size = 55
+	power_font_size = 40
+
+	if "type" in attr:
+		if attr["type"] == "pony":
+			card_type = CARDBACK_PONY
+			if "power" in attr:
+				if attr["power"].find("startcard") != -1:
+					card_type = CARDBACK_START
+		if attr["type"] == "ship":
+			card_type = CARDBACK_SHIP
+		if attr["type"] == "goal":
+			card_type = CARDBACK_GOAL
+
+	if "name" in attr:
+		title = attr["name"]
+		title = string.replace(title, "\\n", "\n")
+
+	DFP = False
+
+	if "keywords" in attr:
+		kw = string.split(attr["keywords"],",")
+		for keyword in kw:
+			keyword = keyword.strip()
+			if keyword not in ["DFP"]:
+				keywords.append(keyword)
+			else:
+				if keyword == "DFP":
+					DFP = True
+
+	if "power_description" in attr:
+		power_description = attr["power_description"]
+		power_description = string.replace(power_description, "\\n", "\n")
+
+	if "quote" in attr:
+		quote = attr["quote"]
+		quote = string.replace(quote, "\\n", "\n")
+
+	if "copyright" in attr:
+		card_copyright = attr["copyright"]
+
+	if "gender" in attr:
+		if attr["gender"] == "both":
+			card_sprites.append(SPRITE_MALE_FEMALE)
+		elif attr["gender"] == "male":
+			card_sprites.append(SPRITE_MALE)
+		elif attr["gender"] == "female":
+			card_sprites.append(SPRITE_FEMALE)
+
+	is_changeling = False
+
+	if "power" in attr:
+		if attr["power"].find("changeling") != -1:
+			is_changeling = True
+
+	if "race" in attr:
+		if is_changeling:
+			if attr["race"] == "alicorn":
+				card_sprites.append(SPRITE_CHANGELING_ALICORN)
+			elif attr["race"] == "unicorn":
+				card_sprites.append(SPRITE_CHANGELING_UNICORN)
+			elif attr["race"] == "pegasus":
+				card_sprites.append(SPRITE_CHANGELING_PEGASUS)
+			elif attr["race"] == "earth":
+				card_sprites.append(SPRITE_CHANGELING_EARTH)
+		else:
+			if attr["race"] == "alicorn":
+				card_sprites.append(SPRITE_ALICORN)
+			elif attr["race"] == "unicorn":
+				card_sprites.append(SPRITE_UNICORN)
+			elif attr["race"] == "pegasus":
+				card_sprites.append(SPRITE_PEGASUS)
+			elif attr["race"] == "earth":
+				card_sprites.append(SPRITE_EARTH)
+
+	if DFP:
+		card_sprites.append(SPRITE_DFP)
+
+	if "name_font_size" in attr:
+		try:
+			title_font_size = int(attr["name_font_size"])
+		except:
+			pass
+
+	if "power_font_size" in attr:
+		try:
+			power_font_size = int(attr["power_font_size"])
+		except:
+			pass
+
+	print card_type,card_img,title,keywords,power_description,quote,card_copyright,card_sprites,title_font_size,power_font_size
+
+	template = Templatizer(	card_type,
+							card_img,
+							title,
+							keywords,
+							power_description,
+							quote,
+							card_copyright,
+							card_sprites,
+							title_font_size,
+							power_font_size)
+	return template
 
 
 class Templatizer(object):
