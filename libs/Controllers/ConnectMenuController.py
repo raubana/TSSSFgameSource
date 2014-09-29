@@ -88,36 +88,38 @@ class ConnectMenuController(Controller):
 		self.load_from_appdata()
 
 	def load_from_appdata(self):
-		folders = os.listdir(APPDATA_LOCATION)
-		if "TSSSF" not in folders:
-			os.makedirs(DATA_LOCATION)
-		else:
-			files = os.listdir(DATA_LOCATION)
-			filename = "connectmenu.data"
-			if filename in files:
-				f = open(DATA_LOCATION+"/"+filename)
-				try:
-					data = f.read().split("\n")
-					ip = data[0]
-					port = data[1]
-					name = data[2]
-					key = data[3]
-					self.ip_inputbox.set_text(ip)
-					self.port_inputbox.set_text(port)
-					self.name_inputbox.set_text(name)
-					self.key_inputbox.set_text(key)
-					f.close()
-				except:
-					f.close()
-					os.remove(DATA_LOCATION+"/"+filename)
-					print "ERROR! Failed to parse 'connectmenu.data'. File is deleted."
+		if APPDATA_LOCATION != None:
+			folders = os.listdir(APPDATA_LOCATION)
+			if "TSSSF" not in folders:
+				os.makedirs(DATA_LOCATION)
+			else:
+				files = os.listdir(DATA_LOCATION)
+				filename = "connectmenu.data"
+				if filename in files:
+					f = open(DATA_LOCATION+"/"+filename)
+					try:
+						data = f.read().split("\n")
+						ip = data[0]
+						port = data[1]
+						name = data[2]
+						key = data[3]
+						self.ip_inputbox.set_text(ip)
+						self.port_inputbox.set_text(port)
+						self.name_inputbox.set_text(name)
+						self.key_inputbox.set_text(key)
+						f.close()
+					except:
+						f.close()
+						os.remove(DATA_LOCATION+"/"+filename)
+						print "ERROR! Failed to parse 'connectmenu.data'. File is deleted."
 
 	def save_to_appdata(self):
-		filename = DATA_LOCATION+"/connectmenu.data"
-		f = open(filename,"w")
-		data = self.ip_inputbox.text+"\n"+self.port_inputbox.text+"\n"+self.name_inputbox.text+"\n"+self.key_inputbox.text
-		f.write(data)
-		f.close()
+		if DATA_LOCATION != None:
+			filename = DATA_LOCATION+"/connectmenu.data"
+			f = open(filename,"w")
+			data = self.ip_inputbox.text+"\n"+self.port_inputbox.text+"\n"+self.name_inputbox.text+"\n"+self.key_inputbox.text
+			f.write(data)
+			f.close()
 
 	def handle_event_losefocus(self, widget):
 		self.check_widget(widget)

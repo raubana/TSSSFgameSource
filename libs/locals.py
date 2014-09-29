@@ -17,8 +17,13 @@ DEFAULT_PORT = 27015
 ESCAPE_CHARACTER = str(chr(3))+str(chr(4))+str(chr(5))+str(chr(6))
 
 # FILE CONSTANTS
-APPDATA_LOCATION = os.getenv('APPDATA').replace("\\","/")
-DATA_LOCATION = APPDATA_LOCATION+"/TSSSF"
+try:
+	#TODO: Make this work on all platforms.
+	APPDATA_LOCATION = os.getenv('APPDATA').replace("\\","/")
+	DATA_LOCATION = APPDATA_LOCATION+"/TSSSF"
+except:
+	APPDATA_LOCATION = None
+	DATA_LOCATION = None
 
 # TEXT ALIGNMENT CONSTANTS
 ALIGN_TOPLEFT = 0
