@@ -3,6 +3,7 @@ import os, random
 
 from locals import *
 from PickledCard import *
+import Templatizer
 
 
 def check_variable_name_is_legal(name):
@@ -100,7 +101,12 @@ class Card(object):
 
 	def parsePickledCard(self, pc):
 		# first we need our image
-		self.image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
+		if "template" in pc.attr and pc.attr["template"] == "True":
+			img = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
+			template = Templatizer.create_template_from_attributes(pc.attr, pc.img)
+			self.image = template.generate_image()
+		else:
+			self.image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
 		#next we need to parse each attribute individually in preparation for proper parsing.
 		self.attributes = str(pc.attr)
 		attributes = pc.attr.split("\n")
@@ -122,3 +128,4 @@ class Card(object):
 		for attr in attributes[1:]:
 			if attr[0] == "name":
 				self.name = attr[1]
+
