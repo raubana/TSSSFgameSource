@@ -84,8 +84,10 @@ def create_template_from_attributes(attr, image):
 					card_type = CARDBACK_START
 		if attr["type"] == "ship":
 			card_type = CARDBACK_SHIP
+			card_sprites.append(SPRITE_SHIP)
 		if attr["type"] == "goal":
 			card_type = CARDBACK_GOAL
+			card_sprites.append(SPRITE_GOAL)
 
 	if "name" in attr:
 		title = attr["name"]
@@ -151,6 +153,18 @@ def create_template_from_attributes(attr, image):
 	if DFP:
 		card_sprites.append(SPRITE_DFP)
 
+	if "worth" in attr:
+		if attr["worth"] == "0":
+			card_sprites.append(SPRITE_0)
+		elif attr["worth"] == "1":
+			card_sprites.append(SPRITE_1)
+		elif attr["worth"] == "2":
+			card_sprites.append(SPRITE_2)
+		elif attr["worth"] == "3":
+			card_sprites.append(SPRITE_3)
+		elif attr["worth"] == "4":
+			card_sprites.append(SPRITE_4)
+
 	if "name_font_size" in attr:
 		try:
 			title_font_size = int(attr["name_font_size"])
@@ -162,8 +176,6 @@ def create_template_from_attributes(attr, image):
 			power_font_size = int(attr["power_font_size"])
 		except:
 			pass
-
-	print card_type,card_img,title,keywords,power_description,quote,card_copyright,card_sprites,title_font_size,power_font_size
 
 	template = Templatizer(	card_type,
 							card_img,
@@ -235,7 +247,7 @@ class Templatizer(object):
 			font = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",self.title_font_size)
 		else:
 			font = TITLE_FONT
-		title_lines = autowrap_text(self.title, TITLE_FONT, 555)
+		title_lines = autowrap_text(self.title, TITLE_FONT, 560)
 		line_spacing = int(TITLE_FONT.get_height()*0.15)
 		height = (TITLE_FONT.get_height())*len(title_lines) - (line_spacing)*(len(title_lines)-1)
 		mid = 100

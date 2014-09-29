@@ -1,5 +1,7 @@
 import traceback
 
+DEFAULT_COPYRIGHT = "Core 1.0.3 Copyright 2014 Horrible People Games. Art by Pixel Prism."
+
 try:
 	import Tkinter
 	from PIL import Image, ImageTk
@@ -124,7 +126,7 @@ class Main(object):
 		self.attributes.insert(Tkinter.INSERT, "template = False\n")
 		self.attributes.insert(Tkinter.INSERT, "power_description = \n")
 		self.attributes.insert(Tkinter.INSERT, "quote = \n")
-		self.attributes.insert(Tkinter.INSERT, "copyright = ")
+		self.attributes.insert(Tkinter.INSERT, "copyright = "+DEFAULT_COPYRIGHT)
 
 	def set_template_ship(self):
 		self.attributes.delete(1.0, Tkinter.END)
@@ -138,7 +140,7 @@ class Main(object):
 		self.attributes.insert(Tkinter.INSERT, "template = False\n")
 		self.attributes.insert(Tkinter.INSERT, "power_description = \n")
 		self.attributes.insert(Tkinter.INSERT, "quote = \n")
-		self.attributes.insert(Tkinter.INSERT, "copyright = ")
+		self.attributes.insert(Tkinter.INSERT, "copyright = "+DEFAULT_COPYRIGHT)
 
 	def set_template_goal(self):
 		self.attributes.delete(1.0, Tkinter.END)
@@ -150,9 +152,9 @@ class Main(object):
 		self.attributes.insert(Tkinter.INSERT, "\n")
 		self.attributes.insert(Tkinter.INSERT, "#Delete everything after this line, if you're not using card templates.\n")
 		self.attributes.insert(Tkinter.INSERT, "template = False\n")
-		self.attributes.insert(Tkinter.INSERT, "power_description = \n")
+		self.attributes.insert(Tkinter.INSERT, "power_description = Win this Goal when:\\n\n")
 		self.attributes.insert(Tkinter.INSERT, "quote = \n")
-		self.attributes.insert(Tkinter.INSERT, "copyright = ")
+		self.attributes.insert(Tkinter.INSERT, "copyright = "+DEFAULT_COPYRIGHT)
 
 	def getSuggestedFilename(self):
 		# we need to get the text from the attributes widget
