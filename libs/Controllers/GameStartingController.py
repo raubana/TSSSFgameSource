@@ -112,7 +112,8 @@ class GameStartingController(Controller):
 
 	def add_to_collage(self):
 		img1 = self.card_img.copy().convert()
-		img2 = self.card_img.copy().convert()
+		img1.fill((127,127,127), special_flags = BLEND_RGB_MULT)
+		img2 = img1.copy()
 		img1.set_colorkey((0,0,0))
 		img2.set_colorkey((255,255,255))
 		angle = random.randint(0,359)
