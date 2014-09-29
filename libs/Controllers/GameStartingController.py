@@ -33,13 +33,12 @@ class GameStartingController(Controller):
 	def check_current(self):
 		#first we check if this card is in our defaults or customs
 		card_name = self.cards_to_load[self.card_index]
-		match = None
-		if os.path.isfile("data/default_cards/"+card_name):
-			match = "data/default_cards/"+card_name
-		elif os.path.isfile("cards/"+card_name):
-			match = "cards/"+card_name
-		if match:# we need to check if our card matches theirs
-			self.card_filename = match
+		self.matching_card = None
+		for card in self.main.my_master_deck:
+			if card.name == card_name:
+				self.matching_card = card
+				break
+		if self.matching_card != None:# we need to check if our card matches theirs
 			self.main.client.send("REQUEST_CARDFILE_ATTRIBUTES:"+str(self.card_index))
 		else:# we need to download the entire file
 			self.main.client.send("REQUEST_CARDFILE:"+str(self.card_index))
@@ -80,14 +79,11 @@ class GameStartingController(Controller):
 			self.current_message = s2+"/"+str(len(self.cards_to_load))
 			index = int(s2)
 			s3 = s1[len(s2)+1:]
-			pc_card = open_pickledcard(self.card_filename)
-			if pc_card.attr != s3:
+			if self.matching_card.attributes != s3:
 				#Our attributes file varies from theirs, so we have to download the entire card... poop.
 				self.main.client.send("REQUEST_CARDFILE:"+str(self.card_index))
 			else:
-				card = Card()
-				card.parsePickledCard(pc_card)
-				self.main.master_deck.cards.append(card)
+				self.main.master_deck.cards.append(self.matching_card)
 				self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
 				self.check_next()
 		elif message == "CLIENT_READY":

@@ -68,11 +68,14 @@ class MasterDeck(object):
 	def load_all_cards(self, pc_list=None):
 		if pc_list == None:
 			pc_list = []
-			files = os.listdir("cards")
-			for f in files:
+			files = []
+			import CustomDeck
+			custom_deck = CustomDeck.CustomDeck()
+			custom_deck.follow_instructions("add_all")
+			for f in custom_deck.list:
 				if f.endswith(".tsssf") or f.endswith(".tsf"):
 					print("loading '" + f + "'")
-					pc = open_pickledcard("data/default_cards/" + f)
+					pc = open_pickledcard(f)
 					pc_list.append(pc)
 		for pc in pc_list:
 			print "parsing " + pc.filename

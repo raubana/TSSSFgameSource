@@ -14,6 +14,7 @@ try:
 	from libs.Deck import *
 	from libs.locals import *
 
+	from libs.Controllers.StartUpController import *
 	from libs.Controllers.ConnectMenuController import *
 	from libs.Sprite.ChatSprite import ChatSprite
 except Exception, e:
@@ -86,9 +87,11 @@ class Main(object):
 		self.connecting = False
 		self.server_is_pinged = False
 
-		self.controller = ConnectMenuController(self)  # Controllers are used to control the application while something is being taken care of.
+		self.controller = StartUpController(self)  # Controllers are used to control the application while something is being taken care of.
 
 		self.manage_pack_requests()
+
+		self.my_master_deck = MasterDeck()
 
 		self.reset()
 		self.run()
