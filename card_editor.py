@@ -275,8 +275,16 @@ class Main(object):
 			if not self.filename.endswith(".tsf") and not self.filename.endswith(".tsssf"):
 				self.filename += ".tsf"
 			# We need to make our object first.
-			attr = str(self.attributes.get("1.0", "1000000000.0"))
-			attr = attr.strip()
+			data = str(self.attributes.get("1.0", "1000000000.0"))
+			data = data.strip()
+			L = data.split("\n")
+			attr = {}
+			for l in L:
+				try:
+					spl = libs.Deck.break_apart_line(l)
+					attr[spl[0]] = spl[1]
+				except:
+					pass
 			if "template" in attr and attr["template"] == "True":
 				pygame.image.save(pygame.transform.smoothscale(self.imported_image,CARD_ART_SIZE), self.filename+".temp.png")
 			else:
@@ -285,7 +293,7 @@ class Main(object):
 			image_data = f.read()
 			f.close()
 			os.remove(self.filename+".temp.png")
-			card = libs.PickledCard.PickledCard(image_data, attr)
+			card = libs.PickledCard.PickledCard(image_data, data)
 			libs.PickledCard.save_pickledcard(card, self.filename)
 
 	def load_file(self, filename):
