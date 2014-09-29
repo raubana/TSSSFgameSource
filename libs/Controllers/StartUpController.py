@@ -1,6 +1,9 @@
 from Controller import*
 
 from ..GUI.GUI import *
+from ..CustomDeck import *
+from ..PickledCard import *
+from ..Deck import*
 
 import string, os, random
 
@@ -11,15 +14,31 @@ class StartUpController(Controller):
 		self.main.main_element.clear()
 		self.main.main_element.set_text("")
 
-		self.main.set_text("Loading...")
+		self.main.main_element.set_text("Loading...")
 
-		self.rendered_once = False
+		self.custom_deck = CustomDeck()
+		self.custom_deck.follow_instructions("add_all")
+
+		self.disable_framerate = True
 
 	def update(self):
-		if self.rendered_once:
-			self.main.my_master_deck.load_all_cards()
-			import ConnectMenuController
-			self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
-
-	def render(self):
-		self.rendered_once = True
+			if len(self.custom_deck.list) > 0:
+				f = self.custom_deck.list.pop(0)
+				if f.endswith(".tsssf") or f.endswith(".tsf"):
+					match = None
+					files = os.listdir("data/default_cards")
+					if f in files:
+						match = "data/default_cards/"+f
+					else:
+						files = os.listdir("cards")
+						if f in files:
+							match = "cards/"+f
+					if match != None:
+						print("loading and parsing'" + match + "'")
+						pc = open_pickledcard(match)
+						card = Card()
+						card.parsePickledCard(pc)
+						self.main.my_master_deck.cards.append(card)
+			else:
+				import ConnectMenuController
+				self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
