@@ -103,7 +103,7 @@ class GameController(Controller):
 			self.bottom_element.clear()
 			self.bottom_element.layout = LAYOUT_HORIZONTAL
 			scale = 0.325
-			size = (int(CARDSIZE[0]*scale),int(CARDSIZE[1]*scale))
+			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 			for x in xrange(len(hand)):
 				s = hand[len(hand)-x-1]
 				i = int(s)
@@ -115,7 +115,7 @@ class GameController(Controller):
 			self.public_goals_element.clear()
 			self.public_goals_element.layout = LAYOUT_VERTICAL
 			scale = 0.425
-			size = (int(CARDSIZE[0]*scale),int(CARDSIZE[1]*scale))
+			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 			for x in xrange(len(hand)):
 				s = hand[len(hand)-x-1]
 				i = int(s)

@@ -94,7 +94,7 @@ class MasterDeck(object):
 
 class Card(object):
 	def __init__(self):
-		self.image = pygame.Surface(CARDSIZE, pygame.SRCALPHA)
+		self.image = pygame.Surface(CARD_SIZE, pygame.SRCALPHA)
 		self.name = None
 		self.type = None
 		self.attributes = ""
@@ -107,6 +107,7 @@ class Card(object):
 			self.image = template.generate_image()
 		else:
 			self.image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
+		self.image = pygame.transform.smoothscale(self.image, CARD_SIZE)
 		#next we need to parse each attribute individually in preparation for proper parsing.
 		self.attributes = str(pc.attr)
 		attributes = pc.attr.split("\n")

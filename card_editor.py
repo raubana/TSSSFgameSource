@@ -25,7 +25,6 @@ class Main(object):
 	def __init__(self):
 		self.filename = ""
 		self.imported_image = None
-		self.imported_image_data = None
 
 		self.top = Tkinter.Tk()
 		self.setup_main_gui()
@@ -44,7 +43,7 @@ class Main(object):
 		menubar = Tkinter.Menu(self.top)
 		filemenu = Tkinter.Menu(menubar, tearoff=0)
 		filemenu.add_command(label="Generate (F5)", command=self.update_image)
-		filemenu.add_command(label="Export Image", command=self.export_image)
+		filemenu.add_command(label="Export Image", command=self.prompt_export_image)
 		filemenu.add_separator()
 		filemenu.add_command(label="New", command=self.close_file)
 		filemenu.add_command(label="Import image", command=self.prompt_import_image)
@@ -84,11 +83,13 @@ class Main(object):
 		self.attributes.pack(fill=Tkinter.Y)
 		self.attributes.bind("<F5>", self.handle_update_image)
 
-		self.canvas = Tkinter.Canvas(left_frame, width=CARDSIZE[0], height=CARDSIZE[1])
+		self.canvas = Tkinter.Canvas(left_frame, width=CARD_SIZE[0], height=CARD_SIZE[1])
 		self.canvas.pack()
 
-	def export_image(self):
-		if self.imported_image:
+	def export_image(self, filename):
+		if self.imported_image != None and filename != "":
+			if not filename.endswith(".png"):
+				filename += ".png"
 			data = str(self.attributes.get("1.0", "1000000000.0"))
 			data = data.strip()
 			L = data.split("\n")
@@ -101,7 +102,7 @@ class Main(object):
 					pass
 			if "template" in attr and attr["template"] == "True":
 				template = libs.Templatizer.create_template_from_attributes(attr, self.imported_image)
-				pygame.image.save(template.generate_image(),self.filename+".EXPORT.png")
+				pygame.image.save(template.generate_image(),filename)
 
 	def handle_update_image(self, event):
 		self.update_image()
@@ -211,29 +212,26 @@ class Main(object):
 		self.import_image(filename)
 
 	def prompt_save_file(self):
-		if self.imported_image_data != None:
+		if self.imported_image != None:
 			suggested_filename = self.getSuggestedFilename()
 			self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf'),('Old Card files', '.tsssf')], initialfile=suggested_filename,
 											  initialdir="cards")
 			self.save_file()
 
+	def prompt_export_image(self):
+		if self.imported_image != None:
+			suggested_filename = self.getSuggestedFilename()
+			filename = asksaveasfilename(filetypes=[('Png files', '.png')], initialfile=suggested_filename,
+											  initialdir="cards")
+			self.export_image(filename)
+
 	def import_image(self, filename):
 		if filename != "":
 			self.imported_image = pygame.image.load(filename)
-			f = io.FileIO(filename, "r")
-			self.imported_image_data = f.read()
-			f.close()
-			"""
-			img = Image.open(filename)
-			img = img.resize(CARDSIZE, Image.ANTIALIAS)
-			img = ImageTk.PhotoImage(img)
-			self.canvas.img = img
-			self.canvas.create_image(CARDSIZE[0] / 2, CARDSIZE[1] / 2, image=img)
-			"""
 			self.update_image()
 
 	def update_image(self):
-		if self.imported_image:
+		if self.imported_image != None:
 			#first we parse our data to determine if our image is pregenerated or not.
 			data = str(self.attributes.get("1.0", "1000000000.0"))
 			data = data.strip()
@@ -249,16 +247,16 @@ class Main(object):
 			if "template" in attr and attr["template"] == "True":
 				#we have to generate the image.
 				template = libs.Templatizer.create_template_from_attributes(attr, self.imported_image)
-				self.card_image = pygame.transform.smoothscale(template.generate_image(),CARDSIZE)
+				self.card_image = pygame.transform.smoothscale(template.generate_image(),CARD_SIZE)
 			else:
 				#the image is pregenerated. Simply resize.
-				self.card_image = pygame.transform.smoothscale(self.imported_image,CARDSIZE)
+				self.card_image = pygame.transform.smoothscale(self.imported_image,CARD_SIZE)
 			pygame.image.save(self.card_image,self.filename+".temp.png")
 			img = Image.open(self.filename+".temp.png")
-			img = img.resize(CARDSIZE, Image.ANTIALIAS)
+			img = img.resize(CARD_SIZE, Image.ANTIALIAS)
 			img = ImageTk.PhotoImage(img)
 			self.canvas.img = img
-			self.canvas.create_image(CARDSIZE[0] / 2, CARDSIZE[1] / 2, image=img)
+			self.canvas.create_image(CARD_SIZE[0] / 2, CARD_SIZE[1] / 2, image=img)
 			os.remove(self.filename+".temp.png")
 
 	def check_save_first(self):
@@ -271,13 +269,21 @@ class Main(object):
 			self.save_file()
 
 	def save_file(self):
-		if self.filename != "" and self.imported_image_data != None:
+		if self.filename != "" and self.imported_image != None:
 			if not self.filename.endswith(".tsf") and not self.filename.endswith(".tsssf"):
 				self.filename += ".tsf"
 			# We need to make our object first.
 			attr = str(self.attributes.get("1.0", "1000000000.0"))
 			attr = attr.strip()
-			card = libs.PickledCard.PickledCard(self.imported_image_data, attr)
+			if "template" in attr and attr["template"] == "True":
+				pygame.image.save(pygame.transform.smoothscale(self.imported_image,CARD_ART_SIZE), self.filename+".temp.png")
+			else:
+				pygame.image.save(pygame.transform.smoothscale(self.imported_image,CARD_SIZE), self.filename+".temp.png")
+			f = io.FileIO(self.filename+".temp.png", "r")
+			image_data = f.read()
+			f.close()
+			os.remove(self.filename+".temp.png")
+			card = libs.PickledCard.PickledCard(image_data, attr)
 			libs.PickledCard.save_pickledcard(card, self.filename)
 
 	def load_file(self, filename):
@@ -288,7 +294,6 @@ class Main(object):
 			self.attributes.insert(Tkinter.INSERT, card.attr)
 			imgIO = io.BytesIO(card.img)
 			self.filename = filename
-			self.imported_image_data = card.img
 			self.imported_image = pygame.image.load(imgIO)
 			self.update_image()
 
@@ -297,7 +302,6 @@ class Main(object):
 
 		self.filename = ""
 		self.imported_image = None
-		self.imported_image_data = None
 
 		self.main.destroy()
 		self.setup_main_gui()
