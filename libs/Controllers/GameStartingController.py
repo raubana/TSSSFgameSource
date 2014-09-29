@@ -17,7 +17,7 @@ class GameStartingController(Controller):
 		self.last_rerendered = 0
 		self.disable_framerate = True
 
-		self.collage_surface = pygame.Surface(self.main.screen_size, SRCALPHA)
+		self.create_collage_surface()
 
 		self.card_size = (int(0.7*200),200)
 		self.card_img = pygame.Surface(self.card_size)
@@ -31,6 +31,10 @@ class GameStartingController(Controller):
 		self.start_time = float(self.main.time)
 
 		self.main.client.send("REQUEST_DECK")
+
+	def create_collage_surface(self):
+		self.collage_surface = pygame.Surface(self.main.screen_size)
+		self.collage_surface.fill((64,64,64))
 
 	def check_current(self):
 		#first we check if this card is in our defaults or customs
@@ -55,7 +59,7 @@ class GameStartingController(Controller):
 	def update(self):
 		for e in self.main.events:
 			if e.type == VIDEORESIZE:
-				self.collage_surface = pygame.Surface(self.main.screen_size, SRCALPHA)
+				self.create_collage_surface()
 
 	def read_message(self, message):
 		if message.startswith("DECK:"):
@@ -107,19 +111,31 @@ class GameStartingController(Controller):
 		return True
 
 	def add_to_collage(self):
-		card_img = pygame.transform.rotozoom(self.card_img.convert_alpha(), random.randint(0,359), 1.0)
-		rect = card_img.get_rect(center = (random.randint(0,self.main.screen_size[0]), random.randint(0,self.main.screen_size[1])))
-		self.collage_surface.blit(card_img,rect)
+		img1 = self.card_img.copy().convert()
+		img2 = self.card_img.copy().convert()
+		img1.set_colorkey((0,0,0))
+		img2.set_colorkey((255,255,255))
+		angle = random.randint(0,359)
+		img1 = pygame.transform.rotate(img1, angle)
+		img2 = pygame.transform.rotate(img2, angle)
+		rect = img1.get_rect(center = (random.randint(0,self.main.screen_size[0]),
+										   random.randint(0,self.main.screen_size[1])))
+		self.collage_surface.blit(img1, rect, special_flags=BLEND_RGB_MAX)
+		img2.set_alpha(127)
+		self.collage_surface.blit(img2, rect)
 
 	def render(self):
 		if self.rerender or self.main.time-self.last_rerendered>1:
 			self.last_rerendered = float(self.main.time)
 			self.rerender = False
 			self.main.screen.blit(self.collage_surface,(0,0))
-			self.main.screen.fill((127,127,127),special_flags = BLEND_RGB_MULT)
+			#self.main.screen.fill((127,127,127),special_flags = BLEND_RGB_MULT)
 			text_img = self.main.font.render(self.current_message, True, (255,255,255))
 			card_img = self.card_img
 			card_rect = card_img.get_rect(center = (self.main.screen_size[0]/2, self.main.screen_size[1]/2))
 			text_rect = text_img.get_rect(midbottom = card_rect.midtop)
+			merged_rect = card_rect.union(text_rect)
+			merged_rect.inflate_ip(10, 10)
+			self.main.screen.fill((64,64,64), merged_rect, special_flags = BLEND_RGB_MULT)
 			self.main.screen.blit(text_img,text_rect)
 			self.main.screen.blit(card_img,card_rect)

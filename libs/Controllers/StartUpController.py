@@ -34,7 +34,7 @@ class StartUpController(Controller):
 						if f in files:
 							match = "cards/"+f
 					if match != None:
-						print("loading and parsing'" + match + "'")
+						print("loading and parsing '" + match + "'")
 						pc = open_pickledcard(match)
 						card = Card()
 						card.parsePickledCard(pc)
