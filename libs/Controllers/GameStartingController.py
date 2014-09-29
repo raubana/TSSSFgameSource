@@ -34,8 +34,8 @@ class GameStartingController(Controller):
 		#first we check if this card is in our defaults or customs
 		card_name = self.cards_to_load[self.card_index]
 		self.matching_card = None
-		for card in self.main.my_master_deck:
-			if card.name == card_name:
+		for card in self.main.my_master_deck.cards:
+			if card.filename == card_name:
 				self.matching_card = card
 				break
 		if self.matching_card != None:# we need to check if our card matches theirs
@@ -69,6 +69,7 @@ class GameStartingController(Controller):
 			s3 = s1[len(s2)+1:]
 			#print s3[:1000]
 			self.main.master_deck.unpickle_and_add_card(s3)
+			print "'"+self.main.master_deck.cards[-1].name+"' downloaded."
 			self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
 			self.check_next()
 		elif message.startswith("CARDFILE_ATTRIBUTES:"):

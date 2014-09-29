@@ -38,6 +38,7 @@ class StartUpController(Controller):
 						pc = open_pickledcard(match)
 						card = Card()
 						card.parsePickledCard(pc)
+						card.filename = f
 						self.main.my_master_deck.cards.append(card)
 			else:
 				import ConnectMenuController

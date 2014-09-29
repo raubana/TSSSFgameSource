@@ -1,6 +1,9 @@
 import traceback
 
 try:
+	import os
+	os.environ['SDL_VIDEO_CENTERED'] = '1'
+
 	import pygame
 	from pygame.locals import *
 	pygame.mixer.pre_init(buffer = 2**9)
