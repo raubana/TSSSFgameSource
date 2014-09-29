@@ -5,7 +5,7 @@ from ..netcom import Client
 from ..Deck import MasterDeck, Card
 from ..PickledCard import *
 
-import string, os, thread, io
+import string, os, thread, io, random
 
 class GameStartingController(Controller):
 	def init(self):
@@ -16,6 +16,8 @@ class GameStartingController(Controller):
 		self.rerender = True
 		self.last_rerendered = 0
 		self.disable_framerate = True
+
+		self.collage_surface = pygame.Surface(self.main.screen_size, SRCALPHA)
 
 		self.card_size = (int(0.7*200),200)
 		self.card_img = pygame.Surface(self.card_size)
@@ -50,6 +52,11 @@ class GameStartingController(Controller):
 		else:
 			self.check_current()
 
+	def update(self):
+		for e in self.main.events:
+			if e.type == VIDEORESIZE:
+				self.collage_surface = pygame.Surface(self.main.screen_size, SRCALPHA)
+
 	def read_message(self, message):
 		if message.startswith("DECK:"):
 			self.rerender = True
@@ -71,6 +78,7 @@ class GameStartingController(Controller):
 			self.main.master_deck.unpickle_and_add_card(s3)
 			print "'"+self.main.master_deck.cards[-1].name+"' downloaded."
 			self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
+			self.add_to_collage()
 			self.check_next()
 		elif message.startswith("CARDFILE_ATTRIBUTES:"):
 			self.rerender = True
@@ -86,6 +94,7 @@ class GameStartingController(Controller):
 			else:
 				self.main.master_deck.cards.append(self.matching_card)
 				self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
+				self.add_to_collage()
 				self.check_next()
 		elif message == "CLIENT_READY":
 			print "DURATION:",round(self.main.time - self.start_time,3)
@@ -97,11 +106,17 @@ class GameStartingController(Controller):
 			return False
 		return True
 
+	def add_to_collage(self):
+		card_img = pygame.transform.rotozoom(self.card_img.convert_alpha(), random.randint(0,359), 1.0)
+		rect = card_img.get_rect(center = (random.randint(0,self.main.screen_size[0]), random.randint(0,self.main.screen_size[1])))
+		self.collage_surface.blit(card_img,rect)
+
 	def render(self):
 		if self.rerender or self.main.time-self.last_rerendered>1:
 			self.last_rerendered = float(self.main.time)
 			self.rerender = False
-			self.main.screen.fill((0,0,0))
+			self.main.screen.blit(self.collage_surface,(0,0))
+			self.main.screen.fill((127,127,127),special_flags = BLEND_RGB_MULT)
 			text_img = self.main.font.render(self.current_message, True, (255,255,255))
 			card_img = self.card_img
 			card_rect = card_img.get_rect(center = (self.main.screen_size[0]/2, self.main.screen_size[1]/2))
