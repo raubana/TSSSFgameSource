@@ -32,6 +32,16 @@ SPRITE_PEGASUS = 17
 SPRITE_SHIP = 18
 SPRITE_UNICORN = 19
 
+DEFAULT_TITLE_FONT_SIZE = 55
+DEFAULT_POWER_FONT_SIZE = 40
+
+TITLE_FONT = pygame.font.Font("data/fonts/Barth_Regular.ttf",DEFAULT_TITLE_FONT_SIZE)
+KEYWORDS_FONT = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",40)
+POWER_FONT= pygame.font.Font("data/fonts/Ubahn_newpony.ttf",DEFAULT_POWER_FONT_SIZE)
+QUOTE_FONT = pygame.font.Font("data/fonts/LinLibertine_RI.ttf",28)
+COPYRIGHT_FONT = pygame.font.Font("data/fonts/Ubahn-Light.ttf",17)
+COPYRIGHT_FONT.set_bold(True)
+
 
 
 def autowrap_text(text, font, max_width):
@@ -221,6 +231,10 @@ class Templatizer(object):
 		img.blit(cardback, (0, 0))
 
 		#we render the card title
+		if self.title_font_size != DEFAULT_TITLE_FONT_SIZE:
+			font = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",self.title_font_size)
+		else:
+			font = TITLE_FONT
 		title_lines = autowrap_text(self.title, TITLE_FONT, 555)
 		line_spacing = int(TITLE_FONT.get_height()*0.15)
 		height = (TITLE_FONT.get_height())*len(title_lines) - (line_spacing)*(len(title_lines)-1)
@@ -240,12 +254,16 @@ class Templatizer(object):
 			img.blit(srf,rect)
 
 		#render the card's power
-		y_pos = 650 + POWER_FONT.get_height()*0.65
-		power_lines = autowrap_text(self.power, POWER_FONT, 680)
-		line_spacing = int(POWER_FONT.get_height()*0.05)
+		if self.power_font_size != DEFAULT_POWER_FONT_SIZE:
+			font = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",self.power_font_size)
+		else:
+			font = POWER_FONT
+		y_pos = 650 + font.get_height()*0.65
+		power_lines = autowrap_text(self.power, font, 680)
+		line_spacing = int(font.get_height()*0.05)
 		for line in power_lines:
 			print "'"+line+"'"
-			srf = POWER_FONT.render(line, True, color)
+			srf = font.render(line, True, color)
 			rect = srf.get_rect(midtop = (395,y_pos))
 			img.blit(srf,rect)
 			y_pos += rect.height-line_spacing
