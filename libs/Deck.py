@@ -118,7 +118,8 @@ class Card(object):
 			self.image = template.generate_image()
 		else:
 			self.image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
-		self.image = pygame.transform.smoothscale(self.image, CARD_SIZE)
+		if self.image.get_size() != CARD_SIZE:
+			self.image = pygame.transform.smoothscale(self.image, CARD_SIZE)
 		#next we need to parse each attribute individually in preparation for proper parsing.
 		self.attributes = str(pc.attr)
 		attributes = pc.attr.split("\n")

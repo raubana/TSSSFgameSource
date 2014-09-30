@@ -1,6 +1,6 @@
 import traceback
 
-DEFAULT_COPYRIGHT = "Core 1.0.3 Copyright 2014 Horrible People Games. Art by Pixel Prism."
+DEFAULT_COPYRIGHT = "Core 1.0.4 Copyright 2014 Horrible People Games. Art by Pixel Prism."
 
 try:
 	import Tkinter
@@ -286,9 +286,15 @@ class Main(object):
 				except:
 					pass
 			if "template" in attr and attr["template"] == "True":
-				pygame.image.save(pygame.transform.smoothscale(self.imported_image,CARD_ART_SIZE), self.filename+".temp.png")
+				imported_image = self.imported_image
+				if imported_image.get_size() != CARD_ART_SIZE:
+					imported_image = pygame.transform.smoothscale(imported_image, CARD_ART_SIZE)
+				pygame.image.save(imported_image, self.filename+".temp.png")
 			else:
-				pygame.image.save(pygame.transform.smoothscale(self.imported_image,CARD_SIZE), self.filename+".temp.png")
+				imported_image = self.imported_image
+				if imported_image.get_size() != CARD_SIZE:
+					imported_image = pygame.transform.smoothscale(imported_image, CARD_SIZE)
+				pygame.image.save(imported_image, self.filename+".temp.png")
 			f = io.FileIO(self.filename+".temp.png", "r")
 			image_data = f.read()
 			f.close()
