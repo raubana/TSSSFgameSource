@@ -30,6 +30,7 @@ class Main(object):
 		"""
 		self.filename = ""
 		self.imported_image = None
+		self.missing_image = pygame.image.load("imgs/template/artplaceholder.png")
 
 		self.top = Tkinter.Tk()
 		self.setup_main_gui()
@@ -289,49 +290,49 @@ class Main(object):
 
 	def set_template_pony(self):
 		new_text = """type = pony
-		name =
-		keywords =
-		gender =
-		race =
-		number_of_ponies = 1
-		power =
-		power_activates_on = default
-		power_is_mandatory = False
-		power_is_copyable =
+name =
+keywords =
+gender =
+race =
+number_of_ponies = 1
+power =
+power_activates_on = default
+power_is_mandatory = False
+power_is_copyable =
 
-		template = True
-		power_description =
-		quote =
-		copyright = """
+template = True
+power_description =
+quote =
+copyright = """
 		new_text += DEFAULT_COPYRIGHT
 		self.set_attributes_text(new_text)
 
 	def set_template_ship(self):
 		new_text = """type = ship
-		name =
-		keywords =
-		power =
-		power_activates_on = default
-		power_is_mandatory = False
+name =
+keywords =
+power =
+power_activates_on = default
+power_is_mandatory = False
 
-		template = True
-		power_description =
-		quote =
-		copyright = """
+template = True
+power_description =
+quote =
+copyright = """
 		new_text += DEFAULT_COPYRIGHT
 		self.set_attributes_text(new_text)
 
 	def set_template_goal(self):
 		new_text = """type = goal
-		name =
-		condition =
-		worth =
-		modifiers =
+name =
+condition =
+worth =
+modifiers =
 
-		template = True
-		power_description = Win this Goal when:\\n
-		quote =
-		copyright = """
+template = True
+power_description = Win this Goal when:\\n
+quote =
+copyright = """
 		new_text += DEFAULT_COPYRIGHT
 		self.set_attributes_text(new_text)
 
@@ -383,7 +384,8 @@ class Main(object):
 	def prompt_open_file(self):
 		self.check_save_first()
 
-		filename = askopenfilename(filetypes=[('Card file', '.tsf'), ('Card file', '.tsssf')], initialdir="cards")
+		#filename = askopenfilename(filetypes=[('Card file', '.tsf'), ('Card file', '.tsssf')], initialdir="cards")
+		filename = askopenfilename(filetypes=[('Card file', '.tsf')], initialdir="cards")
 		self.filename = filename
 		self.load_file(filename)
 
@@ -394,7 +396,9 @@ class Main(object):
 	def prompt_save_file(self):
 		if self.imported_image != None:
 			suggested_filename = self.getSuggestedFilename()
-			self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf'),('Old Card files', '.tsssf')], initialfile=suggested_filename,
+			#self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf'),('Old Card files', '.tsssf')], initialfile=suggested_filename,
+			#								  initialdir="cards")
+			self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf')], initialfile=suggested_filename,
 											  initialdir="cards")
 			self.save_file()
 
@@ -411,32 +415,36 @@ class Main(object):
 			self.update_image()
 
 	def update_image(self):
-		if self.imported_image != None:
-			#first we parse our data to determine if our image is pregenerated or not.
-			data = self.get_attributes_text()
-			L = data.split("\n")
-			attr = {}
-			for l in L:
-				try:
-					spl = libs.Deck.break_apart_line(l)
-					attr[spl[0]] = spl[1]
-				except:
-					pass
+		if self.imported_image == None:
+			card_img = self.missing_image
+		else:
+			card_img = self.imported_image
 
-			if "template" in attr and attr["template"] == "True":
-				#we have to generate the image.
-				template = libs.Templatizer.create_template_from_attributes(attr, self.imported_image)
-				self.card_image = pygame.transform.smoothscale(template.generate_image(),CARD_SIZE)
-			else:
-				#the image is pregenerated. Simply resize.
-				self.card_image = pygame.transform.smoothscale(self.imported_image,CARD_SIZE)
-			pygame.image.save(self.card_image,self.filename+".temp.png")
-			img = Image.open(self.filename+".temp.png")
-			img = img.resize(CARD_SIZE, Image.ANTIALIAS)
-			img = ImageTk.PhotoImage(img)
-			self.canvas.img = img
-			self.canvas.create_image(CARD_SIZE[0] / 2, CARD_SIZE[1] / 2, image=img)
-			os.remove(self.filename+".temp.png")
+		#first we parse our data to determine if our image is pregenerated or not.
+		data = self.get_attributes_text()
+		L = data.split("\n")
+		attr = {}
+		for l in L:
+			try:
+				spl = libs.Deck.break_apart_line(l)
+				attr[spl[0]] = spl[1]
+			except:
+				pass
+
+		if "template" in attr and attr["template"] == "True":
+			#we have to generate the image.
+			template = libs.Templatizer.create_template_from_attributes(attr, card_img)
+			self.card_image = pygame.transform.smoothscale(template.generate_image(),CARD_SIZE)
+		else:
+			#the image is pregenerated. Simply resize.
+			self.card_image = pygame.transform.smoothscale(card_img,CARD_SIZE)
+		pygame.image.save(self.card_image,self.filename+".temp.png")
+		img = Image.open(self.filename+".temp.png")
+		img = img.resize(CARD_SIZE, Image.ANTIALIAS)
+		img = ImageTk.PhotoImage(img)
+		self.canvas.img = img
+		self.canvas.create_image(CARD_SIZE[0] / 2, CARD_SIZE[1] / 2, image=img)
+		os.remove(self.filename+".temp.png")
 
 	def check_save_first(self):
 		pass
@@ -449,7 +457,7 @@ class Main(object):
 
 	def save_file(self):
 		if self.filename != "" and self.imported_image != None:
-			if not self.filename.endswith(".tsf") and not self.filename.endswith(".tsssf"):
+			if not self.filename.endswith(".tsf"):# and not self.filename.endswith(".tsssf"):
 				self.filename += ".tsf"
 			# We need to make our object first.
 			data = self.get_attributes_text()

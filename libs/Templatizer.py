@@ -90,10 +90,10 @@ def create_template_from_attributes(attr, image):
 			if "power" in attr:
 				if attr["power"].find("startcard") != -1:
 					card_type = CARDBACK_START
-		if attr["type"] == "ship":
+		elif attr["type"] == "ship":
 			card_type = CARDBACK_SHIP
 			card_sprites.append(SPRITE_SHIP)
-		if attr["type"] == "goal":
+		elif attr["type"] == "goal":
 			card_type = CARDBACK_GOAL
 			card_sprites.append(SPRITE_GOAL)
 
@@ -241,10 +241,9 @@ class Templatizer(object):
 			color = (18,57,98)
 			second_color = None#this doesn't have a second color because goals don't have keywords
 		else:
-			cardback = pygame.Surface((788, 1088), pygame.SRCALPHA)
-			cardback.fill((0,0,0,0))
-			color = (0,0,0)
-			second_color = (64,64,64)
+			cardback = pygame.image.load("imgs/template/card/Unknown.png")
+			color = (64,64,64)
+			second_color = (220,220,220)
 
 		img.blit(pygame.transform.smoothscale(self.card_img, (600, 442)), (123, 164))
 
