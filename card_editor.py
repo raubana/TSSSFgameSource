@@ -4,16 +4,16 @@ DEFAULT_COPYRIGHT = "Core 1.0.4 Copyright 2014 Horrible People Games. Art by Pix
 
 try:
 	import Tkinter
+	import tkMessageBox
 	from PIL import Image, ImageTk
 	from tkFileDialog import askopenfilename, asksaveasfilename
 
 	import pickle
 	import pygame.image, pygame.transform
-	import gzip
-	import tempfile
 	import os
 	import io
 	import string
+	import time
 
 	import libs.PickledCard
 	from libs.locals import *
@@ -25,6 +25,9 @@ except Exception, e:
 
 class Main(object):
 	def __init__(self):
+		"""
+		self.cards = self.parse_card_pon()#TODO: GET RID OF THIS SHIT
+		"""
 		self.filename = ""
 		self.imported_image = None
 
@@ -44,6 +47,10 @@ class Main(object):
 		menu = Tkinter.Menu()
 		menubar = Tkinter.Menu(self.top)
 		filemenu = Tkinter.Menu(menubar, tearoff=0)
+		"""
+		#filemenu.add_command(label="Auto-Convert All Cards", command=self.auto_convert_all_cards)#TODO: GET RID OF THIS SHIT
+		filemenu.add_command(label="Auto-fill", command=self.auto_fill)#TODO: GET RID OF THIS SHIT
+		"""
 		filemenu.add_command(label="Generate (F5)", command=self.update_image)
 		filemenu.add_command(label="Export Image", command=self.prompt_export_image)
 		filemenu.add_separator()
@@ -88,6 +95,163 @@ class Main(object):
 		self.canvas = Tkinter.Canvas(left_frame, width=CARD_SIZE[0], height=CARD_SIZE[1])
 		self.canvas.pack()
 
+	"""
+	#TODO: GET RID OF THIS SHIT
+	def auto_convert_all_cards(self):
+		files = os.listdir("data/default_cards")
+		for f in files:
+			if f.endswith(".tsssf"):
+				self.load_file("data/default_cards/"+f)
+				self.auto_fill()
+				self.save_file()
+
+	#TODO: GET RID OF THIS SHIT
+	def parse_card_pon(self):
+		f = open("cards.pon")
+		data = f.read()
+		lines = data.split("\n")
+		cards = []
+		for line in lines:
+			parts = line.split("`")
+			if len(parts) == 8:
+				type = parts[0].lower()
+				image = parts[1]
+				sprites = parts[2].split("!")
+				name = parts[3]
+				keywords = []
+				for kw in parts[4].split(","):
+					keywords.append(kw.strip())
+				description = parts[5]
+				quote = parts[6]
+				cards.append((type,name,keywords,description,quote,sprites,image))
+		return cards
+
+	#TODO: GET RID OF THIS SHIT
+	def compare_names(self, N1, N2):
+		if N1 == N2: return True
+
+		name1 = str(N1)
+		name2 = str(N2)
+
+		name1 = name1.lower().replace("\\n"," ")
+		name2 = name2.lower().replace("\\n"," ")
+
+		if name1 == name2: return True
+
+		return False
+
+	#TODO: GET RID OF THIS SHIT
+	def auto_fill(self):
+		#first we need to find the name we're looking for in the attributes
+		attributes = self.get_attributes_text()
+		L = attributes.split("\n")
+		attr = {}
+		for l in L:
+			try:
+				spl = libs.Deck.break_apart_line(l)
+				attr[spl[0]] = spl[1]
+			except:
+				pass
+
+		if "name" in attr and attr["name"] == "Derpy Hooves":
+			return
+
+		if "name" in attr:
+			match = None
+			for card in self.cards:
+				if self.compare_names(attr["name"],card[1]):
+					match = list(card)
+					break
+			if match != None:
+				if match[0] in ("start","pony","ship","goal"):
+					if match[0] == "start":
+						match[0] = "pony"
+						power = "startcard"
+					else:
+						power = ""
+					new_text = "type = "+match[0]+"\n"
+					new_text += "name = "+match[1]+"\n"
+					keywords = list(match[2])
+					gender = "None"
+					race = "None"
+
+					worth = ""
+					for sprite in match[5]:
+						sprite = sprite.lower()
+						if sprite == "female":
+							gender = "female"
+						elif sprite == "male":
+							gender = "male"
+						elif sprite == "malefemale":
+							gender = "both"
+						elif sprite == "earth pony":
+							race = "earth"
+						elif sprite == "unicorn":
+							race = "unicorn"
+						elif sprite == "pegasus":
+							race = "pegasus"
+						elif sprite == "alicorn":
+							race = "alicorn"
+						elif sprite == "dystopian":
+							keywords.append("DFP")
+						elif sprite == "changelingearthpony":
+							race = "earth"
+							power = "changelingearth"
+						elif sprite == "changelingunicorn":
+							race = "unicorn"
+							power = "changelingunicorn"
+						elif sprite == "changelingpegasus":
+							race = "pegasus"
+							power = "changelingpegasus"
+						elif sprite == "changelingalicorn":
+							race = "alicorn"
+							power = "changelingalicorn"
+						elif sprite == "0":
+							worth = "0"
+						elif sprite == "1":
+							worth = "1"
+						elif sprite == "2":
+							worth = "2"
+						elif sprite == "3":
+							worth = "3"
+						elif sprite == "4":
+							worth = "4"
+					if match[0] in ("pony","ship"):
+						new_text += "keywords = " + string.join(keywords,", ") + "\n"
+					else:
+						new_text += "condition = \n"
+						new_text += "worth = " + worth + "\n"
+						new_text += "modifiers = None\n"
+					if match[0] == "pony":
+						new_text += "gender = " + gender + "\n"
+						new_text += "race = " + race + "\n"
+						new_text += "number_of_ponies = 1\n"
+					if match[0] in ("pony","ship"):
+						new_text += "power = " + power + "\n"
+						new_text += "power_activates_on = default\n"
+						new_text += "power_is_mandatory = False\n"
+					if match[0] == "pony":
+						new_text += "power_is_copyable = \n"
+					new_text += "\n"
+					new_text += "template = True\n"
+					new_text += "power_description = " + match[3] + "\n"
+					new_text += "quote = " + match[4] + "\n"
+					new_text += "copyright = " + DEFAULT_COPYRIGHT + "\n"
+
+					self.set_attributes_text(new_text)
+
+					self.import_image("imgs/split pages/"+match[6])
+				else:
+					tkMessageBox.showinfo("Notice", "This card's type won't work: "+match[0])
+					raise RuntimeError("This card's type won't work: "+match[0])
+			else:
+				tkMessageBox.showinfo("Notice", "None of the card's names were close enough to the given name.")
+				raise RuntimeError("None of the card's names were close enough to the given name.")
+		else:
+			tkMessageBox.showinfo("Notice", "There was no 'name' in the attributes.")
+			raise RuntimeError("There was no 'name' in the attributes.")
+	"""
+
 	def export_image(self, filename):
 		if self.imported_image != None and filename != "":
 			if not filename.endswith(".png"):
@@ -109,54 +273,71 @@ class Main(object):
 	def handle_update_image(self, event):
 		self.update_image()
 
-	def set_template_pony(self):
+	def set_attributes_text(self, new_text):
 		self.attributes.delete(1.0, Tkinter.END)
-		self.attributes.insert(Tkinter.INSERT, "type = pony\n")
-		self.attributes.insert(Tkinter.INSERT, "name = \n")
-		self.attributes.insert(Tkinter.INSERT, "keywords = \n")
-		self.attributes.insert(Tkinter.INSERT, "gender = \n")
-		self.attributes.insert(Tkinter.INSERT, "race = \n")
-		self.attributes.insert(Tkinter.INSERT, "number_of_ponies = 1\n")
-		self.attributes.insert(Tkinter.INSERT, "power = \n")
-		self.attributes.insert(Tkinter.INSERT, "power_activates_on = default\n")
-		self.attributes.insert(Tkinter.INSERT, "power_is_mandatory = False\n")
-		self.attributes.insert(Tkinter.INSERT, "power_is_copyable = \n")
-		self.attributes.insert(Tkinter.INSERT, "\n")
-		self.attributes.insert(Tkinter.INSERT, "template = True\n")
-		self.attributes.insert(Tkinter.INSERT, "power_description = \n")
-		self.attributes.insert(Tkinter.INSERT, "quote = \n")
-		self.attributes.insert(Tkinter.INSERT, "copyright = "+DEFAULT_COPYRIGHT)
+		lines = new_text.split("\n")
+		for i in xrange(len(lines)):
+			line = lines[i]
+			if i != len(lines)-1:
+				line += "\n"
+			self.attributes.insert(Tkinter.INSERT, line)
+
+	def get_attributes_text(self):
+		data = str(self.attributes.get("1.0", "1000000000.0"))
+		data = data.strip()
+		return data
+
+	def set_template_pony(self):
+		new_text = """type = pony
+		name =
+		keywords =
+		gender =
+		race =
+		number_of_ponies = 1
+		power =
+		power_activates_on = default
+		power_is_mandatory = False
+		power_is_copyable =
+
+		template = True
+		power_description =
+		quote =
+		copyright = """
+		new_text += DEFAULT_COPYRIGHT
+		self.set_attributes_text(new_text)
 
 	def set_template_ship(self):
-		self.attributes.delete(1.0, Tkinter.END)
-		self.attributes.insert(Tkinter.INSERT, "type = ship\n")
-		self.attributes.insert(Tkinter.INSERT, "name = \n")
-		self.attributes.insert(Tkinter.INSERT, "power = \n")
-		self.attributes.insert(Tkinter.INSERT, "power_activates_on = default\n")
-		self.attributes.insert(Tkinter.INSERT, "power_is_mandatory = False\n")
-		self.attributes.insert(Tkinter.INSERT, "\n")
-		self.attributes.insert(Tkinter.INSERT, "template = True\n")
-		self.attributes.insert(Tkinter.INSERT, "power_description = \n")
-		self.attributes.insert(Tkinter.INSERT, "quote = \n")
-		self.attributes.insert(Tkinter.INSERT, "copyright = "+DEFAULT_COPYRIGHT)
+		new_text = """type = ship
+		name =
+		keywords =
+		power =
+		power_activates_on = default
+		power_is_mandatory = False
+
+		template = True
+		power_description =
+		quote =
+		copyright = """
+		new_text += DEFAULT_COPYRIGHT
+		self.set_attributes_text(new_text)
 
 	def set_template_goal(self):
-		self.attributes.delete(1.0, Tkinter.END)
-		self.attributes.insert(Tkinter.INSERT, "type = goal\n")
-		self.attributes.insert(Tkinter.INSERT, "name = \n")
-		self.attributes.insert(Tkinter.INSERT, "condition = \n")
-		self.attributes.insert(Tkinter.INSERT, "worth = \n")
-		self.attributes.insert(Tkinter.INSERT, "modifiers = None\n")
-		self.attributes.insert(Tkinter.INSERT, "\n")
-		self.attributes.insert(Tkinter.INSERT, "template = True\n")
-		self.attributes.insert(Tkinter.INSERT, "power_description = Win this Goal when:\\n\n")
-		self.attributes.insert(Tkinter.INSERT, "quote = \n")
-		self.attributes.insert(Tkinter.INSERT, "copyright = "+DEFAULT_COPYRIGHT)
+		new_text = """type = goal
+		name =
+		condition =
+		worth =
+		modifiers =
+
+		template = True
+		power_description = Win this Goal when:\\n
+		quote =
+		copyright = """
+		new_text += DEFAULT_COPYRIGHT
+		self.set_attributes_text(new_text)
 
 	def getSuggestedFilename(self):
 		# we need to get the text from the attributes widget
-		data = str(self.attributes.get("1.0", "1000000000.0"))
-		data = data.strip()
+		data = self.get_attributes_text()
 		L = data.split("\n")
 		attr = {}
 		for l in L:
@@ -232,8 +413,7 @@ class Main(object):
 	def update_image(self):
 		if self.imported_image != None:
 			#first we parse our data to determine if our image is pregenerated or not.
-			data = str(self.attributes.get("1.0", "1000000000.0"))
-			data = data.strip()
+			data = self.get_attributes_text()
 			L = data.split("\n")
 			attr = {}
 			for l in L:
@@ -272,8 +452,7 @@ class Main(object):
 			if not self.filename.endswith(".tsf") and not self.filename.endswith(".tsssf"):
 				self.filename += ".tsf"
 			# We need to make our object first.
-			data = str(self.attributes.get("1.0", "1000000000.0"))
-			data = data.strip()
+			data = self.get_attributes_text()
 			L = data.split("\n")
 			attr = {}
 			for l in L:

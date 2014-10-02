@@ -49,15 +49,23 @@ def autowrap_text(text, font, max_width):
 	for L in text.split("\n"):
 		current_line = ""
 		line = ""
-		for word in L.split(" "):
+		parts = L.split(" ")
+		i = 0
+		while i < len(parts):
+			word = parts[i]
 			line += word
-			if font.size(line)[0] >= max_width:
-				lines.append(str(current_line))
+			if font.size(line)[0] > max_width:
+				if current_line != "":
+					lines.append(str(current_line))
+				else:
+					lines.append(str(word))
+					i += 1
 				current_line = ""
-				line = word + " "
+				line = ""
 			else:
 				current_line = str(line)
 				line += " "
+				i += 1
 		line = line.strip()
 		if line != "":
 			lines.append(line)
@@ -271,7 +279,7 @@ class Templatizer(object):
 		else:
 			font = POWER_FONT
 		y_pos = 650 + font.get_height()*0.65
-		power_lines = autowrap_text(self.power, font, 680)
+		power_lines = autowrap_text(self.power, font, 679)
 		line_spacing = int(font.get_height()*0.05)
 		for line in power_lines:
 			print "'"+line+"'"
@@ -281,7 +289,7 @@ class Templatizer(object):
 			y_pos += rect.height-line_spacing
 
 		#render the card's quote
-		quote_lines = autowrap_text(self.quote, QUOTE_FONT, 680)
+		quote_lines = autowrap_text(self.quote, QUOTE_FONT, 682)
 		quote_lines.reverse()
 		line_spacing = int(QUOTE_FONT.get_height()*0.05)
 		y_pos = 1040
