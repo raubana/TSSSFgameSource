@@ -260,7 +260,7 @@ class Templatizer(object):
 		mid = 100
 		y_pos = mid - (height/2)
 		for line in title_lines:
-			print "'"+line+"'"
+			#print "'"+line+"'"
 			srf = TITLE_FONT.render(line,True,color)
 			img.blit(srf,(173+550-srf.get_width(), y_pos))
 			y_pos += srf.get_height()-line_spacing
@@ -281,7 +281,7 @@ class Templatizer(object):
 		power_lines = autowrap_text(self.power, font, 679)
 		line_spacing = int(font.get_height()*0.05)
 		for line in power_lines:
-			print "'"+line+"'"
+			#print "'"+line+"'"
 			srf = font.render(line, True, color)
 			rect = srf.get_rect(midtop = (395,y_pos))
 			img.blit(srf,rect)
@@ -293,7 +293,7 @@ class Templatizer(object):
 		line_spacing = int(QUOTE_FONT.get_height()*0.05)
 		y_pos = 1040
 		for line in quote_lines:
-			print "'"+line+"'"
+			#print "'"+line+"'"
 			srf = QUOTE_FONT.render(line, True, lerp_colors(color,(0,0,0),0.3))
 			rect = srf.get_rect(midbottom = (395,y_pos))
 			img.blit(srf,rect)
@@ -309,7 +309,7 @@ class Templatizer(object):
 		bottomleft_sprite = None
 
 		for sp in self.sprites:
-			print sp
+			#print sp
 			#this is a sprite that goes in the bottom left corner
 			if sp == SPRITE_DFP:
 				bottomleft_sprite = pygame.image.load("imgs/template/symbols/DystopianFuture.png")

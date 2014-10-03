@@ -111,34 +111,35 @@ class Card(object):
 		self.attributes = ""
 
 	def parsePickledCard(self, pc):
-		# first we need our image
-		if "template" in pc.attr and pc.attr["template"] == "True":
+		#we need to parse each attribute individually in preparation for proper parsing.
+		self.attributes = str(pc.attr)
+		L = pc.attr.split("\n")
+		attributes = {}
+		for l in L:
+			try:
+				spl = break_apart_line(l)
+				attributes[spl[0]] = spl[1]
+			except:
+				pass
+		#now we get our type - this should be the very first attribute
+		if len(attributes) == 0:
+			raise EOFError("No attributes in card.")
+		if "type" not in attributes:
+			raise EOFError("No type in card.")
+		elif attributes["type"] in ("pony", "ship", "goal"):
+			self.type = attributes["type"]
+		else:
+			raise SyntaxError("Types are restricted to 'pony','ship', and 'goal'. Instead we got '" + attributes["type"] + "'")
+		#TODO: Do individualized parsing of attributes for each type of card.
+		if "name" in attributes:
+			self.name = attributes["name"]
+		#finally we need our image
+		if "template" in attributes and attributes["template"] == "True":
 			img = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
-			template = Templatizer.create_template_from_attributes(pc.attr, pc.img)
+			template = Templatizer.create_template_from_attributes(attributes, img)
 			self.image = template.generate_image()
 		else:
 			self.image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
 		if self.image.get_size() != CARD_SIZE:
 			self.image = pygame.transform.smoothscale(self.image, CARD_SIZE)
-		#next we need to parse each attribute individually in preparation for proper parsing.
-		self.attributes = str(pc.attr)
-		attributes = pc.attr.split("\n")
-		i = 0
-		while i < len(attributes):
-			attributes[i] = break_apart_line(str(attributes[i]))
-			i += 1
-		#now we get our type - this should be the very first attribute
-		if len(attributes) == 0:
-			raise EOFError("No attributes in card.")
-		first = attributes[0]
-		if first[0] != "type":
-			raise SyntaxError("First line of attributes should be for variable 'type'.")
-		if first[1] in ("pony", "ship", "goal"):
-			self.type = first[1]
-		else:
-			raise SyntaxError("Types are restricted to 'pony','ship', and 'goal'. Instead we got '" + first[1] + "'")
-		#TODO: Do individualized parsing of attributes for each type of card.
-		for attr in attributes[1:]:
-			if attr[0] == "name":
-				self.name = attr[1]
 
