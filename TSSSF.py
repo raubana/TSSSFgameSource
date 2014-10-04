@@ -1,28 +1,24 @@
 import traceback
 
-try:
-	import os
-	os.environ['SDL_VIDEO_CENTERED'] = '1'
+import os
+os.environ['SDL_VIDEO_CENTERED'] = '1'
 
-	import pygame
-	from pygame.locals import *
-	pygame.mixer.pre_init(buffer = 2**9)
-	pygame.init()
+import pygame
+from pygame.locals import *
+pygame.mixer.pre_init(buffer = 2**9)
+pygame.init()
 
-	#import numpy
+#import numpy
 
-	import math, random, time
+import math, random, time
 
-	from libs.GUI.GUI import *
-	from libs.Deck import *
-	from libs.locals import *
+from libs.GUI.GUI import *
+from libs.Deck import *
+from libs.locals import *
 
-	from libs.Controllers.StartUpController import *
-	from libs.Controllers.ConnectMenuController import *
-	from libs.Sprite.ChatSprite import ChatSprite
-except Exception, e:
-	print traceback.format_exc()
-	input("Press enter to quit.")
+from libs.Controllers.StartUpController import *
+from libs.Controllers.ConnectMenuController import *
+from libs.Sprite.ChatSprite import ChatSprite
 
 
 
@@ -46,6 +42,7 @@ class Main(object):
 		self.last_still = time.time() - self.still_freq
 
 		self.font = pygame.font.Font("data/fonts/Ubahn-Light.ttf",14)
+		self.deck_count_font = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",18)
 		self.tiny_font = pygame.font.SysFont("Tahoma",9)
 
 		self.sounds = {}
@@ -409,9 +406,11 @@ class Main(object):
 
 
 
-try:
-	main = Main()
+#try:
+main = Main()
+"""
 except Exception, e:
 	pygame.quit()
 	print traceback.format_exc()
 	input("Press enter to quit.")
+"""

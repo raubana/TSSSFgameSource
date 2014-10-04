@@ -13,13 +13,13 @@ class ConnectMenuController(Controller):
 
 		self.main.main_element.layout = LAYOUT_VERTICAL
 
-		element2 = Element(self.main, self.main.main_element, None, self.main.font.size("Please note that elements have been moved around."), None, text_color=(0,96,0))
-		element2.text = "Please note that elements have been moved around."
-		element2.margin = [10,10,0,10]
+		#element2 = Element(self.main, self.main.main_element, None, self.main.font.size("Please note that elements have been moved around."), None, text_color=(0,96,0))
+		#element2.text = "Please note that elements have been moved around."
+		#element2.margin = [10,10,0,10]
 
 		element4 = Element(self.main, self.main.main_element, None, self.main.font.size("NAME"), None, text_color=(96,96,96))
 		element4.text = "NAME"
-		element4.margin = [10,0,0,2]
+		element4.margin = [10,0,0,10]
 
 		self.name_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("123456789012345")[0]+4, self.main.font.get_height()+4), (255,255,255))
 		self.name_inputbox.margin = [10,0,0,2]

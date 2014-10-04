@@ -1,6 +1,7 @@
 from Controller import*
 
 from ..GUI.GUI import *
+from ..GUI.DeckElement import *
 
 import string, os
 
@@ -73,9 +74,81 @@ class GameController(Controller):
 		self.public_goals_element.v_scrollable = True
 		self.public_goals_element.always_show_v_scroll = True
 
+		self.pony_deck_wrapper_element = Element(self.main, self.decks_element, None, ("33%","50%"), bg=None)
+		self.ship_deck_wrapper_element = Element(self.main, self.decks_element, None, ("50%","50%"), bg=None)
+		self.goal_deck_wrapper_element = Element(self.main, self.decks_element, None, ("100%","50%"), bg=None)
+		self.pony_discard_wrapper_element = Element(self.main, self.decks_element, None, ("33%","100%"), bg=None)
+		self.ship_discard_wrapper_element = Element(self.main, self.decks_element, None, ("50%","100%"), bg=None)
+
+		self.pony_deck_element = DeckElement(self.main, self.pony_deck_wrapper_element, None, ("50%","100%"),
+										 	bg=ScaleImage(pygame.image.load("imgs/cardbacks/cardback_pony.png")))
+		self.pony_deck_count_element = Element(self.main, self.pony_deck_wrapper_element, None, ("100%","100%"),
+											bg=None, text_color=(255,255,255))
+		self.ship_deck_element = DeckElement(self.main, self.ship_deck_wrapper_element, None, ("50%","100%"),
+										 	bg=ScaleImage(pygame.image.load("imgs/cardbacks/cardback_ship.png")))
+		self.ship_deck_count_element = Element(self.main, self.ship_deck_wrapper_element, None, ("100%","100%"),
+											bg=None, text_color=(255,255,255))
+		self.goal_deck_element = DeckElement(self.main, self.goal_deck_wrapper_element, None, ("50%","100%"),
+										 	bg=ScaleImage(pygame.image.load("imgs/cardbacks/cardback_goal.png")))
+		self.goal_deck_count_element = Element(self.main, self.goal_deck_wrapper_element, None, ("100%","100%"),
+											bg=None, text_color=(255,255,255))
+		self.pony_discard_element = DeckElement(self.main, self.pony_discard_wrapper_element, None, ("50%","100%"),
+											bg=(255,255,255))
+		self.pony_discard_count_element = Element(self.main, self.pony_discard_wrapper_element, None, ("100%","100%"),
+											bg=None, text_color=(255,255,0))
+		self.ship_discard_element = DeckElement(self.main, self.ship_discard_wrapper_element, None, ("50%","100%"),
+											bg=(255,255,255))
+		self.ship_discard_count_element = Element(self.main, self.ship_discard_wrapper_element, None, ("100%","100%"),
+											bg=None, text_color=(255,255,0))
+
+		self.pony_deck_count_element.font = self.main.deck_count_font
+		self.ship_deck_count_element.font = self.main.deck_count_font
+		self.goal_deck_count_element.font = self.main.deck_count_font
+		self.pony_discard_count_element.font = self.main.deck_count_font
+		self.ship_discard_count_element.font = self.main.deck_count_font
+
+		self.pony_deck_count_element.set_text_align(ALIGN_MIDDLE)
+		self.ship_deck_count_element.set_text_align(ALIGN_MIDDLE)
+		self.goal_deck_count_element.set_text_align(ALIGN_MIDDLE)
+		self.pony_discard_count_element.set_text_align(ALIGN_MIDDLE)
+		self.ship_discard_count_element.set_text_align(ALIGN_MIDDLE)
+
+		self.pony_deck_count_element.set_text("0")
+		self.ship_deck_count_element.set_text("0")
+		self.goal_deck_count_element.set_text("0")
+		self.pony_discard_count_element.set_text("0")
+		self.ship_discard_count_element.set_text("0")
+
+		self.pony_deck_element.padding = (2,2,2,2)
+		self.ship_deck_element.padding = (2,2,2,2)
+		self.goal_deck_element.padding = (2,2,2,2)
+		self.pony_discard_element.padding = (2,2,2,2)
+		self.ship_discard_element.padding = (2,2,2,2)
+
+		self.pony_deck_element.menu_info.append(("Draw 1",self.do_nothing))
+		self.pony_deck_element.menu_info.append(("Shuffle",self.do_nothing))
+
+		self.ship_deck_element.menu_info.append(("Draw 1",self.do_nothing))
+		self.ship_deck_element.menu_info.append(("Shuffle",self.do_nothing))
+
+		self.goal_deck_element.menu_info.append(("Shuffle",self.do_nothing))
+
+		self.pony_discard_element.menu_info.append(("Draw Top",self.do_nothing))
+		self.pony_discard_element.menu_info.append(("Draw...",self.do_nothing))
+		self.pony_discard_element.menu_info.append(("Shuffle",self.do_nothing))
+		self.pony_discard_element.menu_info.append(("Swap Decks",self.do_nothing))
+
+		self.ship_discard_element.menu_info.append(("Draw Top",self.do_nothing))
+		self.ship_discard_element.menu_info.append(("Draw...",self.do_nothing))
+		self.ship_discard_element.menu_info.append(("Shuffle",self.do_nothing))
+		self.ship_discard_element.menu_info.append(("Swap Decks",self.do_nothing))
+
 		self.chat_input_element = None
 
 		self.bottom_element.give_focus()
+
+	def do_nothing(self):
+		pass
 
 	def read_message(self, message):
 		if message.startswith("PLAYERLIST:"):

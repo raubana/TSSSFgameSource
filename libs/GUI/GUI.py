@@ -106,6 +106,8 @@ class Element(object):
 		self.always_show_v_scroll = False
 		self.always_show_h_scroll = False
 
+		self.menu_info = []
+
 		self.parent = parent
 		if parent != self.main:
 			parent._add_child(self)
@@ -375,7 +377,12 @@ class Element(object):
 		pass
 
 	def generate_context_menu(self, pos):
-		pass
+		if self.menu_info and len(self.menu_info) > 0:
+			create_context_menu(self.main,
+									self.main.main_element,
+									pos,
+									self.menu_info
+									)
 
 	def update(self):
 		pass
@@ -786,8 +793,6 @@ class InputBox(Element):
 		self.valuechange_handlers = []
 		self.submit_handlers = []
 
-		self.menu_info = []
-
 	def add_handler_valuechange(self, handler):
 		self.valuechange_handlers.append(handler)
 
@@ -834,14 +839,6 @@ class InputBox(Element):
 				else:
 					break
 
-	def generate_context_menu(self, pos):
-		if self.menu_info and len(self.menu_info) > 0:
-			create_context_menu(self.main,
-									self.main.main_element,
-									pos,
-									self.menu_info
-									)
-
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
 
@@ -852,7 +849,6 @@ class InputBox(Element):
 			corner = (0,0)
 
 		if button == 3:
-			#for testing purposes, lets make this open a context menu
 			self.generate_context_menu((mouse_pos[0]+corner[0]+10, mouse_pos[1]+corner[1]+10))
 		elif button == 1:
 			if self.pos:
@@ -1073,9 +1069,12 @@ class ContextMenuElement(Element):
 		self.delete_me()
 
 	def handle_event_submit(self, widget):
-		fnc = None
+		match = None
 		for item in self.menu_list:
 			if item[0] == widget.text:
-				fnc = item[1]
-		if fnc:
-			fnc()
+				match = item
+		if match != None:
+			if len(match) > 2:
+				match[1](match[2])
+			else:
+				match[1]()
