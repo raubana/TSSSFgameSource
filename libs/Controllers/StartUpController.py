@@ -16,13 +16,14 @@ class StartUpController(Controller):
 
 		self.main.main_element.set_text("Loading...")
 
-		self.custom_deck = CustomDeck()
-		self.custom_deck.follow_instructions("add_all")
+		if CLIENT_PRECACHE_DECK:
+			self.custom_deck = CustomDeck()
+			self.custom_deck.follow_instructions("add_all")
 
 		self.disable_framerate = True
 
 	def update(self):
-			if len(self.custom_deck.list) > 0:
+			if CLIENT_PRECACHE_DECK and len(self.custom_deck.list) > 0:
 				f = self.custom_deck.list.pop(0)
 				if f.endswith(".tsssf") or f.endswith(".tsf"):
 					match = None
