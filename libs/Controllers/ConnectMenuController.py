@@ -29,7 +29,7 @@ class ConnectMenuController(Controller):
 										bg=ScaleImage(self.twilight_img))
 		self.twilight_peak_delay = 0.75
 		self.twilight_peak_duration = 2.5
-		self.twilight_peak_start_time = float(self.main.time)+self.twilight_peak_delay+self.twilight_peak_duration
+		self.twilight_peak_start_time = float(self.main.time)-self.twilight_peak_delay-self.twilight_peak_duration
 
 		#loads the title
 		title_img = pygame.image.load("imgs/misc/tsssf_title.png")
@@ -54,10 +54,10 @@ class ConnectMenuController(Controller):
 		element4.text = "NAME"
 		element4.margin = [10,0,0,2]
 
-		self.name_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("123456789012345")[0]+4, self.main.font.get_height()+4), (255,255,255))
+		self.name_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("M"*PLAYERNAME_MAX_LENGTH)[0]+4, self.main.font.get_height()+4), (255,255,255))
 		self.name_inputbox.margin = [10,0,0,2]
 		self.name_inputbox.legal_characters = string.letters + string.digits + " "
-		self.name_inputbox.max_characters = len("123456789012345")
+		self.name_inputbox.max_characters = PLAYERNAME_MAX_LENGTH
 
 		tooltip = "Right click for more options."
 
@@ -66,10 +66,10 @@ class ConnectMenuController(Controller):
 		element5.margin = [10,0,0,2]
 		element5.tooltip = tooltip
 
-		self.key_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("MMMMM")[0]+4, self.main.font.get_height()+4), (255,255,255))
+		self.key_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("M"*5)[0]+4, self.main.font.get_height()+4), (255,255,255))
 		self.key_inputbox.margin = [10,0,0,2]
 		self.key_inputbox.legal_characters = string.letters + string.digits
-		self.key_inputbox.max_characters = len("00000")
+		self.key_inputbox.max_characters = 5
 		self.key_inputbox.tooltip = tooltip
 		self.key_inputbox.menu_info.append(("generate new key",self.generate_new_key))
 
@@ -81,27 +81,27 @@ class ConnectMenuController(Controller):
 		element1.text = "IP ADDRESS"
 		element1.margin = [10,0,0,2]
 
-		self.ip_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("000000000000000")[0]+4,self.main.font.get_height()+4), (255,255,255))
+		self.ip_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("MMM.MMM.MMM.MMM")[0]+4,self.main.font.get_height()+4), (255,255,255))
 		self.ip_inputbox.margin = [10,0,0,2]
 		self.ip_inputbox.legal_characters = "1234567890."
-		self.ip_inputbox.max_characters = len("000_000_000_000")
+		self.ip_inputbox.max_characters = len("MMM.MMM.MMM.MMM")
 
 		element2 = Element(self.main, self.main.main_element, None, self.main.font.size("PORT"), None, text_color=(32,32,32))
 		element2.text = "PORT"
 		element2.margin = [10,0,0,2]
 
-		self.port_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("00000")[0]+4,self.main.font.get_height()+4), (255,255,255))
+		self.port_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("M"*5)[0]+4,self.main.font.get_height()+4), (255,255,255))
 		self.port_inputbox.margin = [10,0,0,2]
 		self.port_inputbox.legal_characters = "1234567890"
-		self.port_inputbox.max_characters = len("00000")
+		self.port_inputbox.max_characters = 5
 
 		self.connect_button = Button(self.main, self.main.main_element, None, (self.main.font.size("CONNECT")[0]+15,self.main.font.get_height()+15), (255,255,255))
 		self.connect_button.text = "CONNECT"
-		self.connect_button.margin = [10,10,0,2]
+		self.connect_button.margin = [10,10,0,10]
 
 		self.message_element = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(127,0,0))
 		self.message_element.text = ""
-		self.message_element.margin = [10,0,0,2]
+		self.message_element.margin = [10,0,0,0]
 
 		#Sets up handling
 		self.ip_inputbox.add_handler_losefocus(self)
