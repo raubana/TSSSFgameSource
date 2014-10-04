@@ -17,19 +17,31 @@ class ConnectMenuController(Controller):
 
 		#loads and sets up the twilight head
 		twilight_img = pygame.image.load("imgs/misc/twilight_peak.png")
-		scale = 0.75
+		scale = 0.5
 		self.twilight_img = pygame.transform.smoothscale( twilight_img,
 														 (int(twilight_img.get_width()*scale),
 														  int(twilight_img.get_height()*scale)))
 		self.twilight_element = Element(self.main,
 										self.main.main_element,
-										(self.main.screen_size[0]-self.twilight_img.get_width(),
+										(self.main.screen_size[0]-self.twilight_img.get_width()-25,
 										 self.main.screen_size[1]),
 										self.twilight_img.get_size(),
 										bg=ScaleImage(self.twilight_img))
 		self.twilight_peak_delay = 0.75
-		self.twilight_peak_duration = 1.75
+		self.twilight_peak_duration = 2.5
 		self.twilight_peak_start_time = float(self.main.time)+self.twilight_peak_delay+self.twilight_peak_duration
+
+		#loads the title
+		title_img = pygame.image.load("imgs/misc/tsssf_title.png")
+		scale = 1.0
+		self.title_img = pygame.transform.smoothscale( title_img,
+														 (int(title_img.get_width()*scale),
+														  int(title_img.get_height()*scale)))
+		self.title_element = Element(self.main,
+										self.main.main_element,
+										(self.main.screen_size[0]-self.title_img.get_width()-25, 25),
+										self.title_img.get_size(),
+										bg=ScaleImage(self.title_img))
 
 		#sets up the rest of the GUI
 
@@ -117,10 +129,12 @@ class ConnectMenuController(Controller):
 			p = (t_dif-self.twilight_peak_delay) / float(self.twilight_peak_duration)
 			p = math.sin(p*math.pi*0.5)
 		size = self.twilight_img.get_size()
-		pos = 	(max(int(self.main.screen_size[0] - size[0] - 50), 300),
+		pos = 	(max(int(self.main.screen_size[0] - size[0] - 25), 300),
 				int(self.main.screen_size[1] - lerp(0,size[1],p)))
 
 		self.twilight_element.set_pos(pos)
+
+		self.title_element.set_pos(	(max(self.main.screen_size[0]-self.title_img.get_width()-25, 300), 25) )
 
 	def load_from_appdata(self):
 		if APPDATA_LOCATION != None:
