@@ -2,7 +2,7 @@ from Controller import*
 
 from ..GUI.GUI import *
 
-import string, os, random
+import string, os, random, math
 
 class ConnectMenuController(Controller):
 	def init(self):
@@ -11,7 +11,27 @@ class ConnectMenuController(Controller):
 		self.main.main_element.clear()
 		self.main.main_element.set_text("")
 
+		self.main.updated_elements.append(self)
+
 		self.main.main_element.layout = LAYOUT_VERTICAL
+
+		#loads and sets up the twilight head
+		twilight_img = pygame.image.load("imgs/misc/twilight_peak.png")
+		scale = 0.75
+		self.twilight_img = pygame.transform.smoothscale( twilight_img,
+														 (int(twilight_img.get_width()*scale),
+														  int(twilight_img.get_height()*scale)))
+		self.twilight_element = Element(self.main,
+										self.main.main_element,
+										(self.main.screen_size[0]-self.twilight_img.get_width(),
+										 self.main.screen_size[1]),
+										self.twilight_img.get_size(),
+										bg=ScaleImage(self.twilight_img))
+		self.twilight_peak_delay = 0.75
+		self.twilight_peak_duration = 1.75
+		self.twilight_peak_start_time = float(self.main.time)+self.twilight_peak_delay+self.twilight_peak_duration
+
+		#sets up the rest of the GUI
 
 		#element2 = Element(self.main, self.main.main_element, None, self.main.font.size("Please note that elements have been moved around."), None, text_color=(0,96,0))
 		#element2.text = "Please note that elements have been moved around."
@@ -19,7 +39,7 @@ class ConnectMenuController(Controller):
 
 		element4 = Element(self.main, self.main.main_element, None, self.main.font.size("NAME"), None, text_color=(96,96,96))
 		element4.text = "NAME"
-		element4.margin = [10,0,0,10]
+		element4.margin = [10,10,0,2]
 
 		self.name_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("123456789012345")[0]+4, self.main.font.get_height()+4), (255,255,255))
 		self.name_inputbox.margin = [10,0,0,2]
@@ -86,6 +106,21 @@ class ConnectMenuController(Controller):
 		self.connect_button.add_handler_submit(self)
 
 		self.load_from_appdata()
+
+	def update(self):
+		t_dif = self.main.time - self.twilight_peak_start_time
+		if t_dif < self.twilight_peak_delay:
+			p = 0
+		elif t_dif > self.twilight_peak_delay + self.twilight_peak_duration:
+			p = 1
+		else:
+			p = (t_dif-self.twilight_peak_delay) / float(self.twilight_peak_duration)
+			p = math.sin(p*math.pi*0.5)
+		size = self.twilight_img.get_size()
+		pos = 	(max(int(self.main.screen_size[0] - size[0] - 50), 300),
+				int(self.main.screen_size[1] - lerp(0,size[1],p)))
+
+		self.twilight_element.set_pos(pos)
 
 	def load_from_appdata(self):
 		if APPDATA_LOCATION != None:

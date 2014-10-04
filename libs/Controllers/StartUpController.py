@@ -43,3 +43,4 @@ class StartUpController(Controller):
 			else:
 				import ConnectMenuController
 				self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
+				self.main.controller.twilight_peak_start_time = float(self.main.time)
