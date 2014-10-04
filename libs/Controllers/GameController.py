@@ -28,10 +28,10 @@ class GameController(Controller):
 		self.bottom_element.add_handler_keydown(self)
 		self.table_element.add_handler_keydown(self)
 
-		self.top_element.set_bg((197,96,204))
+		self.top_element.set_bg((175,125,175))
 		self.right_element.set_bg(None)
-		self.bottom_element.set_bg((197,96,204))
-		self.table_element.set_bg((198-16,185-16,224-16))
+		self.bottom_element.set_bg((175,125,175))
+		self.table_element.set_bg((182,169,208))
 
 		self.right_element.layout = LAYOUT_VERTICAL
 		self.top_element.layout = LAYOUT_HORIZONTAL
@@ -65,7 +65,7 @@ class GameController(Controller):
 
 		self.end_turn_button.set_bg((255,127,127))
 		self.ready_button.set_bg((127,255,127))
-		self.decks_element.set_bg((197,96,204))
+		self.decks_element.set_bg((175,125,175))
 		self.public_goals_element.set_bg((173,204,227))
 
 		self.player_list_element.layout = LAYOUT_VERTICAL

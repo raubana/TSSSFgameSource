@@ -33,15 +33,16 @@ class ConnectMenuController(Controller):
 
 		#loads the title
 		title_img = pygame.image.load("imgs/misc/tsssf_title.png")
-		scale = 1.0
+		scale = 0.75
 		self.title_img = pygame.transform.smoothscale( title_img,
 														 (int(title_img.get_width()*scale),
 														  int(title_img.get_height()*scale)))
 		self.title_element = Element(self.main,
 										self.main.main_element,
-										(self.main.screen_size[0]-self.title_img.get_width()-25, 25),
+										None,
 										self.title_img.get_size(),
 										bg=ScaleImage(self.title_img))
+		self.title_element.margin = [10,10,0,10]
 
 		#sets up the rest of the GUI
 
@@ -49,9 +50,9 @@ class ConnectMenuController(Controller):
 		#element2.text = "Please note that elements have been moved around."
 		#element2.margin = [10,10,0,10]
 
-		element4 = Element(self.main, self.main.main_element, None, self.main.font.size("NAME"), None, text_color=(96,96,96))
+		element4 = Element(self.main, self.main.main_element, None, self.main.font.size("NAME"), None, text_color=(32,32,32))
 		element4.text = "NAME"
-		element4.margin = [10,10,0,2]
+		element4.margin = [10,0,0,2]
 
 		self.name_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("123456789012345")[0]+4, self.main.font.get_height()+4), (255,255,255))
 		self.name_inputbox.margin = [10,0,0,2]
@@ -60,7 +61,7 @@ class ConnectMenuController(Controller):
 
 		tooltip = "Right click for more options."
 
-		element5 = Element(self.main, self.main.main_element, None, self.main.font.size("KEY"), None, text_color=(96,96,96))
+		element5 = Element(self.main, self.main.main_element, None, self.main.font.size("KEY"), None, text_color=(32,32,32))
 		element5.text = "KEY"
 		element5.margin = [10,0,0,2]
 		element5.tooltip = tooltip
@@ -76,7 +77,7 @@ class ConnectMenuController(Controller):
 		#self.genkey_button.text = "generate new key"
 		#self.genkey_button.margin = [10,0,0,25]
 		
-		element1 = Element(self.main, self.main.main_element, None, self.main.font.size("IP ADDRESS"), None, text_color=(96,96,96))
+		element1 = Element(self.main, self.main.main_element, None, self.main.font.size("IP ADDRESS"), None, text_color=(32,32,32))
 		element1.text = "IP ADDRESS"
 		element1.margin = [10,0,0,2]
 
@@ -85,7 +86,7 @@ class ConnectMenuController(Controller):
 		self.ip_inputbox.legal_characters = "1234567890."
 		self.ip_inputbox.max_characters = len("000_000_000_000")
 
-		element2 = Element(self.main, self.main.main_element, None, self.main.font.size("PORT"), None, text_color=(96,96,96))
+		element2 = Element(self.main, self.main.main_element, None, self.main.font.size("PORT"), None, text_color=(32,32,32))
 		element2.text = "PORT"
 		element2.margin = [10,0,0,2]
 
@@ -96,7 +97,7 @@ class ConnectMenuController(Controller):
 
 		self.connect_button = Button(self.main, self.main.main_element, None, (self.main.font.size("CONNECT")[0]+15,self.main.font.get_height()+15), (255,255,255))
 		self.connect_button.text = "CONNECT"
-		self.connect_button.margin = [10,0,0,2]
+		self.connect_button.margin = [10,10,0,2]
 
 		self.message_element = Element(self.main, self.main.main_element, None, ("100%",self.main.font.get_height()), None, text_color=(127,0,0))
 		self.message_element.text = ""
@@ -133,8 +134,6 @@ class ConnectMenuController(Controller):
 				int(self.main.screen_size[1] - lerp(0,size[1],p)))
 
 		self.twilight_element.set_pos(pos)
-
-		self.title_element.set_pos(	(max(self.main.screen_size[0]-self.title_img.get_width()-25, 300), 25) )
 
 	def load_from_appdata(self):
 		if APPDATA_LOCATION != None:
