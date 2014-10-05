@@ -70,7 +70,7 @@ class ScaleImage(object):
 
 
 class Element(object):
-	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg=(255, 255, 255), text_color=(0,0,0), always_count_hover=False):
+	def __init__(self, main, parent, preferred_pos=None, preferred_size=None, bg=(255, 255, 255), text_color=(0,0,0)):
 		self.main = main
 		self.element_level = parent.element_level + 1
 		self.name = None
@@ -106,6 +106,8 @@ class Element(object):
 		self.always_show_v_scroll = False
 		self.always_show_h_scroll = False
 
+		self.force_fullrange_scrolling = False
+
 		self.menu_info = []
 
 		self.parent = parent
@@ -114,7 +116,10 @@ class Element(object):
 		self.children = []
 
 		self.hover = False
-		self.always_count_hover = always_count_hover # This is true when it detects hovers, even when we hover over it's children.
+
+		self.always_count_hover = False # This is true when it detects hovers, even when we hover over it's children.
+		self.allow_rightclick_multi_axis_scrolling = False
+		self.ignore_all_input = False
 
 		self.mousehover_handlers = []
 		self.mouseout_handlers = []
@@ -194,7 +199,7 @@ class Element(object):
 		self_hover = False
 		child_hover = False
 		self.triggerMouseMove(mouse_pos_local)
-		if not_hover or (not self.size) or (not self.pos):
+		if not_hover or self.ignore_all_input or (not self.size) or (not self.pos):
 			# This is here so that the children can still get their update without
 			# wasting time checking if the mouse is hovering over the element or not.
 			for c in self.children:
@@ -248,7 +253,7 @@ class Element(object):
 			print ("-"*self.element_level) + " " + str(self)
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
-		if self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
+		if not self.ignore_all_input and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
 			#We know that at least the mouse was inside this element when it clicked.
 			#The question is, did something inside of this element get clicked?
 			#In order to properly test this, we need to iterate in reverse order.
@@ -271,6 +276,11 @@ class Element(object):
 					print ("-"*self.element_level) + " " + str(self) + " - caught mouse button pressed event"
 				if button in (1,2,3):
 					self.give_focus()
+				if button == 3 and self.allow_rightclick_multi_axis_scrolling:
+					if self.h_scrollbar != None:
+						self.h_scrollbar.grabbed = True
+					if self.v_scrollbar != None:
+						self.v_scrollbar.grabbed = True
 				self.triggerMousePressed(mouse_pos_local, button)
 				for handler in self.mousepress_handlers:
 					handler.handle_event_mousepress(self, mouse_pos_local, button)
@@ -279,7 +289,7 @@ class Element(object):
 	def update_for_mouse_button_release(self, mouse_pos_local, button):
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
-		if self.rect and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
+		if not self.ignore_all_input and self.rect and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
 			#We know that at least the mouse was inside this element when it clicked.
 			#The question is, did something inside of this element get clicked?
 			#In order to properly test this, we need to iterate in reverse order.
@@ -302,9 +312,10 @@ class Element(object):
 			return True
 
 	def update_for_keydown(self, unicode, key):
-		self.triggerKeyDown(unicode, key)
-		for handler in self.keydown_handlers:
-			handler.handle_event_keydown(self, unicode, key)
+		if not self.ignore_all_input:
+			self.triggerKeyDown(unicode, key)
+			for handler in self.keydown_handlers:
+				handler.handle_event_keydown(self, unicode, key)
 
 	def update_for_keyup(self, key):
 		pass
@@ -584,6 +595,7 @@ class Element(object):
 						child.flag_for_rerender()
 		else:
 			offset = [0,0]
+			bounds = [0,0,0,0]
 			if self.h_scrollbar != None:
 				offset[0] = -self.h_scrollbar.scrolled_amount
 			if self.v_scrollbar != None:
@@ -652,13 +664,18 @@ class Element(object):
 
 								x_max = max(x_max,x_pos)
 								y_max = max(y_max,new_size[0] + child.margin[0] + child.margin[2] + child.padding[0] + child.padding[2])
-
-							new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
 						else:
 							size = (max(translate_size_to_pixels(child.preferred_size[0],self.size[0]),0),
 										max(translate_size_to_pixels(child.preferred_size[1],self.size[1]),0))
 							new_pos = (int(child.preferred_pos[0]+child.margin[0]+child.padding[0]),int(child.preferred_pos[1]+child.margin[1]+child.padding[1]))
 							new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
+
+						bounds = [min(new_pos[0]-child.padding[0]-child.margin[0], bounds[0]),
+								  min(new_pos[1]-child.padding[1]-child.margin[1], bounds[1]),
+								  max(new_pos[0]+new_size[0]+child.padding[2]+child.margin[2], bounds[2]),
+								  max(new_pos[1]+new_size[1]+child.padding[3]+child.margin[3], bounds[3])]
+
+						new_pos = (new_pos[0]+offset[0], new_pos[1]+offset[1])
 
 						redo= False
 						if new_pos != child.pos:
@@ -675,14 +692,20 @@ class Element(object):
 				#We setup our scroll bars now
 				if self.v_scrollable:
 					#We check if we've exceeded our vertical limit
-					v_dif = (self.size[1]-SCROLLBAR_WIDTH) - y_max
-					if v_dif < 0 or self.always_show_v_scroll:
+					if self.force_fullrange_scrolling:
+						v_dif_min = bounds[1] - self.size[1]
+						v_dif_max = bounds[3]
+					else:
+						v_dif_min = bounds[1]
+						v_dif_max = bounds[3] - (self.size[1]-SCROLLBAR_WIDTH)
+
+					if v_dif_min < 0 or v_dif_max > 0 or self.always_show_v_scroll:
 						#we will need the vertical scrollbar, so we check if one already exists, otherwise we create one
 						if self.v_scrollbar == None:
 							self.v_scrollbar = ScrollBar(self.main, self, None, None)
 							self.v_scrollbar.add_handler_scroll(self)
 						#we setup the scrollbar to scroll the proper amounts
-						self.v_scrollbar.set_scroll_range(0,max(-v_dif,0))
+						self.v_scrollbar.set_scroll_range(min(v_dif_min,0),max(v_dif_max,0))
 						#we also set the scrollbar to be in the proper location
 						self.v_scrollbar.pos = (self.size[0]-SCROLLBAR_WIDTH,0)
 						new_size = (SCROLLBAR_WIDTH,self.size[1])
@@ -702,15 +725,20 @@ class Element(object):
 
 				if self.h_scrollable:
 					#We check if we've exceeded our horizontal limit
-					h_dif = (self.size[0]-SCROLLBAR_WIDTH) - x_max
-					if h_dif < 0 or self.always_show_h_scroll:
+					if self.force_fullrange_scrolling:
+						h_dif_min = bounds[0] - self.size[0]
+						h_dif_max = bounds[2]
+					else:
+						h_dif_min = bounds[0]
+						h_dif_max = bounds[2] - (self.size[0]-SCROLLBAR_WIDTH)
+					if h_dif_min < 0 or h_dif_max > 0 or self.always_show_h_scroll:
 						#we will need the horizontal scrollbar, so we check if one already exists, otherwise we create one
 						if self.h_scrollbar == None:
 							self.h_scrollbar = ScrollBar(self.main, self, None, None)
 							self.h_scrollbar.scroll_direction = SCROLLBAR_HORIZONTAL
 							self.h_scrollbar.add_handler_scroll(self)
 						#we setup the scrollbar to scroll the proper amounts
-						self.h_scrollbar.set_scroll_range(0,max(-h_dif,0))
+						self.h_scrollbar.set_scroll_range(min(h_dif_min,0),max(h_dif_max,0))
 						#we also set the scrollbar to be in the proper location
 						self.h_scrollbar.pos = (0,self.size[1]-SCROLLBAR_WIDTH)
 						if self.v_scrollable:
@@ -985,12 +1013,12 @@ class ScrollBar(Element):
 			handler.handle_event_scroll(self, amount)
 
 	def triggerMousePressed(self, mouse_pos, button):
-		if button == 1:
+		if button in (1,3):
 			self.grabbed = True
 
 	def triggerMouseMove(self, mouse_pos):
 		if self.grabbed:
-			if not self.main.mouse_button[0]:
+			if not (self.main.mouse_button[0] or self.main.mouse_button[2]):
 				self.grabbed = False
 				self.unfocus()
 			else:
@@ -1003,7 +1031,7 @@ class ScrollBar(Element):
 						pos = mouse_pos[1]
 					pos = min(max(pos,0),size)
 					size = float(size)
-					self.set_scrolled_amount(int(lerp(self.min_scroll,self.max_scroll,invlerp(0,size,pos))))
+					self.set_scrolled_amount(min(int(lerp(self.min_scroll,self.max_scroll+1,invlerp(0,size,pos))),self.max_scroll))
 
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)

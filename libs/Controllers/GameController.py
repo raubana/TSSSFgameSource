@@ -44,6 +44,10 @@ class GameController(Controller):
 		self.bottom_element.always_show_h_scroll = True
 		self.table_element.h_scrollable = True
 		self.table_element.v_scrollable = True
+		self.table_element.always_show_v_scroll = True
+		self.table_element.always_show_h_scroll = True
+		self.table_element.allow_rightclick_multi_axis_scrolling = True
+		self.table_element.force_fullrange_scrolling = True
 
 		self.player_list_element = Element(self.main, self.right_element, None, ("100%",50))
 		self.end_turn_button = Button(self.main, self.right_element, None, ("100%",self.main.font.get_height()))
@@ -211,16 +215,38 @@ class GameController(Controller):
 			s = message[len("CARDTABLE:"):]
 			self.main.card_table.parse_message(self.main.master_deck, s)
 			self.table_element.clear()
-			scale = 0.4
-			grid_scale = 0.6
+			scale = 0.25
+			grid_scale = 1.2
 			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
-			grid_size = (int(CARD_SIZE[0]*grid_scale), int(CARD_SIZE[1]*grid_scale))
+			grid_size = (int(size[0]*grid_scale), int(size[1]*grid_scale))
+
+			#creates the grid
+			for y in xrange(self.main.card_table.size[1]):
+				for x in xrange(self.main.card_table.size[0]):
+					works = False
+					for Y in xrange(-1,2):
+						for X in xrange(-1,2):
+							index = (y+Y,x+X)
+							if self.main.card_table.check_if_legal_index(index,"pony",self.main.master_deck.cards):
+								works = True
+								X = 3
+								Y = 3
+					if works:
+						pos = 	(grid_size[0] * x, grid_size[1] * y)
+						if (x)%2 == (y)%2:
+							color = (198,185,224,255)
+						else:
+							color = (179,173,227,255)
+						element = Element(self.main,self.table_element,pos,grid_size,bg=color)
+						element.ignore_all_input = True
+
+			#creates the pony cards
 			for y in xrange(self.main.card_table.size[1]):
 				for x in xrange(self.main.card_table.size[0]):
 					card = self.main.card_table.pony_cards[y][x]
 					if card != None:
-						pos = 	((grid_size[0] - size[0]) / 2,
-									(grid_size[1] - size[1]) / 2)
+						pos = 	(((grid_size[0] - size[0]) / 2) + grid_size[0] * x,
+								  ((grid_size[1] - size[1]) / 2) + grid_size[1] * y)
 						element = CardElement(self.main,self.table_element,pos,size)
 						element.set_card(card)
 						element.menu_info = [("Discard", self.do_nothing),

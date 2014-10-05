@@ -345,3 +345,4 @@ class GameServer(object):
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)
 		self.send_public_goals(player)
+		self.send_cardtable_player(player)

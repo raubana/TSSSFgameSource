@@ -1,7 +1,7 @@
 import traceback
 
 import os
-os.environ['SDL_VIDEO_CENTERED'] = '1'
+#os.environ['SDL_VIDEO_CENTERED'] = '1'
 
 import pygame
 from pygame.locals import *
@@ -110,7 +110,7 @@ class Main(object):
 		#This function is used to clear out any game data that may remain from a previous game
 		self.name = None
 		self.master_deck = MasterDeck()
-		self.table = CardTable()
+		self.card_table = CardTable()
 
 		self.chat_sprites = []
 
