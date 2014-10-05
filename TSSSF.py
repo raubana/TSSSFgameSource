@@ -66,6 +66,9 @@ class Main(object):
 		self.sounds["remove_deck"] = pygame.mixer.Sound("snds/card/remove_deck.ogg")
 		self.sounds["shuffle_deck"] = pygame.mixer.Sound("snds/card/shuffle.ogg")
 
+		self.sounds["drink_call"] = pygame.mixer.Sound("snds/game/drink_call.ogg")
+		self.sounds["players_turn_not_focused"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.ogg")
+
 		pygame.key.set_repeat(300, 30)
 
 		# SETS UP THE GUI

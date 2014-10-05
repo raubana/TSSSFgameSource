@@ -2,6 +2,7 @@ from Controller import*
 
 from ..GUI.GUI import *
 from ..GUI.DeckElement import *
+from ..GUI.CardElement import *
 
 import string, os
 
@@ -181,20 +182,32 @@ class GameController(Controller):
 				s = hand[len(hand)-x-1]
 				i = int(s)
 				card = self.main.master_deck.cards[i]
-				element = Element(self.main,self.bottom_element,None,size,bg=ScaleImage(card.image))
+				element = CardElement(self.main,self.bottom_element,None,size)
+				element.set_card(card)
 				element.padding = (3,3,3,3)
+				if card.type == "pony":
+					element.menu_info = [("Play Card", self.do_nothing),
+										 ("Action: Swap", self.do_nothing),
+										 ("Action: Replace", self.do_nothing),
+										 ("Discard", self.do_nothing)]
+				elif card.type == "ship":
+					element.menu_info = [("Play Card", self.do_nothing),
+										 ("Discard", self.do_nothing)]
 		elif message.startswith("PUBLICGOALS:"):
 			hand = message[len("PUBLICGOALS:"):].split(",")
 			self.public_goals_element.clear()
 			self.public_goals_element.layout = LAYOUT_VERTICAL
-			scale = 0.425
+			scale = 0.4
 			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 			for x in xrange(len(hand)):
 				s = hand[len(hand)-x-1]
 				i = int(s)
 				card = self.main.master_deck.cards[i]
-				element = Element(self.main,self.public_goals_element,None,size,bg=ScaleImage(card.image))
+				element = CardElement(self.main,self.public_goals_element,None,size)
+				element.set_card(card)
 				element.padding = (3,3,3,3)
+				element.menu_info = [("Win Goal", self.do_nothing),
+									 ("Action: New Goal", self.do_nothing)]
 		else:
 			return False
 		return True
