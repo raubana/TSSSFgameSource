@@ -6,6 +6,8 @@ from PickledCard import *
 import Templatizer
 
 
+CARD_POWER_STARTCARD = 1
+
 def check_variable_name_is_legal(name):
 	if name == "":
 		raise SyntaxError("A variable can't be nameless")
@@ -108,6 +110,7 @@ class Card(object):
 		self.image = pygame.Surface(CARD_SIZE, pygame.SRCALPHA)
 		self.name = None
 		self.type = None
+		self.power = None
 		self.attributes = ""
 
 	def parsePickledCard(self, pc):
@@ -133,6 +136,9 @@ class Card(object):
 		#TODO: Do individualized parsing of attributes for each type of card.
 		if "name" in attributes:
 			self.name = attributes["name"]
+		if "power" in attributes:
+			if attributes["power"] == "startcard":
+				self.power = CARD_POWER_STARTCARD
 		#finally we need our image
 		if "template" in attributes and attributes["template"] == "True":
 			img = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
