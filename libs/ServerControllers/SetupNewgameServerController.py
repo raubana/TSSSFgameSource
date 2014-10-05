@@ -85,7 +85,7 @@ class SetupNewgameServerController(ServerController):
 		self.gameserver.ship_deck.shuffle()
 		self.gameserver.goal_deck.shuffle()
 
-	def SetupStartCard(self):
+	def SetupStartCard(self, args):
 		c = None
 		for card in self.gameserver.pony_deck.cards:
 			if "power" in card.attributes and card.attributes["power"] == "startcard":
