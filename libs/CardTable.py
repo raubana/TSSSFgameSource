@@ -152,3 +152,37 @@ class CardTable(object):
 				else:
 					s += str(master_deck.cards.index(card))
 		return s
+
+	def parse_message(self, master_deck, message):
+		#first we must break apart the message into it's sections.
+		sections = message.split(":")
+		if len(sections) != 4: raise RuntimeError("Received a bad table.")
+		#next we must parse the first section to determine the size of the grid.
+		s = sections[0]
+		parts = s.split(",")
+		if len(parts) != 2: raise RuntimeError("Received a bad table.")
+		size = (int(parts[0]),int(parts[1]))
+		#we must change our size to this size.
+		self.__init__(size)
+		#next we must parse the pony card list
+		parts = sections[1].split(",")
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
+				s = parts.pop(0)
+				if s != "_":
+					self.pony_cards[y][x] = master_deck.cards[int(s)]
+		#next we must parse the vertical ship card list
+		parts = sections[2].split(",")
+		for y in xrange(self.size[1] - 1):
+			for x in xrange(self.size[0]):
+				s = parts.pop(0)
+				if s != "_":
+					self.v_ship_cards[y][x] = master_deck.cards[int(s)]
+		#finally we must parse the horizontal ship card list
+		parts = sections[3].split(",")
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0] - 1):
+				s = parts.pop(0)
+				if s != "_":
+					self.h_ship_cards[y][x] = master_deck.cards[int(s)]
+

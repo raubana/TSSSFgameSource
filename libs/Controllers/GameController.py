@@ -187,7 +187,6 @@ class GameController(Controller):
 				element.padding = (3,3,3,3)
 				if card.type == "pony":
 					element.menu_info = [("Play Card", self.do_nothing),
-										 ("Action: Swap", self.do_nothing),
 										 ("Action: Replace", self.do_nothing),
 										 ("Discard", self.do_nothing)]
 				elif card.type == "ship":
@@ -209,7 +208,27 @@ class GameController(Controller):
 				element.menu_info = [("Win Goal", self.do_nothing),
 									 ("Action: New Goal", self.do_nothing)]
 		elif message.startswith("CARDTABLE:"):
-			pass
+			s = message[len("CARDTABLE:"):]
+			self.main.card_table.parse_message(self.main.master_deck, s)
+			self.table_element.clear()
+			scale = 0.4
+			grid_scale = 0.6
+			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
+			grid_size = (int(CARD_SIZE[0]*grid_scale), int(CARD_SIZE[1]*grid_scale))
+			for y in xrange(self.main.card_table.size[1]):
+				for x in xrange(self.main.card_table.size[0]):
+					card = self.main.card_table.pony_cards[y][x]
+					if card != None:
+						pos = 	((grid_size[0] - size[0]) / 2,
+									(grid_size[1] - size[1]) / 2)
+						element = CardElement(self.main,self.table_element,pos,size)
+						element.set_card(card)
+						element.menu_info = [("Discard", self.do_nothing),
+											 ("Action: Swap", self.do_nothing),
+											 ("Action: Set Gender", self.do_nothing),
+											 ("Action: Set Race", self.do_nothing),
+											 ("Action: Give Keyword", self.do_nothing),
+											 ("Action: Imitate Card", self.do_nothing)]
 		else:
 			return False
 		return True

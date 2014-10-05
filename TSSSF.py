@@ -15,6 +15,7 @@ import math, random, time
 from libs.GUI.GUI import *
 from libs.Deck import *
 from libs.locals import *
+from libs.CardTable import *
 
 from libs.Controllers.StartUpController import *
 from libs.Controllers.ConnectMenuController import *
@@ -109,6 +110,7 @@ class Main(object):
 		#This function is used to clear out any game data that may remain from a previous game
 		self.name = None
 		self.master_deck = MasterDeck()
+		self.table = CardTable()
 
 		self.chat_sprites = []
 
