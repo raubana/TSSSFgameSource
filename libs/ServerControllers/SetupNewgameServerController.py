@@ -17,6 +17,13 @@ class SetupNewgameServerController(ServerController):
 							(self.Wait, tuple([0.5])),
 							(self.SendMessage, tuple(["ALERT:place_deck"])),
 							(self.Wait, tuple([1.5])),
+							(self.SendMessage, tuple(["ADD_CHAT:SERVER:Finding the start card..."])),
+					   		(self.Wait, tuple([0.5])),
+							(self.SendMessage, tuple(["ALERT:draw_card_from_deck"])),
+							(self.Wait, tuple([0.5])),
+							(self.SetupStartCard, tuple()),
+							(self.SendMessage, tuple(["ALERT:add_card_to_table"])),
+							(self.Wait, tuple([0.5])),
 							(self.SendMessage, tuple(["ADD_CHAT:SERVER:Giving players their starting hands..."])),
 							(self.SendMessage, tuple(["ALERT:draw_card_from_deck"])),
 							(self.Wait, tuple([0.1])),
@@ -77,6 +84,18 @@ class SetupNewgameServerController(ServerController):
 		self.gameserver.pony_deck.shuffle()
 		self.gameserver.ship_deck.shuffle()
 		self.gameserver.goal_deck.shuffle()
+
+	def SetupStartCard(self):
+		c = None
+		for card in self.gameserver.pony_deck.cards:
+			if "power" in card.attributes and card.attributes["power"] == "startcard":
+				c = card
+				self.gameserver.pony_deck.remove_card(card)
+				break
+		if c == None:
+			raise RuntimeError("There is no start card!")
+		self.gameserver.card_table.pony_cards[1][1] = c
+		self.gameserver.send_cardtable_all()
 
 	def GivePlayersStartHands(self, args):
 		for player in self.gameserver.players:

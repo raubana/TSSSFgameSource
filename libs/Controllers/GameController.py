@@ -208,6 +208,8 @@ class GameController(Controller):
 				element.padding = (3,3,3,3)
 				element.menu_info = [("Win Goal", self.do_nothing),
 									 ("Action: New Goal", self.do_nothing)]
+		elif message.startswith("CARDTABLE:"):
+			pass
 		else:
 			return False
 		return True

@@ -7,6 +7,7 @@ import time
 from ServerPlayer import Player
 import CustomDeck
 from PickledCard import open_pickledcard
+from CardTable import CardTable
 
 class GameServer(object):
 	def __init__(self, port=DEFAULT_PORT):
@@ -31,6 +32,7 @@ class GameServer(object):
 		self.pony_discard = Deck.Deck()
 		self.ship_discard = Deck.Deck()
 		self.public_goals = Deck.Deck()
+		self.card_table = CardTable()
 		self.game_started = False
 		self.begun_gamestart_countdown = False
 		self.gamestart_countdown = 10
@@ -332,7 +334,13 @@ class GameServer(object):
 		self.server.sendto(player.address, "PUBLICGOALS:"+self.public_goals.get_transmit(self.master_deck))
 
 	def send_playerhand(self, player):
-		self.server.sendto(player.address,"PLAYERHAND:"+player.hand.get_transmit(self.master_deck))
+		self.server.sendto(player.address, "PLAYERHAND:"+player.hand.get_transmit(self.master_deck))
+
+	def send_cardtable(self, player):
+		self.server.sendto(player.address, "CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
+
+	def send_cardtable_all(self):
+		self.server.sendall("CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
 
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)
