@@ -19,6 +19,9 @@ class GameServer(object):
 		self.controller = None
 		self.server = None
 
+		self.throttled = True
+		self.delay = 0.1
+
 		self.players = []
 
 		self.load_custom_deck()
@@ -35,7 +38,7 @@ class GameServer(object):
 		self.card_table = CardTable()
 		self.game_started = False
 		self.begun_gamestart_countdown = False
-		self.gamestart_countdown = 10
+		self.gamestart_countdown = int(SERVER_GAMESTART_DELAY)
 		self.gamestart_countdown_time = 0
 		for pl in self.players:
 			pl.reset()
@@ -91,6 +94,8 @@ class GameServer(object):
 			self._update()
 			self._read_messages()
 			self._check_player_status()
+			if self.throttled:
+				time.sleep(self.delay)
 
 	def _update(self):
 		t = time.time()
@@ -299,7 +304,7 @@ class GameServer(object):
 			ready = number_ready >= MIN_PLAYERS and number_ready == len(self.players)
 
 			if ready and not self.begun_gamestart_countdown:
-				self.gamestart_countdown = 10
+				self.gamestart_countdown = int(SERVER_GAMESTART_DELAY)
 				self.gamestart_countdown_time = time.time()
 				self.begun_gamestart_countdown = True
 				self.server.sendall("ADD_CHAT:SERVER: The game will start in...")

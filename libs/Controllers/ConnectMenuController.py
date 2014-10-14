@@ -83,7 +83,8 @@ class ConnectMenuController(Controller):
 
 		self.ip_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("MMM.MMM.MMM.MMM")[0]+4,self.main.font.get_height()+4), (255,255,255))
 		self.ip_inputbox.margin = [10,0,0,2]
-		self.ip_inputbox.legal_characters = "1234567890."
+		if not DEBUG_LOCALHOST:
+			self.ip_inputbox.legal_characters = "1234567890."
 		self.ip_inputbox.max_characters = len("MMM.MMM.MMM.MMM")
 
 		element2 = Element(self.main, self.main.main_element, None, self.main.font.size("PORT"), None, text_color=(32,32,32))
@@ -227,25 +228,30 @@ class ConnectMenuController(Controller):
 		message = None
 		text = str(self.ip_inputbox.text)
 		legal = True
-		if len(text) < 7:
-			legal = False
-			message = "IP: IP is too short."
-		elif text.count(".") < 3:
-			legal = False
-			message = "IP: IP is missing one or more periods."
+		if DEBUG_LOCALHOST:
+			if text != "localhost":
+				message = "IP: DEBUG_LOCALHOST is True, port must be 'localhost'."
+				legal = False
 		else:
-			for i in xrange(len(text)):
-				if text[i] == ".":
-					if i - 1 >= 0 and i + 1 < len(text):
-						if text[i-1] not in string.digits or text[i+1] not in string.digits:
+			if len(text) < 7:
+				legal = False
+				message = "IP: IP is too short."
+			elif text.count(".") < 3:
+				legal = False
+				message = "IP: IP is missing one or more periods."
+			else:
+				for i in xrange(len(text)):
+					if text[i] == ".":
+						if i - 1 >= 0 and i + 1 < len(text):
+							if text[i-1] not in string.digits or text[i+1] not in string.digits:
+								legal = False
+								message = "IP: Can only have digits to left and right of a period."
+								break
+						else:
+							message = "IP: IP can't start nor end with a period."
 							legal = False
-							message = "IP: Can only have digits to left and right of a period."
 							break
-					else:
-						message = "IP: IP can't start nor end with a period."
-						legal = False
-						break
-		if legal:
+		if legal and not DEBUG_LOCALHOST:
 			parts = text.split(".")
 			for part in parts:
 				num = int(part)
@@ -263,15 +269,20 @@ class ConnectMenuController(Controller):
 		message = None
 		text = str(self.port_inputbox.text)
 		legal = True
-		if len(text) < 3:
-			message = "PORT: Port is too short."
-			legal = False
-		elif int(text) < 1024:
-			message = "PORT: Port number is too small."
-			legal = False
-		elif int(text) > 65535:
-			message = "PORT: Port number is too large."
-			legal = False
+		if DEBUG_LOCALHOST:
+			if text != str(DEFAULT_PORT):
+				message = "PORT: DEBUG_LOCALHOST is True, port must be '"+str(DEFAULT_PORT)+"'."
+				legal = False
+		else:
+			if len(text) < 3:
+				message = "PORT: Port is too short."
+				legal = False
+			elif int(text) < 1024:
+				message = "PORT: Port number is too small."
+				legal = False
+			elif int(text) > 65535:
+				message = "PORT: Port number is too large."
+				legal = False
 		if len(text) == 0 or legal:
 			self.port_inputbox.set_bg((255,255,255))
 		else:

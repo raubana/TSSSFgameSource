@@ -13,8 +13,12 @@ TIMEOUT_TIME = 10.0  # seconds before a player is dropped for timing-out
 PING_FREQUENCY = 2.0  # ping the server/client every X seconds to ensure there's still a connection.
 BUFFERSIZE = 2048 # the size of the buffer used in the sockets
 MESSAGE_DELAY = 0.2 # the delay between sent messages to prevent buffer overflows
-DEFAULT_PORT = 27015
 ESCAPE_CHARACTER = str(chr(3))+str(chr(4))+str(chr(5))+str(chr(6))
+DEBUG_LOCALHOST = True #This is for testing on one machine.
+if not DEBUG_LOCALHOST:
+	DEFAULT_PORT = 27015
+else:
+	DEFAULT_PORT = 10000
 
 # FILE CONSTANTS
 try:
@@ -47,4 +51,8 @@ DEBUG_FOCUS_TRACE = False
 PRINTABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_+-={}|:\"<>?[]\\;',./ "
 PLAYERNAME_MAX_LENGTH = 15
 
+#CLIENT-SIDE
 CLIENT_PRECACHE_DECK = True
+
+#SERVER-SIDE
+SERVER_GAMESTART_DELAY = 1

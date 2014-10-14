@@ -18,7 +18,10 @@ class StartUpController(Controller):
 
 		if CLIENT_PRECACHE_DECK:
 			self.custom_deck = CustomDeck()
-			self.custom_deck.follow_instructions("add_all")
+			f = open("your_deck.txt")
+			instructions = f.read()
+			f.close()
+			self.custom_deck.follow_instructions(instructions)
 
 		self.disable_framerate = True
 

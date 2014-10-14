@@ -1,10 +1,50 @@
 # This file is for creating a deck of your own.
 #
-# With this file, you can add cards,
+# With this file, you can add(cards,
 # replace cards with new ones,
 # and/or remove cards.
 #
 # For more details on how to use this file, go to:
 # http://tsssfgame.wikia.com/wiki/Your deck.txt
 
-add_all
+#add_all
+
+
+
+#For testing purposes, I'm reducing the size of the cached deck.
+
+#First our start card.
+add(PonyFanficAuthorTwilight.tsssf)
+
+#Then some Goal cards.
+add(GoalSelfinsertion.tsssf)
+add(GoalTheQuietGame.tsssf)
+add(GoalRodeo.tsssf)
+add(GoalRainbowDashFanClub.tsssf)
+add(GoalFabulosity.tsssf)
+add(GoalParadox.tsssf)
+
+#Next some Ship cards.
+add(ShipCabinInTheWoodsAwooo.tsssf)
+add(ShipCheckingItOffMyList.tsssf)
+add(ShipItsASign.tsssf)
+add(ShipMyLittleShotgunWedding.tsssf)
+add(ShipSawYouInADream.tsssf)
+add(ShipTheOtherMare.tsssf)
+add(ShipTheyFightCrime.tsssf)
+add(ShipTheyreAtItAgain.tsssf)
+add(ShipWhatDidIDoLastNight.tsssf)
+add(ShipUnexpectedPregnancy.tsssf)
+
+#Finally, some Pony cards.
+add(PonyCiderSeasonApplejack.tsssf)
+add(PonyPinkamena.tsssf)
+add(PonyTsundereRainbowDash.tsssf)
+add(PonyDruidFluttershy.tsssf)
+add(PonyDramaticallyWoundedRarity.tsssf)
+add(PonyPrivateEyeTwilight.tsssf)
+add(PonyLyra.tsssf)
+add(PonyBonBon.tsssf)
+add(PonyGilda.tsssf)
+add(PonyDiscord.tsssf)
+add(PonyCheerilee.tsssf)

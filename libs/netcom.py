@@ -18,7 +18,10 @@ def get_this_computers_external_address():
 	return m.group(0)
 
 def gethostname():#a simple wrapper function
-	return socket.gethostname()
+	if not DEBUG_LOCALHOST:
+		return socket.gethostname()
+	else:
+		return "localhost"
 
 
 class Server(object):
@@ -42,7 +45,7 @@ class Server(object):
 		self.received_messages = {}
 		self.messages_to_send = {}
 
-		self.throttled = False
+		self.throttled = True
 
 		print "-Server running."
 
