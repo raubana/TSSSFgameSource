@@ -216,9 +216,9 @@ class GameController(Controller):
 			self.main.card_table.parse_message(self.main.master_deck, s)
 			self.table_element.clear()
 			scale = 0.25
-			grid_scale = 1.2
+			grid_offset = 15
 			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
-			grid_size = (int(size[0]*grid_scale), int(size[1]*grid_scale))
+			grid_size = (int(size[0]+grid_offset*2), int(size[1]+grid_offset*2))
 
 			#creates the grid
 			for y in xrange(self.main.card_table.size[1]):
