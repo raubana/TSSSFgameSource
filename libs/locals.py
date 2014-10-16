@@ -57,5 +57,5 @@ CLIENT_PRECACHE_DECK = True
 #SERVER-SIDE
 SERVER_GAMESTART_DELAY = 3
 SERVER_TURN_MAX_DURATION = 60*5 #This is the length of a player's turn once they've played their first card.
-SERVER_TURN_START_DURATION = 60*1.5 #This is the length of a player's before they've played their first card.
-SERVER_TURN_ALERT_DURATION = 60*0.5 #When the timer reaches this amount, the server will alert the player that their turn is almost over.
+SERVER_TURN_START_DURATION = 60*2 #This is the length of a player's before they've played their first card.
+SERVER_TURN_ALERT_DURATION = 60*0.75 #When the timer reaches this amount, the server will alert the player that their turn is almost over.

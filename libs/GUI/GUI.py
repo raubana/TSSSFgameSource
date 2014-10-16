@@ -162,8 +162,9 @@ class Element(object):
 
 	def clear(self):
 		#This removes every child from this element.
+		self.flag_for_rerender()
 		while len(self.children) > 0:
-			if self.main.focus == self.children[0]:
+			if self.main.focus != None and self.main.focus == self.children[0]:
 				self.children[0].unfocus()
 			del self.children[0]
 		self.h_scrollbar = None

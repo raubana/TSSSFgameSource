@@ -190,7 +190,6 @@ class GameController(Controller):
 				if "YOU" in parts:
 					element.font = self.main.font_bold
 		elif message.startswith("PLAYERHAND:"):
-			print message
 			s = message[len("PLAYERHAND:"):]
 			self.bottom_element.clear()
 			self.bottom_element.layout = LAYOUT_HORIZONTAL

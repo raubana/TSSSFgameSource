@@ -7,7 +7,6 @@ class PlayCardServerController(ServerController):
 	#It then waits for the player to pick a location on the grid to play it at.
 	def init(self):
 		self.selected_card = None
-		self.location_type = "pony"
 
 	def update(self):
 		pass
@@ -29,15 +28,42 @@ class PlayCardServerController(ServerController):
 							works = False
 						if works:
 							#we check if this position is legal on the grid.
-							if self.gameserver.card_table.check_if_legal_index((x,y),self.location_type):
-								#we remove the card from the players hand and then add the card to the shipping grid.
+							index = (x/3,y/3)
+							is_legal = False
+							if self.selected_card.type == "pony":
+								if self.gameserver.card_table.check_if_legal_index(index,"pony"):
+									self.gameserver.card_table.pony_cards[index[1]][index[0]] = self.selected_card
+									is_legal = True
+							if self.selected_card.type == "ship":
+								pos = (index[0]*3+1,index[1]*3+1)
+								dif = (x-pos[0],y-pos[1])
+								index = (pos[0]/3,pos[1]/3)
+								if dif[0]%2 != dif[1]%2:
+									if dif[0]%2 == 1:
+										#This is a h_ship position.
+										index = (index[0]-1,index[1])
+										if dif[0] > 0:
+											index = (index[0]+1,index[1])
+										print pos, dif, index
+										if self.gameserver.card_table.check_if_legal_index(index,"h ship"):
+											self.gameserver.card_table.h_ship_cards[index[1]][index[0]] = self.selected_card
+											is_legal = True
+									else:
+										#This is a v_ship position.
+										index = (index[0],index[1]-1)
+										if dif[1] > 0:
+											index = (index[0],index[1]+1)
+										print pos, dif, index
+										if self.gameserver.card_table.check_if_legal_index(index,"v ship"):
+											self.gameserver.card_table.v_ship_cards[index[1]][index[0]] = self.selected_card
+											is_legal = True
+								else:
+									print "ERROR! This is not a legal position: ",index, pos, dif
+									self.gameserver.server.sendall("ALERT:add_card_to_hand")
+
+							if is_legal:
 								player.hand.remove_card(self.selected_card)
-								if self.location_type == "pony":
-									self.gameserver.card_table.pony_cards[y][x] = self.selected_card
-								elif self.location_type == "v_ship":
-									self.gameserver.card_table.v_ship_cards[y][x] = self.selected_card
-								elif self.location_type == "h_ship":
-									self.gameserver.card_table.h_ship_cards[y][x] = self.selected_card
+								#we remove the card from the players hand and then add the card to the shipping grid.
 								self.gameserver.card_table.refactor()
 								self.gameserver.server.sendall("ALERT:add_card_to_table")
 								self.gameserver.setTimerDuration(SERVER_TURN_MAX_DURATION)
@@ -48,6 +74,7 @@ class PlayCardServerController(ServerController):
 							else:
 								self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You can't put this card here!")
 								self.gameserver.controller = None
+								self.gameserver.server.sendall("ALERT:add_card_to_hand")
 				else:
 					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't play a card right now!")
 			else:
