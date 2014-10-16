@@ -1,7 +1,7 @@
 import pygame
 from GUI import *
 
-class DeckElement(Element):
+class TimerElement(Element):
 	def init(self):
 		pass
 
@@ -20,4 +20,3 @@ class DeckElement(Element):
 			pass
 		elif button in (4,5):
 			pass
-

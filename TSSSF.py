@@ -1,5 +1,3 @@
-import traceback
-
 import os
 #os.environ['SDL_VIDEO_CENTERED'] = '1'
 
@@ -7,10 +5,6 @@ import pygame
 from pygame.locals import *
 pygame.mixer.pre_init(buffer = 2**9)
 pygame.init()
-
-#import numpy
-
-import math, random, time
 
 from libs.GUI.GUI import *
 from libs.Deck import *
@@ -20,6 +14,8 @@ from libs.CardTable import *
 from libs.Controllers.StartUpController import *
 from libs.Controllers.ConnectMenuController import *
 from libs.Sprite.ChatSprite import ChatSprite
+
+import math, random, time
 
 
 
@@ -43,7 +39,10 @@ class Main(object):
 		self.last_still = time.time() - self.still_freq
 
 		self.font = pygame.font.Font("data/fonts/Ubahn-Light.ttf",14)
-		self.deck_count_font = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",18)
+		self.font_bold = pygame.font.Font("data/fonts/Ubahn-Light.ttf",14)
+		self.font_bold.set_bold(True)
+		self.timer_font = pygame.font.Font("data/fonts/Barth_Regular.ttf",18)
+		self.deck_count_font = pygame.font.Font("data/fonts/PackardAntique-Bold.ttf",18)
 		self.tiny_font = pygame.font.SysFont("Tahoma",9)
 
 		self.sounds = {}
@@ -68,6 +67,7 @@ class Main(object):
 		self.sounds["shuffle_deck"] = pygame.mixer.Sound("snds/card/shuffle.ogg")
 
 		self.sounds["drink_call"] = pygame.mixer.Sound("snds/game/drink_call.ogg")
+		self.sounds["players_turn"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.ogg")
 		self.sounds["players_turn_not_focused"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.ogg")
 
 		pygame.key.set_repeat(300, 30)
@@ -97,12 +97,23 @@ class Main(object):
 
 		self.my_master_deck = MasterDeck()
 
+		self.setup_trayicon()
+
 		self.reset()
 		self.run()
 
-	def play_sound(self, soundname):
+	def setup_trayicon(self):
+		#At the moment, this will only work for Window's users.
+		try:
+			from libs.TaskBarIcon import TaskBarIcon
+			self.trayicon = TaskBarIcon()
+		except:
+			self.trayicon = None
+
+	def play_sound(self, soundname, force=False):
 		if soundname in self.sounds:
-			self.sounds[soundname].play()
+			if pygame.key.get_focused() or force:
+				self.sounds[soundname].play()
 		else:
 			print "That sound doesn't appear to be in my list: '"+soundname+"'"
 
@@ -408,6 +419,8 @@ class Main(object):
 			self.client.close()
 		print "GOODBYE!!"
 		pygame.quit()
+		if self.trayicon != None:
+			self.trayicon.Destroy()
 
 
 

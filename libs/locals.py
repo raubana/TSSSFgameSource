@@ -12,7 +12,7 @@ PONG_MESSAGE = "PONG" # response sent back to the server/client by the client/se
 TIMEOUT_TIME = 10.0  # seconds before a player is dropped for timing-out
 PING_FREQUENCY = 2.0  # ping the server/client every X seconds to ensure there's still a connection.
 BUFFERSIZE = 2048 # the size of the buffer used in the sockets
-MESSAGE_DELAY = 0.2 # the delay between sent messages to prevent buffer overflows
+MESSAGE_DELAY = 0.1 # the delay between sent messages to prevent buffer overflows
 ESCAPE_CHARACTER = str(chr(3))+str(chr(4))+str(chr(5))+str(chr(6))
 DEBUG_LOCALHOST = True #This is for testing on one machine.
 if not DEBUG_LOCALHOST:
@@ -49,10 +49,13 @@ DEBUG_FOCUS_TRACE = False
 
 #MISC.
 PRINTABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_+-={}|:\"<>?[]\\;',./ "
-PLAYERNAME_MAX_LENGTH = 15
+PLAYERNAME_MAX_LENGTH = 10
 
 #CLIENT-SIDE
 CLIENT_PRECACHE_DECK = True
 
 #SERVER-SIDE
-SERVER_GAMESTART_DELAY = 1
+SERVER_GAMESTART_DELAY = 3
+SERVER_TURN_MAX_DURATION = 60*5 #This is the length of a player's turn once they've played their first card.
+SERVER_TURN_START_DURATION = 60*1 #This is the length of a player's before they've played their first card.
+SERVER_TURN_ALERT_DURATION = 60*0.5 #When the timer reaches this amount, the server will alert the player that their turn is almost over.

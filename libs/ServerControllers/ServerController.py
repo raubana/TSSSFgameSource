@@ -22,3 +22,9 @@ class ServerController(object):
 
 	def triggerPlayerDisconnect(self, player):
 		pass
+
+	def triggerTimerDone(self):
+		pass
+
+	def triggerTimerTick(self, amount):
+		pass

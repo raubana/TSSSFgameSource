@@ -1,3 +1,4 @@
+import pygame
 from ..GUI.GUI import *
 
 class CardElement(Element):

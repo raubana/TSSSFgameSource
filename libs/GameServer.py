@@ -3,11 +3,13 @@ import netcom
 from locals import *
 import thread
 import time
+import math
 
 from ServerPlayer import Player
 import CustomDeck
 from PickledCard import open_pickledcard
 from CardTable import CardTable
+from common import *
 
 class GameServer(object):
 	def __init__(self, port=DEFAULT_PORT):
@@ -37,9 +39,15 @@ class GameServer(object):
 		self.public_goals = Deck.Deck()
 		self.card_table = CardTable()
 		self.game_started = False
-		self.begun_gamestart_countdown = False
-		self.gamestart_countdown = int(SERVER_GAMESTART_DELAY)
-		self.gamestart_countdown_time = 0
+
+		self.timer_start_amount = 0.0
+		self.timer_amount = 0.0
+		self.prev_timer_amount = 0.0
+		self.timer_start_time = 0.0
+		self.timer_running = False
+
+		self.setTimerDuration(float(SERVER_GAMESTART_DELAY))
+
 		self.current_players_turn = None
 		for pl in self.players:
 			pl.reset()
@@ -100,17 +108,21 @@ class GameServer(object):
 
 	def _update(self):
 		t = time.time()
-		if not self.game_started:
-			if self.begun_gamestart_countdown:
-				if t - self.gamestart_countdown_time >= 1:
-					if self.gamestart_countdown <= 0:
-						import libs.ServerControllers.SetupNewgameServerController as SetupNewgameServerController
-						self.controller = SetupNewgameServerController.SetupNewgameServerController(self)
-					else:
-						self.server.sendall("ADD_CHAT:SERVER:..."+str(self.gamestart_countdown)+"...")
-						self.server.sendall("ALERT:game_timer")
-						self.gamestart_countdown -= 1
-						self.gamestart_countdown_time = t
+
+		if self.timer_running:
+			dif = t - self.timer_start_time
+			self.timer_amount = self.timer_start_amount - dif
+		dif = floorint(self.prev_timer_amount) - floorint(self.timer_amount)
+		if dif != 0:
+			self.send_timer_all()
+			if self.timer_running:
+				for t in xrange(dif):
+					self.triggerTimerTick(floorint(self.prev_timer_amount-1)-t)
+				if self.timer_amount <= 0:
+					self.timer_running = False
+					self.triggerTimerDone()
+
+		self.prev_timer_amount = float(self.timer_amount)
 
 		if self.controller != None:
 			self.controller.update()
@@ -215,22 +227,35 @@ class GameServer(object):
 					self.check_ready()
 					if self.game_started:
 						self.give_fullupdate(player)
-				elif not self.game_started and message == "READY":
-					#toggle this player's "is_ready" variable
-					t = time.time()
-					if t - player.last_toggled_ready < 3:
-						self.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too often.")
-					else:
-						player.is_ready = not player.is_ready
-						player.last_toggled_ready = t
-						if player.is_ready:
-							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
-							self.server.sendall("ALERT:player_ready")
+				elif message == "READY":
+					if not self.game_started:
+						#toggle this player's "is_ready" variable
+						t = time.time()
+						if t - player.last_toggled_ready < 3:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too often.")
 						else:
-							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
-							self.server.sendall("ALERT:player_not_ready")
-						self.send_playerlist_all()
-						self.check_ready()
+							player.is_ready = not player.is_ready
+							player.last_toggled_ready = t
+							if player.is_ready:
+								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
+								self.server.sendall("ALERT:player_ready")
+							else:
+								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
+								self.server.sendall("ALERT:player_not_ready")
+							self.send_playerlist_all()
+							self.check_ready()
+					else:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:The game's already started!")
+				elif message == "END_TURN":
+					#we end this player's turn.
+					if self.game_started:
+						if self.players.index(player) == self.current_players_turn:
+							self.server.sendto(player.address, "ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
+							self.nextPlayersTurn()
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, dummy!")
+					else:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:The game hasn't started yet...")
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -304,36 +329,117 @@ class GameServer(object):
 
 			ready = number_ready >= MIN_PLAYERS and number_ready == len(self.players)
 
-			if ready and not self.begun_gamestart_countdown:
-				self.gamestart_countdown = int(SERVER_GAMESTART_DELAY)
-				self.gamestart_countdown_time = time.time()
-				self.begun_gamestart_countdown = True
+			if ready and not self.timer_running:
+				self.runTimer()
 				self.server.sendall("ADD_CHAT:SERVER: The game will start in...")
-			elif not ready and self.begun_gamestart_countdown:
-				self.begun_gamestart_countdown = False
+			elif not ready and self.timer_running:
+				self.stopTimer()
 				self.server.sendall("ADD_CHAT:SERVER: ...Aborted.")
 
+	def setPlayersTurn(self, i):
+		if i != self.current_players_turn:
+			self.current_players_turn = i
+			self.server.sendto(self.players[i].address, "YOUR_TURN")
+			self.server.sendall("ADD_CHAT:SERVER: It's now "+self.players[i].name+"'s turn.")
+			self.send_playerlist_all()
+			self.stopTimer()
+			self.setTimerDuration(SERVER_TURN_START_DURATION)
+			self.runTimer()
+
+	def nextPlayersTurn(self):
+		i = self.current_players_turn + 1
+		i %= len(self.players)
+		self.setPlayersTurn(i)
+
+	#Timer Stuff
+	def setTimerDuration(self, amount):
+		self.timer_start_amount = amount
+
+	def runTimer(self):
+		#Resets and runs the timer.
+		if not self.timer_running:
+			self.timer_running = True
+			self.timer_start_time = time.time()
+			self.timer_amount = float(self.timer_start_amount)
+
+	def stopTimer(self):
+		#Stops and resets the timer.
+		if self.timer_running:
+			self.timer_running = False
+			self.timer_amount = float(self.timer_start_amount)
+
+	def pauseTimer(self):
+		if self.timer_running:
+			self.timer_running = False
+
+	def resumeTimer(self):
+		if not self.timer_running:
+			self.timer_running = True
+			self.timer_start_time = time.time() - (self.timer_start_time - self.timer_amount)
+
+	#Triggers
+	def triggerTimerTick(self, amount):
+		#called when the timer ticks 1 second down.
+		if self.controller != None:
+			self.controller.triggerTimerTick(amount)
+
+		if not self.game_started:
+			self.server.sendall("ADD_CHAT:SERVER:..."+str(amount)+"...")
+		else:
+			if floorint(self.timer_amount) == SERVER_TURN_ALERT_DURATION:
+				self.server.sendto(self.players[self.current_players_turn].address, "TURN_ALMOST_OVER")
+
+	def triggerTimerDone(self):
+		#called when the timer runs out of time.
+		if self.controller != None:
+			self.controller.triggerTimerDone()
+
+		if not self.game_started:
+			#This must be the game start timer, so we start the game.
+			self.game_started = True
+			self.send_playerlist_all()
+			import libs.ServerControllers.SetupNewgameServerController as SetupNewgameServerController
+			self.controller = SetupNewgameServerController.SetupNewgameServerController(self)
+		else:
+			#This means a player ran out of time for their turn.
+			self.server.sendall("ADD_CHAT:SERVER: "+self.players[self.current_players_turn].name+" ran out of time.")
+			self.nextPlayersTurn()
+
+	#Send Commands
 	def send_playerlist_all(self):
-		s = "PLAYERLIST:"
+		parts = []
 		i = 0
 		while i < len(self.players):
 			player = self.players[i]
+			part = ""
 			if i == self.current_players_turn:
-				s += "CT:"
+				part += "CT:"
 			if not player.is_connected:
-				s += "DC:"
+				part += "DC:"
 			if not self.game_started:
 				if player.is_ready:
-					s += "R:"
+					part += "R:"
 				else:
-					s += "NR:"
+					part += "NR:"
 			if not player.is_loaded:
-				s += "L:"
-			s += player.name
-			if i != len(self.players)-1:
-				s += ","
+				part += "L:"
+			part += player.name
+			parts.append(part)
 			i += 1
-		self.server.sendall(s)
+		i = 0
+		while i < len(self.players):
+			s = "PLAYERLIST:"
+			j = 0
+			while j < len(self.players):
+				part = parts[j]
+				if j == i:
+					part = "YOU:"+str(part)
+				s += part
+				if j < len(self.players) - 1:
+					s += ","
+				j += 1
+			self.server.sendto(self.players[i].address, s)
+			i += 1
 
 	def send_public_goals_all(self):
 		self.server.sendall("PUBLICGOALS:"+self.public_goals.get_transmit(self.master_deck))
@@ -344,13 +450,20 @@ class GameServer(object):
 	def send_playerhand(self, player):
 		self.server.sendto(player.address, "PLAYERHAND:"+player.hand.get_transmit(self.master_deck))
 
-	def send_cardtable(self, player):
+	def send_cardtable_player(self, player):
 		self.server.sendto(player.address, "CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
 
 	def send_cardtable_all(self):
 		self.server.sendall("CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
 
+	def send_timer_all(self):
+		self.server.sendall("TIMER:"+str(floorint(self.timer_amount)))
+
+	def send_timer_player(self, player):
+		self.server.sendto(player.address, "TIMER:"+str(floorint(self.timer_amount)))
+
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)
 		self.send_public_goals(player)
 		self.send_cardtable_player(player)
+		self.send_timer_player(player)

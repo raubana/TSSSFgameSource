@@ -4,8 +4,6 @@ import time, random
 
 class SetupNewgameServerController(ServerController):
 	def init(self):
-		self.gameserver.game_started = True
-
 		self.events = 	[
 							(self.SendMessage, tuple(["ADD_CHAT:SERVER:The game has begun!"])),
 					   		(self.Wait, tuple([0.5])),
@@ -110,8 +108,9 @@ class SetupNewgameServerController(ServerController):
 		self.gameserver.send_public_goals_all()
 
 	def PickFirstPlayer(self, args):
-		i = random.randint(0,len(self.gameserver.players)-1)
-		self.gameserver.current_players_turn = i
-		self.gameserver.server.sendall("ADD_CHAT:SERVER:"+self.gameserver.players[i].name+" goes first!")
-		self.gameserver.server.sendto(self.gameserver.players[i].address, "ALERT:players_turn_not_focused")
-		self.gameserver.send_playerlist_all()
+		#We actually scramble the player list.
+		random.shuffle(self.gameserver.players)
+		self.gameserver.server.sendall("ADD_CHAT:SERVER:"+self.gameserver.players[0].name+" goes first!")
+		self.gameserver.setPlayersTurn(0)
+
+

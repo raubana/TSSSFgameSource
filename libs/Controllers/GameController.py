@@ -3,6 +3,7 @@ from Controller import*
 from ..GUI.GUI import *
 from ..GUI.DeckElement import *
 from ..GUI.CardElement import *
+from ..GUI.TimerElement import *
 
 import string, os
 
@@ -50,8 +51,7 @@ class GameController(Controller):
 		self.table_element.force_fullrange_scrolling = True
 
 		self.player_list_element = Element(self.main, self.right_element, None, ("100%",50))
-		self.end_turn_button = Button(self.main, self.right_element, None, ("100%",self.main.font.get_height()))
-		self.ready_button = Button(self.main, self.right_element, None, ("100%",self.main.font.get_height()))
+		self.timer_element = TimerElement(self.main, self.right_element, None, ("100%", int(self.main.timer_font.get_height()*1.2)))
 		self.decks_element = Element(self.main, self.right_element, None, ("100%",75))
 		self.public_goals_element = Element(self.main, self.right_element, None, ("100%","100%"))
 
@@ -59,17 +59,15 @@ class GameController(Controller):
 		self.decks_element.add_handler_keydown(self)
 		self.public_goals_element.add_handler_keydown(self)
 
-		self.end_turn_button.add_handler_submit(self)
-		self.ready_button.add_handler_submit(self)
+		self.timer_element.add_handler_mousepress(self)
 
-		self.end_turn_button.set_text("END TURN")
-		self.ready_button.set_text("TOGGLE READY")
+		self.timer_element.set_text_color((255,255,255))
 
-		self.end_turn_button.set_text_color((255,127,127))
-		self.ready_button.set_text_color((127,255,127))
+		self.timer_element.font = self.main.timer_font
 
-		self.end_turn_button.set_bg((255,127,127))
-		self.ready_button.set_bg((127,255,127))
+		self.timer_element.set_text_align(ALIGN_MIDDLE)
+
+		self.timer_element.set_bg((175,125,175))
 		self.decks_element.set_bg((175,125,175))
 		self.public_goals_element.set_bg((173,204,227))
 
@@ -78,6 +76,8 @@ class GameController(Controller):
 
 		self.public_goals_element.v_scrollable = True
 		self.public_goals_element.always_show_v_scroll = True
+
+		self.timer_element.menu_info.append(("End Turn", self.end_turn))
 
 		self.pony_deck_wrapper_element = Element(self.main, self.decks_element, None, ("33%","50%"), bg=None)
 		self.ship_deck_wrapper_element = Element(self.main, self.decks_element, None, ("50%","50%"), bg=None)
@@ -155,6 +155,9 @@ class GameController(Controller):
 	def do_nothing(self):
 		pass
 
+	def end_turn(self):
+		self.main.client.send("END_TURN")
+
 	def read_message(self, message):
 		if message.startswith("PLAYERLIST:"):
 			playerlist = message[len("PLAYERLIST:"):].split(",")
@@ -176,8 +179,12 @@ class GameController(Controller):
 					bg_color = (192,192,192)
 				if "CT" in parts:
 					name = ">"+name
+				else:
+					name = " "+name
 				element = Element(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
 				element.set_text(name)
+				if "YOU" in parts:
+					element.font = self.main.font_bold
 		elif message.startswith("PLAYERHAND:"):
 			hand = message[len("PLAYERHAND:"):].split(",")
 			self.bottom_element.clear()
@@ -257,6 +264,25 @@ class GameController(Controller):
 											 ("Action: Set Race", self.do_nothing),
 											 ("Action: Give Keyword", self.do_nothing),
 											 ("Action: Imitate Card", self.do_nothing)]
+		elif message.startswith("TIMER:"):
+			s = message[len("TIMER:"):]
+			self.timer_element.set_text(s)
+		elif message == "YOUR_TURN":
+			if not pygame.key.get_focused():
+				self.main.play_sound("players_turn_not_focused", True)
+				#we try to get the user's attention.
+				if self.main.trayicon != None:
+					self.main.trayicon.ShowBalloon("Yay!","It's your turn!", 15*1000)
+			else:
+				self.main.play_sound("players_turn")
+		elif message == "TURN_ALMOST_OVER":
+			if not pygame.key.get_focused():
+				self.main.play_sound("players_turn_not_focused", True)
+				#we try to get the user's attention.
+				if self.main.trayicon != None:
+					self.main.trayicon.ShowBalloon("Uh oh!","You're almost out of time!", 15*1000)
+			else:
+				self.main.play_sound("players_turn")
 		else:
 			return False
 		return True
@@ -270,14 +296,13 @@ class GameController(Controller):
 			self.chat_input_element.give_focus()
 
 	def handle_event_submit(self, widget):
-		if widget == self.end_turn_button:
-			self.main.client.send("END_TURN")
-		elif widget == self.ready_button:
-			self.main.client.send("READY")
-		elif (not (self.chat_input_element == None)) and widget == self.chat_input_element:
+		if (not (self.chat_input_element == None)) and widget == self.chat_input_element:
 			message = self.chat_input_element.text.strip()
 			if len(message) > 0:
-				self.main.client.send("CHAT:"+self.chat_input_element.text)
+				if message == "!ready":
+					self.main.client.send("READY")
+				else:
+					self.main.client.send("CHAT:"+self.chat_input_element.text)
 			self.bottom_element.give_focus()
 
 	def handle_event_losefocus(self, widget):
