@@ -1,6 +1,6 @@
 from ServerController import ServerController
 from ..Deck import *
-import time
+import time, random
 
 class SetupNewgameServerController(ServerController):
 	def init(self):
@@ -46,8 +46,7 @@ class SetupNewgameServerController(ServerController):
 							(self.Wait, tuple([3.0])),
 							(self.SendMessage, tuple(["ADD_CHAT:SERVER:Let's see who gets to go first!"])),
 							(self.Wait, tuple([2.0])),
-							(self.PickFirstPlayer, tuple()),
-							(self.SendMessage, tuple(["ADD_CHAT:SERVER:This is as far as I've got with the code. You'll want to close the program now."])),
+							(self.PickFirstPlayer, tuple())
 						]
 
 		self.waiting = False
@@ -111,4 +110,8 @@ class SetupNewgameServerController(ServerController):
 		self.gameserver.send_public_goals_all()
 
 	def PickFirstPlayer(self, args):
-		pass
+		i = random.randint(0,len(self.gameserver.players)-1)
+		self.gameserver.current_players_turn = i
+		self.gameserver.server.sendall("ADD_CHAT:SERVER:"+self.gameserver.players[i].name+" goes first!")
+		self.gameserver.server.sendto(self.gameserver.players[i].address, "ALERT:players_turn_not_focused")
+		self.gameserver.send_playerlist_all()

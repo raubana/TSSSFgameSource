@@ -40,6 +40,7 @@ class GameServer(object):
 		self.begun_gamestart_countdown = False
 		self.gamestart_countdown = int(SERVER_GAMESTART_DELAY)
 		self.gamestart_countdown_time = 0
+		self.current_players_turn = None
 		for pl in self.players:
 			pl.reset()
 		if self.server != None:
@@ -317,6 +318,8 @@ class GameServer(object):
 		i = 0
 		while i < len(self.players):
 			player = self.players[i]
+			if i == self.current_players_turn:
+				s += "CT:"
 			if not player.is_connected:
 				s += "DC:"
 			if not self.game_started:

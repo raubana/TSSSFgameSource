@@ -174,6 +174,8 @@ class GameController(Controller):
 						color = (127,0,0)
 				if "DC" in parts:
 					bg_color = (192,192,192)
+				if "CT" in parts:
+					name = ">"+name
 				element = Element(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
 				element.set_text(name)
 		elif message.startswith("PLAYERHAND:"):
