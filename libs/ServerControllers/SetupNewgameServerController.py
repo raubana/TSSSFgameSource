@@ -61,6 +61,8 @@ class SetupNewgameServerController(ServerController):
 			if len(self.events) > 0:
 				event = self.events.pop(0)
 				event[0](event[1])
+			else:
+				self.gameserver.controller = None
 
 	def SendMessage(self, args):
 		message = args[0]

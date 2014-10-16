@@ -5,7 +5,10 @@ import thread
 import time
 import math
 
+from ServerControllers.PlayCardServerController import *
+
 from ServerPlayer import Player
+import Deck
 import CustomDeck
 from PickledCard import open_pickledcard
 from CardTable import CardTable
@@ -256,6 +259,34 @@ class GameServer(object):
 							self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, dummy!")
 					else:
 						self.server.sendto(player.address,"ADD_CHAT:SERVER:The game hasn't started yet...")
+				elif message.startswith("PLAY_CARD:"):
+					#we play the selected card.
+					if self.game_started:
+						if self.players.index(player) == self.current_players_turn:
+							#we check if this card is in the player's hand.
+							try:
+								i = int(message[len("PLAY_CARD:"):])
+								works = True
+							except:
+								works = False
+							if works:
+								match = False
+								for card in player.hand.cards:
+									if self.master_deck.cards.index(card) == i:
+										match = True
+										break
+								if match:
+									#we attempt to play this card.
+									self.controller = PlayCardServerController(self)
+									self.controller.selected_card = card
+									self.server.sendall("ALERT:draw_card_from_hand")
+									self.server.sendto(player.address,"ADD_CHAT:SERVER: Click on the grid where you want to play this card.")
+								else:
+									self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...that card's not even in your hand!")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't play a card right now!")
+					else:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't play a card, the game hasn't started...")
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -393,6 +424,8 @@ class GameServer(object):
 		#called when the timer runs out of time.
 		if self.controller != None:
 			self.controller.triggerTimerDone()
+			self.controller.cleanup()
+			self.controller = None
 
 		if not self.game_started:
 			#This must be the game start timer, so we start the game.

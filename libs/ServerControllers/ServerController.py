@@ -14,6 +14,9 @@ class ServerController(object):
 	def read_message(self, message, player):
 		pass
 
+	def cleanup(self):
+		pass
+
 	def triggerNewPlayer(self, player):
 		pass
 

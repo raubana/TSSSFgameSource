@@ -4,6 +4,7 @@ from ..GUI.GUI import *
 from ..GUI.DeckElement import *
 from ..GUI.CardElement import *
 from ..GUI.TimerElement import *
+from ..GUI.TableElement import *
 
 import string, os
 
@@ -23,7 +24,7 @@ class GameController(Controller):
 		self.top_element = Element(self.main, self.main.main_element, None, ("100%",50))
 		self.right_element = Element(self.main, self.main.main_element, None, (150,"100%"))
 		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",100))
-		self.table_element = Element(self.main, self.main.main_element, None, ("100%","100%"))
+		self.table_element = TableElement(self.main, self.main.main_element, None, ("100%","100%"))
 
 		self.top_element.add_handler_keydown(self)
 		self.right_element.add_handler_keydown(self)
@@ -158,6 +159,9 @@ class GameController(Controller):
 	def end_turn(self):
 		self.main.client.send("END_TURN")
 
+	def play_card(self, args):
+		self.main.client.send("PLAY_CARD:"+str(args[0]))
+
 	def read_message(self, message):
 		if message.startswith("PLAYERLIST:"):
 			playerlist = message[len("PLAYERLIST:"):].split(",")
@@ -186,25 +190,28 @@ class GameController(Controller):
 				if "YOU" in parts:
 					element.font = self.main.font_bold
 		elif message.startswith("PLAYERHAND:"):
-			hand = message[len("PLAYERHAND:"):].split(",")
+			print message
+			s = message[len("PLAYERHAND:"):]
 			self.bottom_element.clear()
 			self.bottom_element.layout = LAYOUT_HORIZONTAL
-			scale = 0.325
-			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
-			for x in xrange(len(hand)):
-				s = hand[len(hand)-x-1]
-				i = int(s)
-				card = self.main.master_deck.cards[i]
-				element = CardElement(self.main,self.bottom_element,None,size)
-				element.set_card(card)
-				element.padding = (3,3,3,3)
-				if card.type == "pony":
-					element.menu_info = [("Play Card", self.do_nothing),
-										 ("Action: Replace", self.do_nothing),
-										 ("Discard", self.do_nothing)]
-				elif card.type == "ship":
-					element.menu_info = [("Play Card", self.do_nothing),
-										 ("Discard", self.do_nothing)]
+			if len(s) > 0:
+				hand = s.split(",")
+				scale = 0.325
+				size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
+				for x in xrange(len(hand)):
+					s = hand[len(hand)-x-1]
+					i = int(s)
+					card = self.main.master_deck.cards[i]
+					element = CardElement(self.main,self.bottom_element,None,size)
+					element.set_card(card)
+					element.padding = (3,3,3,3)
+					if card.type == "pony":
+						element.menu_info = [("Play Card", self.play_card, tuple([i])),
+											 ("Action: Replace", self.do_nothing),
+											 ("Discard", self.do_nothing)]
+					elif card.type == "ship":
+						element.menu_info = [("Play Card", self.play_card, tuple([i])),
+											 ("Discard", self.do_nothing)]
 		elif message.startswith("PUBLICGOALS:"):
 			hand = message[len("PUBLICGOALS:"):].split(",")
 			self.public_goals_element.clear()
@@ -223,47 +230,7 @@ class GameController(Controller):
 		elif message.startswith("CARDTABLE:"):
 			s = message[len("CARDTABLE:"):]
 			self.main.card_table.parse_message(self.main.master_deck, s)
-			self.table_element.clear()
-			scale = 0.25
-			grid_offset = 15
-			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
-			grid_size = (int(size[0]+grid_offset*2), int(size[1]+grid_offset*2))
-
-			#creates the grid
-			for y in xrange(self.main.card_table.size[1]):
-				for x in xrange(self.main.card_table.size[0]):
-					works = False
-					for Y in xrange(-1,2):
-						for X in xrange(-1,2):
-							index = (y+Y,x+X)
-							if self.main.card_table.check_if_legal_index(index,"pony",self.main.master_deck.cards):
-								works = True
-								X = 3
-								Y = 3
-					if works:
-						pos = 	(grid_size[0] * x, grid_size[1] * y)
-						if (x)%2 == (y)%2:
-							color = (198,185,224,255)
-						else:
-							color = (179,173,227,255)
-						element = Element(self.main,self.table_element,pos,grid_size,bg=color)
-						element.ignore_all_input = True
-
-			#creates the pony cards
-			for y in xrange(self.main.card_table.size[1]):
-				for x in xrange(self.main.card_table.size[0]):
-					card = self.main.card_table.pony_cards[y][x]
-					if card != None:
-						pos = 	(((grid_size[0] - size[0]) / 2) + grid_size[0] * x,
-								  ((grid_size[1] - size[1]) / 2) + grid_size[1] * y)
-						element = CardElement(self.main,self.table_element,pos,size)
-						element.set_card(card)
-						element.menu_info = [("Discard", self.do_nothing),
-											 ("Action: Swap", self.do_nothing),
-											 ("Action: Set Gender", self.do_nothing),
-											 ("Action: Set Race", self.do_nothing),
-											 ("Action: Give Keyword", self.do_nothing),
-											 ("Action: Imitate Card", self.do_nothing)]
+			self.table_element.setup_grid()
 		elif message.startswith("TIMER:"):
 			s = message[len("TIMER:"):]
 			self.timer_element.set_text(s)
