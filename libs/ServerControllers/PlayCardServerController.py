@@ -41,7 +41,7 @@ class PlayCardServerController(ServerController):
 								if dif[0]%2 != dif[1]%2:
 									if dif[0]%2 == 1:
 										#This is a h_ship position.
-										index = (index[0]-1,index[1])
+										index = (index[0]-1,index[1]-1)
 										if dif[0] > 0:
 											index = (index[0]+1,index[1])
 										print pos, dif, index
@@ -50,7 +50,7 @@ class PlayCardServerController(ServerController):
 											is_legal = True
 									else:
 										#This is a v_ship position.
-										index = (index[0],index[1]-1)
+										index = (index[0]-1,index[1]-1)
 										if dif[1] > 0:
 											index = (index[0],index[1]+1)
 										print pos, dif, index

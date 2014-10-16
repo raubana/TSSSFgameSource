@@ -2,9 +2,12 @@ import pygame
 from ..GUI.GUI import *
 
 class CardElement(Element):
-	def set_card(self, card):
+	def set_card(self, card, alpha=255):
 		self.card = card
-		self.set_bg(ScaleImage(card.image))
+		img = card.image.copy()
+		if alpha < 255:
+			img.fill((255,255,255,alpha),None,special_flags=BLEND_RGBA_MULT)
+		self.set_bg(ScaleImage(img, False))
 
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)

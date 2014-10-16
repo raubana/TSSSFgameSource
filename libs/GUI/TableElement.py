@@ -6,7 +6,7 @@ from ..common import *
 
 class TableElement(Element):
 	def init(self):
-		scale = 0.25
+		scale = 0.2
 		grid_offset = 15
 		self.card_size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 		self.grid_size = (int(self.card_size[0]+grid_offset*2), int(self.card_size[1]+grid_offset*2))
@@ -42,10 +42,10 @@ class TableElement(Element):
 			for x in xrange(self.main.card_table.size[0]):
 				card = self.main.card_table.v_ship_cards[y][x]
 				if card != None:
-					pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * x,
+					pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * (x+1),
 							  ((-self.card_size[1]) / 2) + self.grid_size[1] * (y+1))
 					element = CardElement(self.main,self,pos,self.card_size)
-					element.set_card(card)
+					element.set_card(card, 127)
 					element.menu_info = [("Discard", self.do_nothing)]
 
 		#creates the h ship cards
@@ -54,9 +54,9 @@ class TableElement(Element):
 				card = self.main.card_table.h_ship_cards[y][x]
 				if card != None:
 					pos = 	(((- self.card_size[0]) / 2) + self.grid_size[0] * (x+1),
-							  ((self.grid_size[1] - self.card_size[1]) / 2) + self.grid_size[1] * y)
+							  ((self.grid_size[1] - self.card_size[1]) / 2) + self.grid_size[1] * (y+1))
 					element = CardElement(self.main,self,pos,self.card_size)
-					element.set_card(card)
+					element.set_card(card, 127)
 					element.menu_info = [("Discard", self.do_nothing)]
 
 		#creates the pony cards

@@ -54,8 +54,11 @@ def create_context_menu(main, element, pos, menu_list):
 
 
 class ScaleImage(object):
-	def __init__(self, img):
-		self.image = img.copy()
+	def __init__(self, img, copy = True):
+		if copy:
+			self.image = img.copy()
+		else:
+			self.image = img
 		self.scaled_image = None
 		self.current_size = None
 
