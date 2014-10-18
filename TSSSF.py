@@ -198,8 +198,20 @@ class Main(object):
 		for element in self.updated_elements:
 			element.update()
 
-		if self.tooltip_text != None and self.tooltip_surface == None and self.time - self.hover_focus_time >= 0.5:
-			self.create_tooltip_surface()
+		if self.tooltip_text != None and self.tooltip_surface == None:
+			if type(self.tooltip_text) in (unicode,str):
+				if self.time - self.hover_focus_time >= 0.5:
+					self.create_tooltip_surface()
+			elif type(self.tooltip_text) == Card and (self.keys[K_LALT] or self.keys[K_RALT]):
+				self.create_tooltip_surface()
+		elif self.tooltip_surface != None:
+			if type(self.tooltip_text) == Card:
+				if not (self.keys[K_LALT] or self.keys[K_RALT]):
+					self.tooltip_surface = None
+					self.main_element.flag_for_rerender()
+			elif self.tooltip_text == None:
+				self.tooltip_surface = None
+				self.main_element.flag_for_rerender()
 
 		self.ping_server()
 		self.read_messages()
@@ -216,10 +228,12 @@ class Main(object):
 				self.main_element.flag_for_rerender()
 			i -= 1
 
-	def set_tooltip_text(self, text):
+	def set_tooltip(self, text):
 		if text != self.tooltip_text:
 			if type(text) in (str,unicode):
 				self.tooltip_text = str(text)
+			elif type(text) == Card:
+				self.tooltip_text = text
 			else:
 				self.tooltip_text = None
 			self.hover_focus_time = float(self.time)
@@ -230,13 +244,19 @@ class Main(object):
 		c1 = (255,255,196)
 		c2 = (127,64,64)
 
-		size = self.tiny_font.size(self.tooltip_text)
-		size = (size[0]+3,size[1]+2)
-		self.tooltip_surface = pygame.Surface(size)
-		self.tooltip_surface.fill(c1)
-		pygame.draw.rect(self.tooltip_surface,c2,(0,0,size[0],size[1]),1)
-		text_img = self.tiny_font.render(self.tooltip_text,True,c2)
-		self.tooltip_surface.blit(text_img,(2,1))
+		if type(self.tooltip_text) in (str,unicode):
+			size = self.tiny_font.size(self.tooltip_text)
+			size = (size[0]+3,size[1]+2)
+			self.tooltip_surface = pygame.Surface(size)
+			self.tooltip_surface.fill(c1)
+			pygame.draw.rect(self.tooltip_surface,c2,(0,0,size[0],size[1]),1)
+			text_img = self.tiny_font.render(self.tooltip_text,True,c2)
+			self.tooltip_surface.blit(text_img,(2,1))
+		elif type(self.tooltip_text) == Card:
+			size = (int((CARD_SIZE[0]*self.screen_size[1])/float(CARD_SIZE[1])),self.screen_size[1])
+			self.tooltip_surface = pygame.Surface(size)
+			self.tooltip_surface.fill(c1)
+			self.tooltip_surface.blit(pygame.transform.smoothscale(self.tooltip_text.image, size), (0,0))
 
 		self.main_element.flag_for_rerender()
 

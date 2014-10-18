@@ -234,7 +234,7 @@ class Element(object):
 				else:
 					#Nothing else caught the event, so we catch it.
 					self_hover = True
-					self.main.set_tooltip_text(self.tooltip)
+					self.main.set_tooltip(self.tooltip)
 			else:
 				for c in self.children:
 					if c is not None:
