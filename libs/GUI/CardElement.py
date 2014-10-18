@@ -2,11 +2,20 @@ import pygame
 from ..GUI.GUI import *
 
 class CardElement(Element):
-	def set_card(self, card, alpha=255):
+	def init(self):
+		self.card = None
+		self.alpha = 255
+		self.angle = 0
+
+	def set_card(self, card, alpha=255, angle=0):
 		self.card = card
 		img = card.image.copy()
 		if alpha < 255:
 			img.fill((255,255,255,alpha),None,special_flags=BLEND_RGBA_MULT)
+			self.alpha = alpha
+		if angle != 0:
+			img = pygame.transform.rotate(img, angle)
+			self.angle = angle
 		self.set_bg(ScaleImage(img, False))
 
 	def triggerMouseHover(self, mouse_pos):

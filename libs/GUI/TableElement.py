@@ -22,14 +22,24 @@ class TableElement(Element):
 			pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * index[0],
 							  ((self.grid_size[1] - self.card_size[1]) / 2) + self.grid_size[1] * index[1])
 		elif card_type == "h ship":
-			pos = 	(((- self.card_size[0]) / 2) + self.grid_size[0] * (index[0]+1),
-							  ((self.grid_size[1] - self.card_size[1]) / 2) + self.grid_size[1] * (index[1]+1))
+			pos = 	(((- self.card_size[1]) / 2) + self.grid_size[0] * (index[0]+1),
+							  ((self.grid_size[1] - self.card_size[0]) / 2) + self.grid_size[1] * (index[1]+1))
 		elif card_type == "v ship":
 			pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * (index[0]+1),
 							  ((-self.card_size[1]) / 2) + self.grid_size[1] * (index[1]+1))
 		return pos
 
 	def setup_grid(self):
+		old_elements = {}
+
+		i = len(self.children) - 1
+		while i >= 0:
+			child = self.children[i]
+			if type(child) == CardElement:
+				old_elements[child.card.name] = child
+				self._remove_child(child)
+			i -= 1
+
 		self.clear()
 
 		#creates the grid
@@ -58,9 +68,15 @@ class TableElement(Element):
 				card = self.main.card_table.v_ship_cards[y][x]
 				if card != None:
 					pos = self.get_graphical_pos((x,y), "v ship")
-					element = CardElement(self.main,self,pos,self.card_size)
-					element.set_card(card, 127)
-					element.menu_info = [("Discard", self.do_nothing)]
+					if card.name in old_elements and old_elements[card.name].angle == 0:
+						element = old_elements[card.name]
+						del old_elements[card.name]
+						self._add_child(element)
+						element.set_pos(pos)
+					else:
+						element = CardElement(self.main,self,pos,self.card_size)
+						element.set_card(card, 127)
+						element.menu_info = [("Discard", self.do_nothing)]
 
 		#creates the h ship cards
 		for y in xrange(self.main.card_table.size[1]):
@@ -68,9 +84,15 @@ class TableElement(Element):
 				card = self.main.card_table.h_ship_cards[y][x]
 				if card != None:
 					pos = self.get_graphical_pos((x,y), "h ship")
-					element = CardElement(self.main,self,pos,self.card_size)
-					element.set_card(card, 127)
-					element.menu_info = [("Discard", self.do_nothing)]
+					if card.name in old_elements and old_elements[card.name].angle == 90:
+						element = old_elements[card.name]
+						del old_elements[card.name]
+						self._add_child(element)
+						element.set_pos(pos)
+					else:
+						element = CardElement(self.main,self,pos,[self.card_size[1],self.card_size[0]])
+						element.set_card(card, 127, 90)
+						element.menu_info = [("Discard", self.do_nothing)]
 
 		#creates the pony cards
 		for y in xrange(self.main.card_table.size[1]):
@@ -78,14 +100,24 @@ class TableElement(Element):
 				card = self.main.card_table.pony_cards[y][x]
 				if card != None:
 					pos = self.get_graphical_pos((x,y), "pony")
-					element = CardElement(self.main,self,pos,self.card_size)
-					element.set_card(card)
-					element.menu_info = [("Discard", self.do_nothing),
-										 ("Action: Swap", self.do_nothing),
-										 ("Action: Set Gender", self.do_nothing),
-										 ("Action: Set Race", self.do_nothing),
-										 ("Action: Give Keyword", self.do_nothing),
-										 ("Action: Imitate Card", self.do_nothing)]
+					if card.name in old_elements:
+						element = old_elements[card.name]
+						del old_elements[card.name]
+						self._add_child(element)
+						element.set_pos(pos)
+					else:
+						element = CardElement(self.main,self,pos,self.card_size)
+						element.set_card(card)
+						element.menu_info = [("Discard", self.do_nothing),
+											 ("Action: Swap", self.do_nothing),
+											 ("Action: Set Gender", self.do_nothing),
+											 ("Action: Set Race", self.do_nothing),
+											 ("Action: Give Keyword", self.do_nothing),
+											 ("Action: Imitate Card", self.do_nothing)]
+
+		#we dispose of the remaining old_elements
+		for key in old_elements:
+			del old_elements[key]
 
 	def mousepos_to_xcoords(self, mouse_pos):
 		index = (floorint(mouse_pos[0]/self.grid_size[0]), floorint(mouse_pos[1]/self.grid_size[1]))
@@ -153,7 +185,7 @@ class TableElement(Element):
 			index = info[1]
 			if info[0] == "h ship":
 				pos = self.get_graphical_pos(index, "h ship")
-				pygame.draw.rect(self.rendered_surface, (255,0,255), (pos[0]-offset[0],pos[1]-offset[1],self.card_size[0],self.card_size[1]), 2)
+				pygame.draw.rect(self.rendered_surface, (255,0,255), (pos[0]-offset[0],pos[1]-offset[1],self.card_size[1],self.card_size[0]), 2)
 			elif info[0] == "v ship":
 				pos = self.get_graphical_pos(index, "v ship")
 				pygame.draw.rect(self.rendered_surface, (255,0,255), (pos[0]-offset[0],pos[1]-offset[1],self.card_size[0],self.card_size[1]), 2)
