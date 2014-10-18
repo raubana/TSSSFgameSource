@@ -1,3 +1,32 @@
+def xcoords_to_index(xcoords, card_type):
+	x,y = xcoords
+	index = (x/3,y/3)
+	if card_type == "pony":
+		return ("pony",index)
+	elif card_type == "ship":
+		pos = (index[0]*3+1,index[1]*3+1)
+		dif = (x-pos[0],y-pos[1])
+		index = (pos[0]/3,pos[1]/3)
+		if dif[0]%2 != dif[1]%2:
+			if dif[0]%2 == 1:
+				#This is a h_ship position.
+				index = (index[0]-1,index[1]-1)
+				if dif[0] > 0:
+					index = (index[0]+1,index[1])
+				return ("h ship",index)
+			else:
+				#This is a v_ship position.
+				index = (index[0]-1,index[1]-1)
+				if dif[1] > 0:
+					index = (index[0],index[1]+1)
+				return ("v ship",index)
+		else:
+			print "ERROR! This is not a legal position: ",index, pos, dif
+	else:
+		print "ERROR! This is not a legal card type!"
+	return (None,(0,0))
+
+
 class XY_Range(object):
 	def __init__(self):
 		self.is_empty = True

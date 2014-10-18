@@ -84,6 +84,8 @@ class SetupNewgameServerController(ServerController):
 		self.gameserver.ship_deck.shuffle()
 		self.gameserver.goal_deck.shuffle()
 
+		self.gameserver.send_decks_all()
+
 	def SetupStartCard(self, args):
 		c = None
 		for card in self.gameserver.pony_deck.cards:
@@ -96,6 +98,8 @@ class SetupNewgameServerController(ServerController):
 		self.gameserver.card_table.pony_cards[1][1] = c
 		self.gameserver.send_cardtable_all()
 
+		self.gameserver.send_decks_all()
+
 	def GivePlayersStartHands(self, args):
 		for player in self.gameserver.players:
 			for i in xrange(4):
@@ -104,10 +108,14 @@ class SetupNewgameServerController(ServerController):
 				player.hand.add_card_to_top(self.gameserver.ship_deck.draw())
 			self.gameserver.send_playerhand(player)
 
+		self.gameserver.send_decks_all()
+
 	def DrawPublicGoals(self, args):
 		for i in xrange(3):
 			self.gameserver.public_goals.add_card_to_top(self.gameserver.goal_deck.draw())
 		self.gameserver.send_public_goals_all()
+
+		self.gameserver.send_decks_all()
 
 	def PickFirstPlayer(self, args):
 		#We actually scramble the player list.

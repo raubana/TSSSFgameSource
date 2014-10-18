@@ -803,9 +803,9 @@ class Element(object):
 						print self.size
 						raise e
 			self.rerender_background()
-			self.rerender_foreground()
 			self.rerender_text()
 			self.rerender_children()
+			self.rerender_foreground()
 
 	def render(self):
 		self.rerender()

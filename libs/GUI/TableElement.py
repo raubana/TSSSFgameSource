@@ -2,6 +2,7 @@ import pygame
 from GUI import *
 from ..GUI.CardElement import *
 from ..common import *
+from ..CardTable import xcoords_to_index
 
 
 class TableElement(Element):
@@ -11,8 +12,22 @@ class TableElement(Element):
 		self.card_size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 		self.grid_size = (int(self.card_size[0]+grid_offset*2), int(self.card_size[1]+grid_offset*2))
 
+		self.mouse_pos = None
+
 	def do_nothing(self):
 		pass
+
+	def get_graphical_pos(self, index, card_type):
+		if card_type == "pony":
+			pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * index[0],
+							  ((self.grid_size[1] - self.card_size[1]) / 2) + self.grid_size[1] * index[1])
+		elif card_type == "h ship":
+			pos = 	(((- self.card_size[0]) / 2) + self.grid_size[0] * (index[0]+1),
+							  ((self.grid_size[1] - self.card_size[1]) / 2) + self.grid_size[1] * (index[1]+1))
+		elif card_type == "v ship":
+			pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * (index[0]+1),
+							  ((-self.card_size[1]) / 2) + self.grid_size[1] * (index[1]+1))
+		return pos
 
 	def setup_grid(self):
 		self.clear()
@@ -42,8 +57,7 @@ class TableElement(Element):
 			for x in xrange(self.main.card_table.size[0]):
 				card = self.main.card_table.v_ship_cards[y][x]
 				if card != None:
-					pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * (x+1),
-							  ((-self.card_size[1]) / 2) + self.grid_size[1] * (y+1))
+					pos = self.get_graphical_pos((x,y), "v ship")
 					element = CardElement(self.main,self,pos,self.card_size)
 					element.set_card(card, 127)
 					element.menu_info = [("Discard", self.do_nothing)]
@@ -53,8 +67,7 @@ class TableElement(Element):
 			for x in xrange(self.main.card_table.size[0]-1):
 				card = self.main.card_table.h_ship_cards[y][x]
 				if card != None:
-					pos = 	(((- self.card_size[0]) / 2) + self.grid_size[0] * (x+1),
-							  ((self.grid_size[1] - self.card_size[1]) / 2) + self.grid_size[1] * (y+1))
+					pos = self.get_graphical_pos((x,y), "h ship")
 					element = CardElement(self.main,self,pos,self.card_size)
 					element.set_card(card, 127)
 					element.menu_info = [("Discard", self.do_nothing)]
@@ -64,8 +77,7 @@ class TableElement(Element):
 			for x in xrange(self.main.card_table.size[0]):
 				card = self.main.card_table.pony_cards[y][x]
 				if card != None:
-					pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * x,
-							  ((self.grid_size[1] - self.card_size[1]) / 2) + self.grid_size[1] * y)
+					pos = self.get_graphical_pos((x,y), "pony")
 					element = CardElement(self.main,self,pos,self.card_size)
 					element.set_card(card)
 					element.menu_info = [("Discard", self.do_nothing),
@@ -75,6 +87,23 @@ class TableElement(Element):
 										 ("Action: Give Keyword", self.do_nothing),
 										 ("Action: Imitate Card", self.do_nothing)]
 
+	def mousepos_to_xcoords(self, mouse_pos):
+		index = (floorint(mouse_pos[0]/self.grid_size[0]), floorint(mouse_pos[1]/self.grid_size[1]))
+
+		center = ((index[0]+0.5)*self.grid_size[0], (index[1]+0.5)*self.grid_size[1])
+		offset = ((mouse_pos[0]-center[0])/float(self.grid_size[0]),(mouse_pos[1]-center[1])/float(self.grid_size[1]))
+		if abs(offset[0]) > abs(offset[1]):
+			if offset[0] >= 0:
+				index = (index[0]*3+2 , index[1]*3+1 )
+			else:
+				index = (index[0]*3+0 , index[1]*3+1 )
+		else:
+			if offset[1] >= 0:
+				index = (index[0]*3+1 , index[1]*3+2 )
+			else:
+				index = (index[0]*3+1 , index[1]*3+0 )
+
+		return index
 
 	def triggerMousePressed(self, mouse_pos, button):
 		if button == 1:
@@ -90,25 +119,48 @@ class TableElement(Element):
 				pos[0] = pos[0] + self.h_scrollbar.scrolled_amount
 			if self.v_scrollbar != None:
 				pos[1] = pos[1] + self.v_scrollbar.scrolled_amount
-			#then we do some math to get our grid location.
-			index = (floorint(pos[0]/self.grid_size[0]), floorint(pos[1]/self.grid_size[1]))
 
-			#BUT WAIT; THERE'S MORE!
-			#We have to compare this grid's center with the mouse position to get our "special" grid position.
-			#("Special" meaning it can be used to describe both pony and ship card positions).
-
-			center = ((index[0]+0.5)*self.grid_size[0], (index[1]+0.5)*self.grid_size[1])
-			offset = ((pos[0]-center[0])/float(self.grid_size[0]),(pos[1]-center[1])/float(self.grid_size[1]))
-			if abs(offset[0]) > abs(offset[1]):
-				if offset[0] >= 0:
-					index = (index[0]*3+2 , index[1]*3+1 )
-				else:
-					index = (index[0]*3+0 , index[1]*3+1 )
-			else:
-				if offset[1] >= 0:
-					index = (index[0]*3+1 , index[1]*3+2 )
-				else:
-					index = (index[0]*3+1 , index[1]*3+0 )
+			index = self.mousepos_to_xcoords(pos)
 
 			#finally, we send this off to the server.
 			self.main.client.send("CLICKED_GRID_AT:"+str(index[0])+","+str(index[1]))
+
+	def triggerMouseMove(self, mouse_pos):
+		if self.hover:
+			if self.parent:
+				corner = self.parent.get_world_pos()
+			else:
+				corner = (0,0)
+			self.mouse_pos = [mouse_pos[0]-corner[0]-self.pos[0],mouse_pos[1]-corner[1]-self.pos[1]]
+			self.flag_for_rerender()
+		else:
+			if self.mouse_pos != None:
+				self.flag_for_rerender()
+				self.mouse_pos = None
+
+	def rerender_foreground(self):
+		if self.mouse_pos != None:
+			offset = [0,0]
+			if self.h_scrollbar != None:
+				offset[0] = self.h_scrollbar.scrolled_amount
+			if self.v_scrollbar != None:
+				offset[1] = self.v_scrollbar.scrolled_amount
+			mouse_pos = (self.mouse_pos[0]+offset[0], self.mouse_pos[1]+offset[1])
+			xcoords = self.mousepos_to_xcoords(mouse_pos)
+
+			#draw h ship
+			info = xcoords_to_index(xcoords, "ship")
+			index = info[1]
+			if info[0] == "h ship":
+				pos = self.get_graphical_pos(index, "h ship")
+				pygame.draw.rect(self.rendered_surface, (255,0,255), (pos[0]-offset[0],pos[1]-offset[1],self.card_size[0],self.card_size[1]), 2)
+			elif info[0] == "v ship":
+				pos = self.get_graphical_pos(index, "v ship")
+				pygame.draw.rect(self.rendered_surface, (255,0,255), (pos[0]-offset[0],pos[1]-offset[1],self.card_size[0],self.card_size[1]), 2)
+
+			#draw pony
+			info = xcoords_to_index(xcoords, "pony")
+			index = info[1]
+			if info[0] == "pony":
+				pos = self.get_graphical_pos(index, "pony")
+				pygame.draw.rect(self.rendered_surface, (127,0,255), (pos[0]-offset[0],pos[1]-offset[1],self.card_size[0],self.card_size[1]), 2)

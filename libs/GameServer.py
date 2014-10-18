@@ -382,6 +382,23 @@ class GameServer(object):
 		i %= len(self.players)
 		self.setPlayersTurn(i)
 
+	def get_decks_trasmit(self):
+		s = "DECKS:"
+		s += str(len(self.pony_deck.cards))+","
+		s += str(len(self.ship_deck.cards))+","
+		s += str(len(self.goal_deck.cards))+","
+		s += str(len(self.pony_discard.cards))+","
+		s += str(len(self.ship_discard.cards))+":"
+		if len(self.pony_discard.cards) > 0:
+			s += str(self.master_deck.cards.index(self.pony_discard.cards[-1])) + ","
+		else:
+			s += "N,"
+		if len(self.ship_discard.cards) > 0:
+			s += str(self.master_deck.cards.index(self.ship_discard.cards[-1]))
+		else:
+			s += "N"
+		return s
+
 	#Timer Stuff
 	def setTimerDuration(self, amount):
 		self.timer_start_amount = amount
@@ -489,6 +506,12 @@ class GameServer(object):
 	def send_cardtable_all(self):
 		self.server.sendall("CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
 
+	def send_decks_all(self):
+		self.server.sendall(self.get_decks_trasmit())
+
+	def send_decks_player(self, player):
+		self.server.sendto(player.address, self.get_decks_trasmit())
+
 	def send_timer_all(self):
 		self.server.sendall("TIMER:"+str(floorint(self.timer_amount)))
 
@@ -500,3 +523,4 @@ class GameServer(object):
 		self.send_public_goals(player)
 		self.send_cardtable_player(player)
 		self.send_timer_player(player)
+		self.send_decks_player(player)

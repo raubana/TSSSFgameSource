@@ -230,6 +230,44 @@ class GameController(Controller):
 			s = message[len("CARDTABLE:"):]
 			self.main.card_table.parse_message(self.main.master_deck, s)
 			self.table_element.setup_grid()
+		elif message.startswith("DECKS:"):
+			s = message[len("DECKS:"):]
+			parts = s.split(":")
+			if len(parts) == 2:
+				part1 = parts[0].split(",")
+				part2 = parts[1].split(",")
+				if len(part1) == 5:
+					try:
+						pony = str(int(part1[0]))
+						ship = str(int(part1[1]))
+						goal = str(int(part1[2]))
+						pony_discard = str(int(part1[3]))
+						ship_discard = str(int(part1[4]))
+						self.pony_deck_count_element.set_text(pony)
+						self.ship_deck_count_element.set_text(ship)
+						self.goal_deck_count_element.set_text(goal)
+						self.pony_discard_count_element.set_text(pony_discard)
+						self.ship_discard_count_element.set_text(ship_discard)
+					except:
+						print "ERROR! Received bad decks info. D"
+					if len(part2) == 2:
+						try:
+							if part2[0] == "N":
+								self.pony_discard_element.set_bg((255,255,255))
+							else:
+								self.pony_discard_element.set_bg(ScaleImage(self.main.master_deck.card[int(part2[0])].image))
+							if part2[1] == "N":
+								self.pony_discard_element.set_bg((255,255,255))
+							else:
+								self.ship_discard_element.set_bg(ScaleImage(self.main.master_deck.card[int(part2[1])].image))
+						except:
+							print "ERROR! Received bad decks info. E"
+					else:
+						print "ERROR! Received bad decks info. C"
+				else:
+					print "ERROR! Received bad decks info. B"
+			else:
+				print "ERROR! Received bad decks info. A"
 		elif message.startswith("TIMER:"):
 			s = message[len("TIMER:"):]
 			self.timer_element.set_text(s)
