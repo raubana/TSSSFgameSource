@@ -131,10 +131,10 @@ class GameController(Controller):
 		self.pony_discard_element.padding = (2,2,2,2)
 		self.ship_discard_element.padding = (2,2,2,2)
 
-		self.pony_deck_element.menu_info.append(("Draw 1",self.do_nothing))
+		self.pony_deck_element.menu_info.append(("Draw 1",self.draw_1,tuple(["pony"])))
 		self.pony_deck_element.menu_info.append(("Shuffle",self.do_nothing))
 
-		self.ship_deck_element.menu_info.append(("Draw 1",self.do_nothing))
+		self.ship_deck_element.menu_info.append(("Draw 1",self.draw_1,tuple(["ship"])))
 		self.ship_deck_element.menu_info.append(("Shuffle",self.do_nothing))
 
 		self.goal_deck_element.menu_info.append(("Shuffle",self.do_nothing))
@@ -161,6 +161,9 @@ class GameController(Controller):
 
 	def play_card(self, args):
 		self.main.client.send("PLAY_CARD:"+str(args[0]))
+
+	def draw_1(self, args):
+		self.main.client.send("DRAW_1:"+args[0])
 
 	def read_message(self, message):
 		if message.startswith("PLAYERLIST:"):

@@ -287,6 +287,32 @@ class GameServer(object):
 							self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't play a card right now!")
 					else:
 						self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't play a card, the game hasn't started...")
+				elif message.startswith("DRAW_1:"):
+					s = message[len("DRAW_1:"):]
+					if s == "pony":
+						if len(self.pony_deck.cards) > 0:
+							self.server.sendall("ADD_CHAT:SERVER:"+player.name+" drew a Pony card.")
+							self.server.sendall("ALERT:draw_card_from_deck")
+							self.server.sendall("ALERT:add_card_to_hand")
+							card = self.pony_deck.draw()
+							player.hand.add_card_to_top(card)
+							self.send_decks_all()
+							self.send_playerhand(player)
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Pony cards to draw...")
+					elif s == "ship":
+						if len(self.ship_deck.cards) > 0:
+							self.server.sendall("ADD_CHAT:SERVER:"+player.name+" drew a Ship card.")
+							self.server.sendall("ALERT:draw_card_from_deck")
+							self.server.sendall("ALERT:add_card_to_hand")
+							card = self.ship_deck.draw()
+							player.hand.add_card_to_top(card)
+							self.send_decks_all()
+							self.send_playerhand(player)
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Ship cards to draw...")
+					else:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't draw that type of card!")
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
