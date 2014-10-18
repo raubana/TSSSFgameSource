@@ -5,6 +5,7 @@ CARD_SIZE = (394, 544)
 CARD_ART_SIZE = (385, 284)
 MIN_PLAYERS = 2
 MAX_PLAYERS = 5
+MIN_CARDS_IN_HAND = 7
 
 # SOCKET CONSTANTS
 PING_MESSAGE = "PING" # message sent when a server/client needs to know that a client/server is still connected.

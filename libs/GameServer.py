@@ -253,8 +253,12 @@ class GameServer(object):
 					#we end this player's turn.
 					if self.game_started:
 						if self.players.index(player) == self.current_players_turn:
-							self.server.sendto(player.address, "ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
-							self.nextPlayersTurn()
+							#We check if the player has the correct number of cards in their hand.
+							if len(player.hand.cards) < MIN_CARDS_IN_HAND:
+								self.server.sendto(player.address, "ADD_CHAT:SERVER:You need to draw up to "+str(MIN_CARDS_IN_HAND)+" before you can end your turn.")
+							else:
+								self.server.sendto(player.address, "ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
+								self.nextPlayersTurn()
 						else:
 							self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, dummy!")
 					else:
