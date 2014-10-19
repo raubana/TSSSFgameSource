@@ -149,174 +149,16 @@ class GameServer(object):
 					self.server.sendto(key,PONG_MESSAGE)
 				elif message == PONG_MESSAGE:
 					pass
-				elif message.startswith("CONNECT:"):
-					#We get the clients name now and add them to the game.
-					#TODO: Kick the client if their name sucks or if the game's already started
-					if False:
-						pass
-					else:
-						data = message[len("CONNECT:"):]
-						data = data.split(":")
-						if len(data) < 2:
-							self.server.kick(key,"You seem to be running an older version. Please go updated.")
-						else:
-							player_key = data[0]
-							name = data[1]
-							if player == None:
-								for pl in self.players:
-									if pl.name == name and pl.player_key == player_key:
-										player = pl
-										break
-							if player != None:
-								#reconnect player
-								if not player.is_connected:
-									self.server.sendto(key,"CONNECTED:"+name)
-									self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has reconnected.")
-									player.is_connected = True
-									player.address = key
-									if self.controller != None:
-										self.controller.triggerRejoinPlayer(player)
-									print "=Player '"+name+"'", key, "has rejoined the game."
-								else:
-									#we kick this one, since the player is already connected.
-									self.server.kick(key,"This player is already connected.")
-							else:
-								if not self.game_started:
-									#connect new player
-									self.server.sendto(key,"CONNECTED:"+name)
-									self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
-									self.players.append(Player(key, name, player_key))
-									if self.controller != None:
-										self.controller.triggerNewPlayer(self.players[-1])
-									print "=Player '"+name+"'", key, "has joined the game."
-								else:
-									self.server.kick(key,"The game's already started. Please come back later.")
-							self.send_playerlist_all()
-							self.check_ready()
-				elif message.startswith("CHAT:"):
-					if not player:
-						name = "???"
-					else:
-						name = player.name
-					chat = message[len("CHAT:"):]
-					self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
-				elif message == "REQUEST_DECK":
-					s = ""
-					i = 0
-					while i < len(self.custom_deck.list):
-						card = self.custom_deck.list[i]
-						if card.startswith("R:"):
-							card = card[2:]
-						s += card
-						i += 1
-						if i < len(self.custom_deck.list):
-							s += ","
-					self.server.sendto(player.address,"DECK:"+s)
-				elif message.startswith("REQUEST_CARDFILE:"):
-					index = int(message[len("REQUEST_CARDFILE:"):])
-					data = "CARDFILE:"+str(index)+":"+self.master_deck.pc_cards[index]
-					#print "SENDING CARD: "+data[:100]
-					self.server.sendto(player.address,data)
-				elif message.startswith("REQUEST_CARDFILE_ATTRIBUTES:"):
-					index = int(message[len("REQUEST_CARDFILE_ATTRIBUTES:"):])
-					data = "CARDFILE_ATTRIBUTES:"+str(index)+":"+self.master_deck.cards[index].attributes
-					#print "SENDING CARD ATTRIBUTES: "+data[:100]
-					self.server.sendto(player.address,data)
-				elif message == "DONE_LOADING":
-					player.is_loaded = True
-					self.server.sendto(player.address, "CLIENT_READY")
-					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has joined.")
-					self.send_playerlist_all()
-					self.check_ready()
-					if self.game_started:
-						self.give_fullupdate(player)
-				elif message == "READY":
-					if not self.game_started:
-						#toggle this player's "is_ready" variable
-						t = time.time()
-						if t - player.last_toggled_ready < 3:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too often.")
-						else:
-							player.is_ready = not player.is_ready
-							player.last_toggled_ready = t
-							if player.is_ready:
-								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
-								self.server.sendall("ALERT:player_ready")
-							else:
-								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
-								self.server.sendall("ALERT:player_not_ready")
-							self.send_playerlist_all()
-							self.check_ready()
-					else:
-						self.server.sendto(player.address,"ADD_CHAT:SERVER:The game's already started!")
-				elif message == "END_TURN":
-					#we end this player's turn.
-					if self.game_started:
-						if self.players.index(player) == self.current_players_turn:
-							#We check if the player has the correct number of cards in their hand.
-							if len(player.hand.cards) < MIN_CARDS_IN_HAND:
-								self.server.sendto(player.address, "ADD_CHAT:SERVER:You need to draw up to "+str(MIN_CARDS_IN_HAND)+" before you can end your turn.")
-							else:
-								self.server.sendto(player.address, "ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
-								self.nextPlayersTurn()
-						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, dummy!")
-					else:
-						self.server.sendto(player.address,"ADD_CHAT:SERVER:The game hasn't started yet...")
-				elif message.startswith("PLAY_CARD:"):
-					#we play the selected card.
-					if self.game_started:
-						if self.players.index(player) == self.current_players_turn:
-							#we check if this card is in the player's hand.
-							try:
-								i = int(message[len("PLAY_CARD:"):])
-								works = True
-							except:
-								works = False
-							if works:
-								match = False
-								for card in player.hand.cards:
-									if self.master_deck.cards.index(card) == i:
-										match = True
-										break
-								if match:
-									#we attempt to play this card.
-									self.controller = PlayCardServerController(self)
-									self.controller.selected_card = card
-									self.server.sendall("ALERT:draw_card_from_hand")
-									self.server.sendto(player.address,"ADD_CHAT:SERVER: Click on the grid where you want to play this card.")
-								else:
-									self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...that card's not even in your hand!")
-						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't play a card right now!")
-					else:
-						self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't play a card, the game hasn't started...")
-				elif message.startswith("DRAW_1:"):
-					s = message[len("DRAW_1:"):]
-					if s == "pony":
-						if len(self.pony_deck.cards) > 0:
-							self.server.sendall("ADD_CHAT:SERVER:"+player.name+" drew a Pony card.")
-							self.server.sendall("ALERT:draw_card_from_deck")
-							self.server.sendall("ALERT:add_card_to_hand")
-							card = self.pony_deck.draw()
-							player.hand.add_card_to_top(card)
-							self.send_decks_all()
-							self.send_playerhand(player)
-						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Pony cards to draw...")
-					elif s == "ship":
-						if len(self.ship_deck.cards) > 0:
-							self.server.sendall("ADD_CHAT:SERVER:"+player.name+" drew a Ship card.")
-							self.server.sendall("ALERT:draw_card_from_deck")
-							self.server.sendall("ALERT:add_card_to_hand")
-							card = self.ship_deck.draw()
-							player.hand.add_card_to_top(card)
-							self.send_decks_all()
-							self.send_playerhand(player)
-						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Ship cards to draw...")
-					else:
-						self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't draw that type of card!")
+				elif self._rm_connect(message, key, player): pass
+				elif self._rm_chat(message, key, player): pass
+				elif self._rm_request_deck(message, key, player): pass
+				elif self._rm_request_cardfile(message, key, player): pass
+				elif self._rm_request_cardfile_attributes(message, key, player): pass
+				elif self._rm_done_loading(message, key, player): pass
+				elif self._rm_ready(message, key, player): pass
+				elif self._rm_end_turn(message, key, player): pass
+				elif self._rm_play_card(message, key, player): pass
+				elif self._rm_draw_1(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -325,6 +167,207 @@ class GameServer(object):
 					else:
 						print "ERROR: Received unknown message and no controller: "+message[:100]
 
+	#Message Parsing Functions
+	def _rm_connect(self, message, key, player):
+		if message.startswith("CONNECT:"):
+			#We get the clients name now and add them to the game.
+			#TODO: Kick the client if their name sucks or if the game's already started
+			if False:
+				pass
+			else:
+				data = message[len("CONNECT:"):]
+				data = data.split(":")
+				if len(data) < 2:
+					self.server.kick(key,"You seem to be running an older version. Please go updated.")
+				else:
+					player_key = data[0]
+					name = data[1]
+					if player == None:
+						for pl in self.players:
+							if pl.name == name and pl.player_key == player_key:
+								player = pl
+								break
+					if player != None:
+						#reconnect player
+						if not player.is_connected:
+							self.server.sendto(key,"CONNECTED:"+name)
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has reconnected.")
+							player.is_connected = True
+							player.address = key
+							if self.controller != None:
+								self.controller.triggerRejoinPlayer(player)
+							print "=Player '"+name+"'", key, "has rejoined the game."
+						else:
+							#we kick this one, since the player is already connected.
+							self.server.kick(key,"This player is already connected.")
+					else:
+						if not self.game_started:
+							#connect new player
+							self.server.sendto(key,"CONNECTED:"+name)
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
+							self.players.append(Player(key, name, player_key))
+							if self.controller != None:
+								self.controller.triggerNewPlayer(self.players[-1])
+							print "=Player '"+name+"'", key, "has joined the game."
+						else:
+							self.server.kick(key,"The game's already started. Please come back later.")
+					self.send_playerlist_all()
+					self.check_ready()
+			return True
+		return False
+	def _rm_chat(self, message, key, player):
+		if message.startswith("CHAT:"):
+			if not player:
+				name = "???"
+			else:
+				name = player.name
+			chat = message[len("CHAT:"):]
+			self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
+			return True
+		return False
+	def _rm_request_deck(self, message, key, player):
+		if message == "REQUEST_DECK":
+			s = ""
+			i = 0
+			while i < len(self.custom_deck.list):
+				card = self.custom_deck.list[i]
+				if card.startswith("R:"):
+					card = card[2:]
+				s += card
+				i += 1
+				if i < len(self.custom_deck.list):
+					s += ","
+			self.server.sendto(player.address,"DECK:"+s)
+			return True
+		return False
+	def _rm_request_cardfile(self, message, key, player):
+		if message.startswith("REQUEST_CARDFILE:"):
+			index = int(message[len("REQUEST_CARDFILE:"):])
+			data = "CARDFILE:"+str(index)+":"+self.master_deck.pc_cards[index]
+			#print "SENDING CARD: "+data[:100]
+			self.server.sendto(player.address,data)
+			return True
+		return False
+	def _rm_request_cardfile_attributes(self, message, key, player):
+		if message.startswith("REQUEST_CARDFILE_ATTRIBUTES:"):
+			index = int(message[len("REQUEST_CARDFILE_ATTRIBUTES:"):])
+			data = "CARDFILE_ATTRIBUTES:"+str(index)+":"+self.master_deck.cards[index].attributes
+			#print "SENDING CARD ATTRIBUTES: "+data[:100]
+			self.server.sendto(player.address,data)
+			return True
+		return False
+	def _rm_done_loading(self, message, key, player):
+		if message == "DONE_LOADING":
+			player.is_loaded = True
+			self.server.sendto(player.address, "CLIENT_READY")
+			self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has joined.")
+			self.send_playerlist_all()
+			self.check_ready()
+			if self.game_started:
+				self.give_fullupdate(player)
+			return True
+		return False
+	def _rm_ready(self, message, key, player):
+		if message == "READY":
+			if not self.game_started:
+				#toggle this player's "is_ready" variable
+				t = time.time()
+				if t - player.last_toggled_ready < 3:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too often.")
+				else:
+					player.is_ready = not player.is_ready
+					player.last_toggled_ready = t
+					if player.is_ready:
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
+						self.server.sendall("ALERT:player_ready")
+					else:
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
+						self.server.sendall("ALERT:player_not_ready")
+					self.send_playerlist_all()
+					self.check_ready()
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:The game's already started!")
+			return True
+		return False
+	def _rm_end_turn(self, message, key, player):
+		if message == "END_TURN":
+			#we end this player's turn.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#We check if the player has the correct number of cards in their hand.
+					if len(player.hand.cards) < MIN_CARDS_IN_HAND:
+						self.server.sendto(player.address, "ADD_CHAT:SERVER:You need to draw up to "+str(MIN_CARDS_IN_HAND)+" before you can end your turn.")
+					else:
+						self.server.sendto(player.address, "ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
+						self.nextPlayersTurn()
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, dummy!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:The game hasn't started yet...")
+			return True
+		return False
+	def _rm_play_card(self, message, key, player):
+		if message.startswith("PLAY_CARD:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("PLAY_CARD:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						match = False
+						for card in player.hand.cards:
+							if self.master_deck.cards.index(card) == i:
+								match = True
+								break
+						if match:
+							#we attempt to play this card.
+							self.controller = PlayCardServerController(self)
+							self.controller.selected_card = card
+							self.server.sendall("ALERT:draw_card_from_hand")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Click on the grid where you want to play this card.")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...that card's not even in your hand!")
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't play a card right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't play a card, the game hasn't started...")
+			return True
+		return False
+	def _rm_draw_1(self, message, key, player):
+		if message.startswith("DRAW_1:"):
+			s = message[len("DRAW_1:"):]
+			if s == "pony":
+				if len(self.pony_deck.cards) > 0:
+					self.server.sendall("ADD_CHAT:SERVER:"+player.name+" drew a Pony card.")
+					self.server.sendall("ALERT:draw_card_from_deck")
+					self.server.sendall("ALERT:add_card_to_hand")
+					card = self.pony_deck.draw()
+					player.hand.add_card_to_top(card)
+					self.send_decks_all()
+					self.send_playerhand(player)
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Pony cards to draw...")
+			elif s == "ship":
+				if len(self.ship_deck.cards) > 0:
+					self.server.sendall("ADD_CHAT:SERVER:"+player.name+" drew a Ship card.")
+					self.server.sendall("ALERT:draw_card_from_deck")
+					self.server.sendall("ALERT:add_card_to_hand")
+					card = self.ship_deck.draw()
+					player.hand.add_card_to_top(card)
+					self.send_decks_all()
+					self.send_playerhand(player)
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Ship cards to draw...")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't draw that type of card!")
+			return True
+		return False
+
+	#Other Stuff
 	def _check_player_status(self):
 		# This function is to check that players are still connected, otherwise it kicks them after no response.
 		t = time.time()
