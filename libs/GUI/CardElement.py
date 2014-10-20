@@ -36,7 +36,7 @@ class CardElement(Element):
 		if button == 3:
 			self.generate_context_menu((mouse_pos[0]+corner[0]+10, mouse_pos[1]+corner[1]+10))
 		elif button == 1:
-			pass
+			self.main.client.send("CLICKED_CARD:"+str(self.main.master_deck.cards.index(self.card)))
 		elif button in (4,5):
 			pass
 

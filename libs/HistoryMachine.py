@@ -6,6 +6,7 @@ SNAPSHOT_PLAY_CARD = 2
 SNAPSHOT_DREW_CARD = 3
 SNAPSHOT_DISCARD_FROM_HAND = 4
 SNAPSHOT_DISCARD_FROM_GRID = 5
+SNAPSHOT_REPLACED_CARD = 6
 
 
 class Snapshot(object):
@@ -31,7 +32,7 @@ class HistoryMachine(object):
 
 	def take_snapshot(self, event_type, description):
 		#TODO: Finish snapshot function.
-		if len(self.history) == 0 or (self.history[-1].event_type != SNAPSHOT_NULL and self.history[-1].event_type != event_type):
+		if True:#len(self.history) == 0 or (self.history[-1].event_type != SNAPSHOT_NULL and self.history[-1].event_type != event_type):
 			#Creates a new snapshot.
 			self.history.append(Snapshot(len(self.history), event_type))
 		snapshot = self.history[-1]

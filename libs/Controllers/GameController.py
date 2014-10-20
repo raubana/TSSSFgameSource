@@ -156,18 +156,16 @@ class GameController(Controller):
 
 	def do_nothing(self):
 		pass
-
 	def end_turn(self):
 		self.main.client.send("END_TURN")
-
 	def play_card(self, args):
 		self.main.client.send("PLAY_CARD:"+str(args[0]))
-
 	def draw_1(self, args):
 		self.main.client.send("DRAW_1:"+args[0])
-
 	def discard_card(self, args):
 		self.main.client.send("DISCARD_CARD:"+str(args[0]))
+	def replace_card(self, args):
+		self.main.client.send("REPLACE_CARD:"+str(args[0]))
 
 	def read_message(self, message):
 		if self._rm_playerlist(message): pass
@@ -231,7 +229,7 @@ class GameController(Controller):
 					element.padding = (3,3,3,3)
 					if card.type == "pony":
 						element.menu_info = [("Play Card", self.play_card, tuple([i])),
-											 ("Action: Replace", self.do_nothing),
+											 ("Action: Replace", self.replace_card, tuple([i])),
 											 ("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
 					elif card.type == "ship":
 						element.menu_info = [("Play Card", self.play_card, tuple([i])),

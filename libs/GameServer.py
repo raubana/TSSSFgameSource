@@ -6,6 +6,7 @@ import time
 import math
 
 from ServerControllers.PlayCardServerController import *
+from ServerControllers.ReplaceCardServerController import *
 
 from ServerPlayer import Player
 import Deck
@@ -163,6 +164,7 @@ class GameServer(object):
 				elif self._rm_play_card(message, key, player): pass
 				elif self._rm_draw_1(message, key, player): pass
 				elif self._rm_discard_card(message, key, player): pass
+				elif self._rm_replace_card(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -467,6 +469,42 @@ class GameServer(object):
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't discard a card, the game hasn't started...")
 			return True
 		return False
+	def _rm_replace_card(self, message, key, player):
+		if message.startswith("REPLACE_CARD:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("REPLACE_CARD:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						selected_card = None
+						for card in player.hand.cards:
+							if self.master_deck.cards.index(card) == i:
+								selected_card = card
+								break
+						if selected_card != None:
+							if selected_card.type == "pony":
+								#we attempt to replace with this card.
+								self.controller = ReplaceCardServerController(self)
+								self.controller.selected_card = selected_card
+								self.server.sendall("ALERT:draw_card_from_hand")
+								self.server.sendto(player.address,"ADD_CHAT:SERVER: Click on the card you want to replace.")
+							else:
+								self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even replace with that card!")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even replace with that card!")
+					else:
+						print "ERROR! Couldn't find card with this id."
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't replace right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't replace a card, the game hasn't started...")
+			return True
+		return False
 
 	#Other Stuff
 	def _check_player_status(self):
@@ -550,6 +588,7 @@ class GameServer(object):
 			self.history.clear()
 			self.history.take_snapshot(SNAPSHOT_TURN_START, self.players[i].name+"'s turn has started.")
 			self.send_full_history_all()
+			self.controller = None
 	def nextPlayersTurn(self):
 		i = self.current_players_turn + 1
 		i %= len(self.players)
