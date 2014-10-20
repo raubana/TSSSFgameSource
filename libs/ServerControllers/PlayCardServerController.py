@@ -1,6 +1,7 @@
 from ServerController import ServerController
 from ..Deck import *
 from ..CardTable import xcoords_to_index
+from ..HistoryMachine import SNAPSHOT_PLAY_CARD
 import time, random
 
 class PlayCardServerController(ServerController):
@@ -46,11 +47,12 @@ class PlayCardServerController(ServerController):
 									is_legal = True
 
 							if is_legal:
+								self.gameserver.history.take_snapshot(SNAPSHOT_PLAY_CARD, player.name+" placed the card '"+self.selected_card.name+"' onto the shipping grid.")
+								self.send_full_history_all()
 								player.hand.remove_card(self.selected_card)
 								#we remove the card from the players hand and then add the card to the shipping grid.
 								self.gameserver.card_table.refactor()
 								self.gameserver.server.sendall("ALERT:add_card_to_table")
-								self.gameserver.server.sendall("ADD_CHAT:SERVER:"+player.name+" placed the card '"+self.selected_card.name+"' onto the shipping grid.")
 								self.gameserver.setTimerDuration(SERVER_TURN_MAX_DURATION)
 								#finally, we send the player their new hand and we send all players the new table.
 								self.gameserver.send_playerhand(player)

@@ -23,4 +23,41 @@ class HistoryElement(Element):
 		pass
 
 	def parse_full_history(self, message):
-		pass
+		self.clear()
+		self.layout = LAYOUT_HORIZONTAL
+
+		print message
+
+		i = message.find(":")
+		if i != -1:
+			try:
+				number_of_events = int(message[:i])
+				works = True
+			except:
+				works = False
+			if works:
+				s = message[(i+1):]
+				parts = s.split("::")
+				if len(parts) == number_of_events:
+					for part in parts:
+						i = part.find(",")
+						if i != -1:
+							try:
+								event_type = int(part[:i])
+								works = True
+							except:
+								works = False
+							if works:
+								s = part[(i+1):]
+								element = Element(self.main,self,None,(30,30),bg=ScaleImage(get_image_for_history_icon(event_type)))
+								element.tooltip = s
+							else:
+								print "ERROR! Received bad full history! E"
+						else:
+							print "ERROR! Received bad full history! D"
+				else:
+					print "ERROR! Received bad full history! C"
+			else:
+				print "ERROR! Received bad full history! B"
+		else:
+			print "ERROR! Received bad full history! A"
