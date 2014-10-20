@@ -13,6 +13,7 @@ import CustomDeck
 from PickledCard import open_pickledcard
 from CardTable import CardTable
 from common import *
+from HistoryMachine import *
 
 class GameServer(object):
 	def __init__(self, port=DEFAULT_PORT):
@@ -34,6 +35,8 @@ class GameServer(object):
 		self.reset()
 
 	def reset(self):
+		self.history = HistoryMachine()
+
 		self.pony_deck = Deck.Deck()
 		self.ship_deck = Deck.Deck()
 		self.goal_deck = Deck.Deck()
@@ -342,7 +345,8 @@ class GameServer(object):
 			s = message[len("DRAW_1:"):]
 			if s == "pony":
 				if len(self.pony_deck.cards) > 0:
-					self.server.sendall("ADD_CHAT:SERVER:"+player.name+" drew a Pony card.")
+					self.history.take_snapshot(SNAPSHOT_DREW_CARD, player.name+" drew a Pony card.")
+					self.send_full_history_all()
 					self.server.sendall("ALERT:draw_card_from_deck")
 					self.server.sendall("ALERT:add_card_to_hand")
 					card = self.pony_deck.draw()
@@ -353,7 +357,8 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Pony cards to draw...")
 			elif s == "ship":
 				if len(self.ship_deck.cards) > 0:
-					self.server.sendall("ADD_CHAT:SERVER:"+player.name+" drew a Ship card.")
+					self.history.take_snapshot(SNAPSHOT_DREW_CARD, player.name+" drew a Ship card.")
+					self.send_full_history_all()
 					self.server.sendall("ALERT:draw_card_from_deck")
 					self.server.sendall("ALERT:add_card_to_hand")
 					card = self.ship_deck.draw()
@@ -423,7 +428,6 @@ class GameServer(object):
 					self.send_playerlist_all()
 					self.check_ready()
 			i -= 1
-
 	def check_ready(self):
 		if not self.game_started:
 			number_ready = 0
@@ -439,23 +443,22 @@ class GameServer(object):
 			elif not ready and self.timer_running:
 				self.stopTimer()
 				self.server.sendall("ADD_CHAT:SERVER: ...Aborted.")
-
 	def setPlayersTurn(self, i):
 		if i != self.current_players_turn:
 			self.current_players_turn = i
 			self.server.sendto(self.players[i].address, "YOUR_TURN")
-			self.server.sendall("ADD_CHAT:SERVER: It's now "+self.players[i].name+"'s turn.")
 			self.send_playerlist_all()
 			self.stopTimer()
 			self.setTimerDuration(SERVER_TURN_START_DURATION)
 			self.runTimer()
-
+			self.history.clear()
+			self.history.take_snapshot(SNAPSHOT_TURN_START, self.players[i].name+"'s turn has started.")
+			self.send_full_history_all()
 	def nextPlayersTurn(self):
 		i = self.current_players_turn + 1
 		i %= len(self.players)
 		self.setPlayersTurn(i)
-
-	def get_decks_trasmit(self):
+	def get_decks_transmit(self):
 		s = "DECKS:"
 		s += str(len(self.pony_deck.cards))+","
 		s += str(len(self.ship_deck.cards))+","
@@ -475,24 +478,20 @@ class GameServer(object):
 	#Timer Stuff
 	def setTimerDuration(self, amount):
 		self.timer_start_amount = amount
-
 	def runTimer(self):
 		#Resets and runs the timer.
 		if not self.timer_running:
 			self.timer_running = True
 			self.timer_start_time = time.time()
 			self.timer_amount = float(self.timer_start_amount)
-
 	def stopTimer(self):
 		#Stops and resets the timer.
 		if self.timer_running:
 			self.timer_running = False
 			self.timer_amount = float(self.timer_start_amount)
-
 	def pauseTimer(self):
 		if self.timer_running:
 			self.timer_running = False
-
 	def resumeTimer(self):
 		if not self.timer_running:
 			self.timer_running = True
@@ -509,7 +508,6 @@ class GameServer(object):
 		else:
 			if floorint(self.timer_amount) == SERVER_TURN_ALERT_DURATION:
 				self.server.sendto(self.players[self.current_players_turn].address, "TURN_ALMOST_OVER")
-
 	def triggerTimerDone(self):
 		#called when the timer runs out of time.
 		if self.controller != None:
@@ -563,37 +561,34 @@ class GameServer(object):
 				j += 1
 			self.server.sendto(self.players[i].address, s)
 			i += 1
-
 	def send_public_goals_all(self):
 		self.server.sendall("PUBLICGOALS:"+self.public_goals.get_transmit(self.master_deck))
-
 	def send_public_goals(self, player):
 		self.server.sendto(player.address, "PUBLICGOALS:"+self.public_goals.get_transmit(self.master_deck))
-
 	def send_playerhand(self, player):
 		self.server.sendto(player.address, "PLAYERHAND:"+player.hand.get_transmit(self.master_deck))
-
 	def send_cardtable_player(self, player):
 		self.server.sendto(player.address, "CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
-
 	def send_cardtable_all(self):
 		self.server.sendall("CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
-
 	def send_decks_all(self):
-		self.server.sendall(self.get_decks_trasmit())
-
+		self.server.sendall(self.get_decks_transmit())
 	def send_decks_player(self, player):
-		self.server.sendto(player.address, self.get_decks_trasmit())
-
+		self.server.sendto(player.address, self.get_decks_transmit())
 	def send_timer_all(self):
 		self.server.sendall("TIMER:"+str(floorint(self.timer_amount)))
-
 	def send_timer_player(self, player):
 		self.server.sendto(player.address, "TIMER:"+str(floorint(self.timer_amount)))
-
+	def send_full_history_all(self):
+		history = self.history.get_full_transmit()
+		self.server.sendall(history)
+	def send_full_history_player(self, player):
+		history = self.history.get_full_transmit()
+		self.server.sendto(player.address, history)
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)
 		self.send_public_goals(player)
 		self.send_cardtable_player(player)
 		self.send_timer_player(player)
 		self.send_decks_player(player)
+		self.send_full_history_player(player)

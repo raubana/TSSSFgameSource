@@ -5,6 +5,7 @@ from ..GUI.DeckElement import *
 from ..GUI.CardElement import *
 from ..GUI.TimerElement import *
 from ..GUI.TableElement import *
+from ..GUI.HistoryGUI import *
 
 import string, os
 
@@ -21,7 +22,7 @@ class GameController(Controller):
 
 		self.left_element = None#Element(self.main, self.main.main_element, None, (0,"100%"))
 		self.main.main_element.children.append(None)
-		self.top_element = Element(self.main, self.main.main_element, None, ("100%",50))
+		self.top_element = HistoryElement(self.main, self.main.main_element, None, ("100%",50))
 		self.right_element = Element(self.main, self.main.main_element, None, (150,"100%"))
 		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.table_element = TableElement(self.main, self.main.main_element, None, ("100%","100%"))
@@ -166,6 +167,21 @@ class GameController(Controller):
 		self.main.client.send("DRAW_1:"+args[0])
 
 	def read_message(self, message):
+		if self._rm_playerlist(message): pass
+		elif self._rm_playerhand(message): pass
+		elif self._rm_publicgoals(message): pass
+		elif self._rm_cardtable(message): pass
+		elif self._rm_decks(message): pass
+		elif self._rm_timer(message): pass
+		elif self._rm_your_turn(message): pass
+		elif self._rm_turn_almost_over(message): pass
+		elif self._rm_history_full(message): pass
+		else:
+			return False
+		return True
+
+	#Message Parsing Functions
+	def _rm_playerlist(self, message):
 		if message.startswith("PLAYERLIST:"):
 			playerlist = message[len("PLAYERLIST:"):].split(",")
 			self.player_list_element.clear()
@@ -192,7 +208,10 @@ class GameController(Controller):
 				element.set_text(name)
 				if "YOU" in parts:
 					element.font = self.main.font_bold
-		elif message.startswith("PLAYERHAND:"):
+			return True
+		return False
+	def _rm_playerhand(self, message):
+		if message.startswith("PLAYERHAND:"):
 			s = message[len("PLAYERHAND:"):]
 			self.bottom_element.clear()
 			self.bottom_element.layout = LAYOUT_HORIZONTAL
@@ -214,7 +233,10 @@ class GameController(Controller):
 					elif card.type == "ship":
 						element.menu_info = [("Play Card", self.play_card, tuple([i])),
 											 ("Discard", self.do_nothing)]
-		elif message.startswith("PUBLICGOALS:"):
+			return True
+		return False
+	def _rm_publicgoals(self, message):
+		if message.startswith("PUBLICGOALS:"):
 			hand = message[len("PUBLICGOALS:"):].split(",")
 			self.public_goals_element.clear()
 			self.public_goals_element.layout = LAYOUT_VERTICAL
@@ -229,11 +251,17 @@ class GameController(Controller):
 				element.padding = (3,3,3,3)
 				element.menu_info = [("Win Goal", self.do_nothing),
 									 ("Action: New Goal", self.do_nothing)]
-		elif message.startswith("CARDTABLE:"):
+			return True
+		return False
+	def _rm_cardtable(self, message):
+		if message.startswith("CARDTABLE:"):
 			s = message[len("CARDTABLE:"):]
 			self.main.card_table.parse_message(self.main.master_deck, s)
 			self.table_element.setup_grid()
-		elif message.startswith("DECKS:"):
+			return True
+		return False
+	def _rm_decks(self, message):
+		if message.startswith("DECKS:"):
 			s = message[len("DECKS:"):]
 			parts = s.split(":")
 			if len(parts) == 2:
@@ -271,10 +299,16 @@ class GameController(Controller):
 					print "ERROR! Received bad decks info. B"
 			else:
 				print "ERROR! Received bad decks info. A"
-		elif message.startswith("TIMER:"):
+			return True
+		return False
+	def _rm_timer(self, message):
+		if message.startswith("TIMER:"):
 			s = message[len("TIMER:"):]
 			self.timer_element.set_text(s)
-		elif message == "YOUR_TURN":
+			return True
+		return False
+	def _rm_your_turn(self, message):
+		if message == "YOUR_TURN":
 			if not pygame.key.get_focused():
 				self.main.play_sound("players_turn_not_focused", True)
 				#we try to get the user's attention.
@@ -282,7 +316,10 @@ class GameController(Controller):
 					self.main.trayicon.ShowBalloon("Yay!","It's your turn!", 15*1000)
 			else:
 				self.main.play_sound("players_turn")
-		elif message == "TURN_ALMOST_OVER":
+			return True
+		return False
+	def _rm_turn_almost_over(self, message):
+		if message == "TURN_ALMOST_OVER":
 			if not pygame.key.get_focused():
 				self.main.play_sound("players_turn_not_focused", True)
 				#we try to get the user's attention.
@@ -290,10 +327,16 @@ class GameController(Controller):
 					self.main.trayicon.ShowBalloon("Uh oh!","You're almost out of time!", 15*1000)
 			else:
 				self.main.play_sound("players_turn")
-		else:
-			return False
-		return True
+			return True
+		return False
+	def _rm_history_full(self, message):
+		if message.startswith("HISTORY_FULL:"):
+			s = message[len("HISTORY_FULL:"):]
+			self.top_element.parse_full_history(s)
+			return True
+		return False
 
+	#Handler Functions
 	def handle_event_keydown(self, widget, unicode, key):
 		if key == K_RETURN:
 			self.chat_input_element = InputBox(self.main, self.main.main_element, (25,25), ("100%-50px",self.main.font.get_height()+2))
