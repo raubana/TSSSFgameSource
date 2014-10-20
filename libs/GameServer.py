@@ -162,6 +162,7 @@ class GameServer(object):
 				elif self._rm_end_turn(message, key, player): pass
 				elif self._rm_play_card(message, key, player): pass
 				elif self._rm_draw_1(message, key, player): pass
+				elif self._rm_discard_card(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -369,6 +370,101 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Ship cards to draw...")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't draw that type of card!")
+			return True
+		return False
+	def _rm_discard_card(self, message, key, player):
+		if message.startswith("DISCARD_CARD:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("DISCARD_CARD:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						location = None
+						selected_card = None
+						for card in player.hand.cards:
+							if self.master_deck.cards.index(card) == i:
+								location = ("hand",0,0)
+								selected_card = card
+								break
+						if location == None:
+							for y in xrange(self.card_table.size[1]):
+								for x in xrange(self.card_table.size[0]):
+									card = self.card_table.pony_cards[y][x]
+									if card != None:
+										if self.master_deck.cards.index(card) == i:
+											location = ("pony",x,y)
+											selected_card = card
+											break
+								if location != None:
+									break
+						if location == None:
+							for y in xrange(self.card_table.size[1]):
+								for x in xrange(self.card_table.size[0] - 1):
+									card = self.card_table.h_ship_cards[y][x]
+									if card != None:
+										if self.master_deck.cards.index(card) == i:
+											location = ("h ship",x,y)
+											selected_card = card
+											break
+								if location != None:
+									break
+						if location == None:
+							for y in xrange(self.card_table.size[1] - 1):
+								for x in xrange(self.card_table.size[0]):
+									card = self.card_table.v_ship_cards[y][x]
+									if card != None:
+										if self.master_deck.cards.index(card) == i:
+											location = ("v ship",x,y)
+											selected_card = card
+											break
+								if location != None:
+									break
+						if location != None:
+							if selected_card.type == "pony" and selected_card.power == "startcard":
+								self.server.sendto(player.address,"ADD_CHAT:SERVER: You can't discard the start card!")
+							else:
+								if location[0] == "hand":
+									#we attempt to discard this card from the player's hand.
+									self.history.take_snapshot(SNAPSHOT_DISCARD_FROM_HAND, player.name+" discarded '"+selected_card.name+"' from their hand.")
+									self.send_full_history_all()
+									self.server.sendall("ALERT:draw_card_from_hand")
+									if selected_card.type == "pony":
+										self.pony_discard.add_card_to_top(selected_card)
+									elif selected_card.type == "ship":
+										self.ship_discard.add_card_to_top(selected_card)
+									else:
+										print "ERROR! This card was of a type that can't be discarded."
+									player.hand.remove_card(selected_card)
+									self.send_playerhand(player)
+								else:
+									#we attempt to discard this card from the grid.
+									self.history.take_snapshot(SNAPSHOT_DISCARD_FROM_GRID, player.name+" discarded '"+selected_card.name+"' from the shipping grid.")
+									self.send_full_history_all()
+									self.server.sendall("ALERT:draw_card_from_table")
+									if location[0] == "pony":
+										self.pony_discard.add_card_to_top(selected_card)
+										self.card_table.pony_cards[location[2]][location[1]] = None
+									else:
+										self.ship_discard.add_card_to_top(selected_card)
+										if location[0] == "h ship":
+											self.card_table.h_ship_cards[location[2]][location[1]] = None
+										elif location[0] == "v ship":
+											self.card_table.v_ship_cards[location[2]][location[1]] = None
+									self.card_table.refactor()
+									self.send_cardtable_all()
+								self.send_decks_all()
+								self.server.sendall("ALERT:add_card_to_deck")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even discard that card!")
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't discard right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't discard a card, the game hasn't started...")
 			return True
 		return False
 

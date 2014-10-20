@@ -17,6 +17,9 @@ class TableElement(Element):
 	def do_nothing(self):
 		pass
 
+	def discard_card(self, args):
+		self.main.client.send("DISCARD_CARD:"+str(args[0]))
+
 	def get_graphical_pos(self, index, card_type):
 		if card_type == "pony":
 			pos = 	(((self.grid_size[0] - self.card_size[0]) / 2) + self.grid_size[0] * index[0],
@@ -76,7 +79,7 @@ class TableElement(Element):
 					else:
 						element = CardElement(self.main,self,pos,self.card_size)
 						element.set_card(card, 127)
-						element.menu_info = [("Discard", self.do_nothing)]
+						element.menu_info = [("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
 
 		#creates the h ship cards
 		for y in xrange(self.main.card_table.size[1]):
@@ -92,7 +95,7 @@ class TableElement(Element):
 					else:
 						element = CardElement(self.main,self,pos,[self.card_size[1],self.card_size[0]])
 						element.set_card(card, 127, 90)
-						element.menu_info = [("Discard", self.do_nothing)]
+						element.menu_info = [("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
 
 		#creates the pony cards
 		for y in xrange(self.main.card_table.size[1]):
@@ -108,7 +111,7 @@ class TableElement(Element):
 					else:
 						element = CardElement(self.main,self,pos,self.card_size)
 						element.set_card(card)
-						element.menu_info = [("Discard", self.do_nothing),
+						element.menu_info = [("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)])),
 											 ("Action: Swap", self.do_nothing),
 											 ("Action: Set Gender", self.do_nothing),
 											 ("Action: Set Race", self.do_nothing),
@@ -116,7 +119,8 @@ class TableElement(Element):
 											 ("Action: Imitate Card", self.do_nothing)]
 
 		#we dispose of the remaining old_elements
-		for key in old_elements:
+		keys = old_elements.keys()
+		for key in keys:
 			del old_elements[key]
 
 	def mousepos_to_xcoords(self, mouse_pos):

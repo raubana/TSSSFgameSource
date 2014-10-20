@@ -166,6 +166,9 @@ class GameController(Controller):
 	def draw_1(self, args):
 		self.main.client.send("DRAW_1:"+args[0])
 
+	def discard_card(self, args):
+		self.main.client.send("DISCARD_CARD:"+str(args[0]))
+
 	def read_message(self, message):
 		if self._rm_playerlist(message): pass
 		elif self._rm_playerhand(message): pass
@@ -229,10 +232,10 @@ class GameController(Controller):
 					if card.type == "pony":
 						element.menu_info = [("Play Card", self.play_card, tuple([i])),
 											 ("Action: Replace", self.do_nothing),
-											 ("Discard", self.do_nothing)]
+											 ("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
 					elif card.type == "ship":
 						element.menu_info = [("Play Card", self.play_card, tuple([i])),
-											 ("Discard", self.do_nothing)]
+											 ("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
 			return True
 		return False
 	def _rm_publicgoals(self, message):
