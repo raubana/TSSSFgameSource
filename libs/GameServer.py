@@ -165,6 +165,7 @@ class GameServer(object):
 				elif self._rm_draw_1(message, key, player): pass
 				elif self._rm_discard_card(message, key, player): pass
 				elif self._rm_replace_card(message, key, player): pass
+				elif self._rm_new_goal(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -503,6 +504,52 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't replace right now!")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't replace a card, the game hasn't started...")
+			return True
+		return False
+	def _rm_new_goal(self, message, key, player):
+		if message.startswith("NEW_GOAL:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("NEW_GOAL:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						selected_card = None
+						for card in self.public_goals.cards:
+							if self.master_deck.cards.index(card) == i:
+								selected_card = card
+								break
+						if selected_card != None:
+							if len(self.goal_deck.cards) > 0:
+								#we attempt to replace with this card.
+								self.history.take_snapshot(SNAPSHOT_NEW_GOAL, player.name+" discarded '"+selected_card.name+"' to the bottom of the goal deck and drew a new one to replace it.")
+								self.send_full_history_all()
+								self.server.sendall("ALERT:draw_card_from_table")
+								self.public_goals.remove_card(selected_card)
+								self.server.sendall("ALERT:remove_deck")
+								self.server.sendall("ALERT:add_card_to_deck")
+								self.goal_deck.add_card_to_bottom(selected_card)
+								self.server.sendall("ALERT:place_deck")
+								self.server.sendall("ALERT:draw_card_from_deck")
+								new_goal = self.goal_deck.draw()
+								self.server.sendall("ALERT:add_card_to_table")
+								self.public_goals.add_card_to_top(new_goal)
+								self.send_decks_all()
+								self.send_public_goals_all()
+							else:
+								self.server.sendto(player.address,"ADD_CHAT:SERVER: You can't set a new goal, the goal deck is empty.")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...")
+					else:
+						print "ERROR! Couldn't find card with this id."
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't set new goals!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't set a new goal, the game hasn't started...")
 			return True
 		return False
 

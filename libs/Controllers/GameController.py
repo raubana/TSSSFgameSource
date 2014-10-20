@@ -166,6 +166,8 @@ class GameController(Controller):
 		self.main.client.send("DISCARD_CARD:"+str(args[0]))
 	def replace_card(self, args):
 		self.main.client.send("REPLACE_CARD:"+str(args[0]))
+	def new_goal(self, args):
+		self.main.client.send("NEW_GOAL:"+str(args[0]))
 
 	def read_message(self, message):
 		if self._rm_playerlist(message): pass
@@ -251,7 +253,7 @@ class GameController(Controller):
 				element.set_card(card)
 				element.padding = (3,3,3,3)
 				element.menu_info = [("Win Goal", self.do_nothing),
-									 ("Action: New Goal", self.do_nothing)]
+									 ("Action: New Goal", self.new_goal, tuple([i]))]
 			return True
 		return False
 	def _rm_cardtable(self, message):

@@ -11,6 +11,7 @@ IMG_SNAPSHOT_PLAY_SHIP_CARD = pygame.image.load("imgs/history_icons/played_ship_
 IMG_SNAPSHOT_DREW_PONY_CARD = pygame.image.load("imgs/history_icons/drew_pony_card.png")
 IMG_SNAPSHOT_DREW_SHIP_CARD = pygame.image.load("imgs/history_icons/drew_ship_card.png")
 IMG_SNAPSHOT_DISCARD_FROM_GRID = pygame.image.load("imgs/history_icons/card_discarded_from_grid.png")
+IMG_SNAPSHOT_NEW_GOAL = pygame.image.load("imgs/history_icons/new_goal.png")
 
 
 def get_image_for_history_icon(event_type):
@@ -21,6 +22,7 @@ def get_image_for_history_icon(event_type):
 	elif event_type == SNAPSHOT_DREW_PONY_CARD: return IMG_SNAPSHOT_DREW_PONY_CARD
 	elif event_type == SNAPSHOT_DREW_SHIP_CARD: return IMG_SNAPSHOT_DREW_SHIP_CARD
 	elif event_type == SNAPSHOT_DISCARD_FROM_GRID: return IMG_SNAPSHOT_DISCARD_FROM_GRID
+	elif event_type == SNAPSHOT_NEW_GOAL: return IMG_SNAPSHOT_NEW_GOAL
 	return IMG_SNAPSHOT_NULL
 
 
