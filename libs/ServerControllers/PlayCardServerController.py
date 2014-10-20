@@ -48,7 +48,7 @@ class PlayCardServerController(ServerController):
 
 							if is_legal:
 								self.gameserver.history.take_snapshot(SNAPSHOT_PLAY_CARD, player.name+" placed the card '"+self.selected_card.name+"' onto the shipping grid.")
-								self.send_full_history_all()
+								self.gameserver.send_full_history_all()
 								player.hand.remove_card(self.selected_card)
 								#we remove the card from the players hand and then add the card to the shipping grid.
 								self.gameserver.card_table.refactor()

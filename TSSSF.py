@@ -245,13 +245,19 @@ class Main(object):
 		c2 = (127,64,64)
 
 		if type(self.tooltip_text) in (str,unicode):
-			size = self.tiny_font.size(self.tooltip_text)
+			size = [0,0]
+			lines = self.tooltip_text.split("\n")
+			for line in lines:
+				line_size = self.tiny_font.size(line)
+				size[0] = max(size[0], line_size[0])
+				size[1] = size[1]+line_size[1]
 			size = (size[0]+3,size[1]+2)
 			self.tooltip_surface = pygame.Surface(size)
 			self.tooltip_surface.fill(c1)
 			pygame.draw.rect(self.tooltip_surface,c2,(0,0,size[0],size[1]),1)
-			text_img = self.tiny_font.render(self.tooltip_text,True,c2)
-			self.tooltip_surface.blit(text_img,(2,1))
+			for i in xrange(len(lines)):
+				text_img = self.tiny_font.render(lines[i],True,c2)
+				self.tooltip_surface.blit(text_img,(2,1+(i*self.tiny_font.get_height())))
 		elif type(self.tooltip_text) == Card:
 			size = (int((CARD_SIZE[0]*self.screen_size[1])/float(CARD_SIZE[1])),self.screen_size[1])
 			self.tooltip_surface = pygame.Surface(size)
