@@ -348,7 +348,7 @@ class GameServer(object):
 			s = message[len("DRAW_1:"):]
 			if s == "pony":
 				if len(self.pony_deck.cards) > 0:
-					self.history.take_snapshot(SNAPSHOT_DREW_CARD, player.name+" drew a Pony card.")
+					self.history.take_snapshot(SNAPSHOT_DREW_PONY_CARD, player.name+" drew a Pony card.")
 					self.send_full_history_all()
 					self.server.sendall("ALERT:draw_card_from_deck")
 					self.server.sendall("ALERT:add_card_to_hand")
@@ -360,7 +360,7 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Pony cards to draw...")
 			elif s == "ship":
 				if len(self.ship_deck.cards) > 0:
-					self.history.take_snapshot(SNAPSHOT_DREW_CARD, player.name+" drew a Ship card.")
+					self.history.take_snapshot(SNAPSHOT_DREW_SHIP_CARD, player.name+" drew a Ship card.")
 					self.send_full_history_all()
 					self.server.sendall("ALERT:draw_card_from_deck")
 					self.server.sendall("ALERT:add_card_to_hand")

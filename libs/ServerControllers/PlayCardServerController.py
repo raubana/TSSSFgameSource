@@ -1,7 +1,7 @@
 from ServerController import ServerController
 from ..Deck import *
 from ..CardTable import xcoords_to_index
-from ..HistoryMachine import SNAPSHOT_PLAY_CARD
+from ..HistoryMachine import SNAPSHOT_PLAY_PONY_CARD, SNAPSHOT_PLAY_SHIP_CARD
 import time, random
 
 class PlayCardServerController(ServerController):
@@ -47,7 +47,10 @@ class PlayCardServerController(ServerController):
 									is_legal = True
 
 							if is_legal:
-								self.gameserver.history.take_snapshot(SNAPSHOT_PLAY_CARD, player.name+" placed the card '"+self.selected_card.name+"' onto the shipping grid.")
+								if self.selected_card.type == "pony":
+									self.gameserver.history.take_snapshot(SNAPSHOT_PLAY_PONY_CARD, player.name+" placed the card '"+self.selected_card.name+"' onto the shipping grid.")
+								elif self.selected_card.type == "ship":
+									self.gameserver.history.take_snapshot(SNAPSHOT_PLAY_SHIP_CARD, player.name+" placed the card '"+self.selected_card.name+"' onto the shipping grid.")
 								self.gameserver.send_full_history_all()
 								player.hand.remove_card(self.selected_card)
 								#we remove the card from the players hand and then add the card to the shipping grid.
