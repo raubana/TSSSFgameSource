@@ -133,7 +133,7 @@ class Card(object):
 			raise SyntaxError("Types are restricted to 'pony','ship', and 'goal'. Instead we got '" + attributes["type"] + "'")
 		#TODO: Do individualized parsing of attributes for each type of card.
 		if "name" in attributes:
-			self.name = attributes["name"]
+			self.name = attributes["name"].replace("\\n"," ")
 		if "power" in attributes:
 			self.power = attributes["power"]
 		#finally we need our image
