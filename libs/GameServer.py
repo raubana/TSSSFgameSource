@@ -7,6 +7,7 @@ import math
 
 from ServerControllers.PlayCardServerController import *
 from ServerControllers.ReplaceCardServerController import *
+from ServerControllers.SwapCardServerController import *
 
 from ServerPlayer import Player
 import Deck
@@ -166,6 +167,7 @@ class GameServer(object):
 				elif self._rm_discard_card(message, key, player): pass
 				elif self._rm_replace_card(message, key, player): pass
 				elif self._rm_new_goal(message, key, player): pass
+				elif self._rm_swap_card(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -550,6 +552,47 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't set new goals!")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't set a new goal, the game hasn't started...")
+			return True
+		return False
+	def _rm_swap_card(self, message, key, player):
+		if message.startswith("SWAP_CARD:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("SWAP_CARD:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						location = None
+						selected_card = None
+						for y in xrange(self.card_table.size[1]):
+							for x in xrange(self.card_table.size[0]):
+								card = self.card_table.pony_cards[y][x]
+								if card != None:
+									if self.master_deck.cards.index(card) == i:
+										location = (x,y)
+										selected_card = card
+										break
+							if location != None:
+								break
+						if selected_card != None:
+							#we attempt to swap with this card.
+							self.controller = SwapCardServerController(self)
+							self.controller.selected_card = selected_card
+							self.controller.selected_card_location = location
+							self.server.sendall("ALERT:draw_card_from_table")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:Click on the card you want to swap with.")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even swap with that card!")
+					else:
+						print "ERROR! Couldn't find card with this id."
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't swap right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't swap a card, the game hasn't started...")
 			return True
 		return False
 
