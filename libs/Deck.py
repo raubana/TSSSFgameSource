@@ -155,52 +155,59 @@ class Card(object):
 		self.temp_to_be_discarded = False
 
 	def reset(self):
-		if self.temp_name != None or self.temp_gender != None or self.temp_race != None or self.temp_keywords != None or self.temp_to_be_discarded:
+		self.set_temp_name(None,None,None)
+		self.set_temp_gender(None)
+		self.set_temp_race(None)
+		self.set_temp_keywords(None)
+		self.set_temp_image(None)
+		self.set_temp_to_be_discarded(False)
+
+	def set_temp_name(self, name, printed_name, printed_name_size = "None"):
+		if name != self.temp_name or printed_name != self.temp_printed_name or self.temp_printed_name_size != printed_name_size:
+			self.temp_name = name
+			self.temp_printed_name = printed_name
+			self.temp_printed_name_size = printed_name_size
 			self.flag_for_rerender()
-		self.temp_name = None
-		self.temp_printed_name = None
-		self.temp_printed_name_size = None
-		self.temp_gender = None
-		self.temp_race = None
-		self.temp_keywords = None
-		self.temp_image = None
-		self.temp_to_be_discarded = False
+
+	def set_temp_gender(self, gender):
+		if gender != self.temp_gender:
+			self.temp_gender = gender
+			self.flag_for_rerender()
+
+	def set_temp_race(self, race):
+		if race != self.temp_race:
+			self.temp_race = race
+			self.flag_for_rerender()
+
+	def set_temp_keywords(self, keywords):
+		if keywords != self.temp_keywords:
+			self.temp_keywords = keywords
+			self.flag_for_rerender()
+
+	def set_temp_image(self, image):
+		if image != self.temp_image:
+			self.temp_image = image
+			self.flag_for_rerender()
+
+	def set_temp_to_be_discarded(self, discarded):
+		if discarded != self.temp_to_be_discarded:
+			self.temp_to_be_discarded = discarded
+			self.flag_for_rerender()
 
 	def flag_for_rerender(self):
 		self.flagged_for_rerender = True
 
 	def imitate_card(self, card):
-		self.temp_name = str(card.name)
-		self.temp_printed_name = str(card.printed_name)
-		if card.printed_name_size != None:
-			self.temp_printed_name_size = str(card.printed_name_size)
-		self.temp_gender = str(card.gender)
-		self.temp_race = str(card.race)
-		self.temp_keywords = list(card.keywords)
-		self.temp_image = pygame.Surface((int((297/394.)*card.original_image.get_width()),
+		self.set_temp_name(str(card.name), str(card.printed_name), str(card.printed_name_size))
+		self.set_temp_gender(str(card.gender))
+		self.set_temp_race(str(card.race))
+		self.set_temp_keywords(list(card.keywords))
+		img = pygame.Surface((int((297/394.)*card.original_image.get_width()),
 										  int((215/544.)*card.original_image.get_height())),
 										 SRCALPHA)
-		self.temp_image.blit(card.original_image, (-int((63/394.)*card.original_image.get_width()),
+		img.blit(card.original_image, (-int((63/394.)*card.original_image.get_width()),
 										  -int((86/544.)*card.original_image.get_height())))
-		self.flag_for_rerender()
-
-	def swap_gender(self):
-		if self.gender in ("male", "female"):
-			if self.gender == "male":
-				self.temp_gender = "female"
-			else:
-				self.temp_gender = "male"
-			self.flag_for_rerender()
-
-	def set_race(self, race):
-		self.temp_race = race
-		self.flag_for_rerender()
-
-	def append_keyword(self, new_keyword):
-		if self.temp_keywords == None:
-			self.temp_keywords = list(self.keywords)
-		self.temp_keywords.append(new_keyword)
-		self.flag_for_rerender()
+		self.set_temp_image(img)
 
 	def parsePickledCard(self, pc):
 		#we need to parse each attribute individually in preparation for proper parsing.
