@@ -39,6 +39,7 @@ def open_pickledcard(f):
 	# we get the image from the archive
 	img = t.extractfile("image.png").read()  # we get our attributes
 	attr = t.extractfile("attributes").read()
+	t.close()
 	# we return our card
 	pc = PickledCard(img, attr)
 	if type(f) in (str,unicode):

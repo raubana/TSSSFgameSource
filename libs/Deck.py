@@ -1,9 +1,11 @@
 import pygame
-import os, random
+from pygame.locals import*
+import os, random, math
 
 from locals import *
 from PickledCard import *
 import Templatizer
+from common import lerp, apply_shadow
 
 
 def check_variable_name_is_legal(name):
@@ -23,6 +25,30 @@ def break_apart_line(line):
 	value = str(parts[1]).strip()
 	check_variable_name_is_legal(variable)
 	return (variable, value)
+
+def cut_and_paste_strip(src_img, dest_srf, p_rect):
+	size = dest_srf.get_size()
+	rect = pygame.Rect(lerp(0,size[0],p_rect[0]),
+					   lerp(0,size[1],p_rect[1]),
+					   lerp(0,size[0],p_rect[2]),
+					   lerp(0,size[1],p_rect[3]))
+	srf = pygame.Surface(rect.size,SRCALPHA)
+	srf.fill((255,255,255,0))
+	srf.blit(src_img,(-rect.left,-rect.top))
+	srf.fill((255,255,220), None, special_flags = BLEND_RGB_MULT)
+	pygame.draw.rect(srf, (255,255,255), (0,0,rect.width,rect.height), 4)
+	srf = apply_shadow(srf,15,64)
+	"""
+	offset = 5
+	p1 = (rect.left+lerp(-offset,offset,random.random()),rect.top+lerp(-offset,offset,random.random()))
+	p2 = (rect.right+lerp(-offset,offset,random.random()),rect.bottom+lerp(-offset,offset,random.random()))
+	center = ((p1[0]+p2[0])/2.0,(p1[1]+p2[1])/2.0)
+	angle = math.degrees(math.atan2(rect.height,rect.width)-math.atan2(p2[1]-p1[1],p2[0]-p1[0]))
+	new_srf = pygame.transform.rotozoom(srf, angle, 1.0)
+	"""
+	new_srf = srf
+	new_rect = new_srf.get_rect(center = rect.center)
+	dest_srf.blit(new_srf,new_rect)
 
 
 class Deck(object):
@@ -57,7 +83,6 @@ class Deck(object):
 			if i < len(self.cards):
 				s +=","
 		return s
-
 
 
 class MasterDeck(object):
@@ -105,11 +130,77 @@ class MasterDeck(object):
 
 class Card(object):
 	def __init__(self):
-		self.image = pygame.Surface(CARD_SIZE, pygame.SRCALPHA)
+		self.original_image = pygame.Surface(CARD_SIZE, pygame.SRCALPHA)
+		self.image = self.original_image.copy()
 		self.name = None
 		self.type = None
+		self.gender = None
+		self.race = None
+		self.keywords = []
 		self.power = None
 		self.attributes = ""
+
+		self.flagged_for_rerender = False
+
+		self.printed_name = None
+		self.printed_name_size = None
+
+		self.temp_name = None
+		self.temp_printed_name = None
+		self.temp_printed_name_size = None
+		self.temp_gender = None
+		self.temp_race = None
+		self.temp_keywords = None
+		self.temp_image = None
+		self.temp_to_be_discarded = False
+
+	def reset(self):
+		if self.temp_name != None or self.temp_gender != None or self.temp_race != None or self.temp_keywords != None or self.temp_to_be_discarded:
+			self.flag_for_rerender()
+		self.temp_name = None
+		self.temp_printed_name = None
+		self.temp_printed_name_size = None
+		self.temp_gender = None
+		self.temp_race = None
+		self.temp_keywords = None
+		self.temp_image = None
+		self.temp_to_be_discarded = False
+
+	def flag_for_rerender(self):
+		self.flagged_for_rerender = True
+
+	def imitate_card(self, card):
+		self.temp_name = str(card.name)
+		self.temp_printed_name = str(card.printed_name)
+		if card.printed_name_size != None:
+			self.temp_printed_name_size = str(card.printed_name_size)
+		self.temp_gender = str(card.gender)
+		self.temp_race = str(card.race)
+		self.temp_keywords = list(card.keywords)
+		self.temp_image = pygame.Surface((int((297/394.)*card.original_image.get_width()),
+										  int((215/544.)*card.original_image.get_height())),
+										 SRCALPHA)
+		self.temp_image.blit(card.original_image, (-int((63/394.)*card.original_image.get_width()),
+										  -int((86/544.)*card.original_image.get_height())))
+		self.flag_for_rerender()
+
+	def swap_gender(self):
+		if self.gender in ("male", "female"):
+			if self.gender == "male":
+				self.temp_gender = "female"
+			else:
+				self.temp_gender = "male"
+			self.flag_for_rerender()
+
+	def set_race(self, race):
+		self.temp_race = race
+		self.flag_for_rerender()
+
+	def append_keyword(self, new_keyword):
+		if self.temp_keywords == None:
+			self.temp_keywords = list(self.keywords)
+		self.temp_keywords.append(new_keyword)
+		self.flag_for_rerender()
 
 	def parsePickledCard(self, pc):
 		#we need to parse each attribute individually in preparation for proper parsing.
@@ -134,15 +225,86 @@ class Card(object):
 		#TODO: Do individualized parsing of attributes for each type of card.
 		if "name" in attributes:
 			self.name = attributes["name"].replace("\\n"," ")
+			self.printed_name = attributes["name"]
+		if "name_font_size" in attributes:
+			self.printed_name_size = attributes["name_font_size"]
 		if "power" in attributes:
 			self.power = attributes["power"]
+		if "gender" in attributes:
+			self.gender = attributes["gender"]
+		if "race" in attributes:
+			self.race = attributes["race"]
+		if "keywords" in attributes:
+			keywords = attributes["keywords"].split(",")
+			self.keywords = []
+			for keyword in keywords:
+				self.keywords.append(keyword.strip())
+		#THIS PART IS STRICTLY FOR TESTING PURPOSES
+		if "temp_name" in attributes:
+			self.temp_name = attributes["temp_name"]
+		if "temp_printed_name" in attributes:
+			self.temp_printed_name = attributes["temp_printed_name"]
+		if "temp_printed_name_size" in attributes:
+			self.temp_printed_name_size = attributes["temp_printed_name_size"]
+		if "temp_gender" in attributes:
+			self.temp_gender = attributes["temp_gender"]
+		if "temp_race" in attributes:
+			self.temp_race = attributes["temp_race"]
+		if "temp_keywords" in attributes:
+			keywords = attributes["temp_keywords"].split(",")
+			self.temp_keywords = []
+			for keyword in keywords:
+				self.temp_keywords.append(keyword.strip())
+
 		#finally we need our image
 		if "template" in attributes and attributes["template"] == "True":
 			img = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
 			template = Templatizer.create_template_from_attributes(attributes, img)
-			self.image = template.generate_image()
+			self.original_image = template.generate_image()
 		else:
-			self.image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
-		if self.image.get_size() != CARD_SIZE:
-			self.image = pygame.transform.smoothscale(self.image, CARD_SIZE)
+			self.original_image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
+		if self.original_image.get_size() != CARD_SIZE:
+			self.original_image = pygame.transform.smoothscale(self.original_image, CARD_SIZE)
+		self.reset()
+		self.flag_for_rerender()
+
+	def rerender(self):
+		if self.flagged_for_rerender:
+			self.flagged_for_rerender = False
+			self.image = self.original_image.copy()
+			if self.temp_image != None or self.temp_keywords!=None or self.temp_race!=None or self.temp_gender!=None:
+				self.image.fill((220,220,220), None, special_flags = BLEND_RGB_MULT)
+				#We draw out temporary changes.
+				#We are going to create a template to help make this part faster.
+				attr={}
+				attr["template"] = "True"
+				if self.temp_printed_name != None: attr["name"] = self.temp_printed_name
+				if self.temp_printed_name_size != None: attr["name_font_size"] = self.temp_printed_name_size
+				if self.temp_gender != None: attr["gender"] = self.temp_gender
+				elif self.gender != None: attr["gender"] = self.gender
+				if self.temp_race != None: attr["race"] = self.temp_race
+				elif self.race != None: attr["race"] = self.race
+				if self.temp_keywords != None: attr["keywords"] = string.join(self.temp_keywords,",")
+				if self.temp_image != None:
+					img = self.temp_image
+				else:
+					img = pygame.Surface((1,1))
+					img.fill((255,255,255))
+				template = Templatizer.create_template_from_attributes(attr,img)
+				img = template.generate_image()
+				if img.get_size() != CARD_SIZE:
+					img = pygame.transform.smoothscale(img, CARD_SIZE)
+				#Finally, we "cut strips" out of the template image and blit them onto the card's image.
+				if self.temp_image != None:
+					cut_and_paste_strip(img, self.image, (75/394.,103/544.,273/394.,181/544.))
+				if self.temp_printed_name != None:
+					cut_and_paste_strip(img, self.image, (83/392.,15/542.,297/392.,75/542.))
+				if self.temp_keywords != None:
+					cut_and_paste_strip(img, self.image, (47/392.,294/542.,325/392.,39/542.))
+				if self.temp_keywords != None and "DFP" in self.temp_keywords:
+					cut_and_paste_strip(img, self.image, (23/392.,263/542.,64/392.,65/542.))
+				if self.temp_gender != None or self.temp_race != None:
+					cut_and_paste_strip(img, self.image, (21/392.,18/542.,68/392.,122/542.))
+
+
 
