@@ -18,22 +18,21 @@ class Main(object):
 		self.framerate = 60
 		self.clock = pygame.time.Clock()
 
-		self.reset()
-		self.run()
-
-	def reset(self):
-		reload(libs.Deck)
-
 		print "A"
 		self.card = libs.Deck.Card()
 		self.card.parsePickledCard(open_pickledcard("data/default_cards/PonyChangelingEarth.tsssf"))
 
 		print "B"
 		self.imit_card = libs.Deck.Card()
-		self.imit_card.parsePickledCard(open_pickledcard("data/default_cards/PonyApplejackTheCutestSmartestAllaroundbestBackgroundPony.tsssf"))
+		#self.imit_card.parsePickledCard(open_pickledcard("data/default_cards/PonyApplejackTheCutestSmartestAllaroundbestBackgroundPony.tsssf"))
+		self.imit_card.parsePickledCard(open_pickledcard("data/default_cards/PonyBraeburn.tsssf"))
 
 		print "C"
 
+		self.reset()
+		self.run()
+
+	def reset(self):
 		self.card.imitate_card(self.imit_card)
 
 		self.card.rerender()

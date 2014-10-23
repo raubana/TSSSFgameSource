@@ -35,19 +35,19 @@ def cut_and_paste_strip(src_img, dest_srf, p_rect):
 	srf = pygame.Surface(rect.size,SRCALPHA)
 	srf.fill((255,255,255,0))
 	srf.blit(src_img,(-rect.left,-rect.top))
-	srf.fill((255,255,220), None, special_flags = BLEND_RGB_MULT)
+	srf.fill((255,255,200), None, special_flags = BLEND_RGB_MULT)
 	pygame.draw.rect(srf, (255,255,255), (0,0,rect.width,rect.height), 4)
-	srf = apply_shadow(srf,15,64)
-	"""
-	offset = 5
+	srf = apply_shadow(srf,8,32)
+
+	offset = 3
 	p1 = (rect.left+lerp(-offset,offset,random.random()),rect.top+lerp(-offset,offset,random.random()))
 	p2 = (rect.right+lerp(-offset,offset,random.random()),rect.bottom+lerp(-offset,offset,random.random()))
 	center = ((p1[0]+p2[0])/2.0,(p1[1]+p2[1])/2.0)
 	angle = math.degrees(math.atan2(rect.height,rect.width)-math.atan2(p2[1]-p1[1],p2[0]-p1[0]))
 	new_srf = pygame.transform.rotozoom(srf, angle, 1.0)
-	"""
-	new_srf = srf
-	new_rect = new_srf.get_rect(center = rect.center)
+
+	#new_srf = srf
+	new_rect = new_srf.get_rect(center = center)#rect.center)
 	dest_srf.blit(new_srf,new_rect)
 
 
@@ -280,7 +280,7 @@ class Card(object):
 			self.flagged_for_rerender = False
 			self.image = self.original_image.copy()
 			if self.temp_image != None or self.temp_keywords!=None or self.temp_race!=None or self.temp_gender!=None:
-				self.image.fill((220,220,220), None, special_flags = BLEND_RGB_MULT)
+				#self.image.fill((220,220,220), None, special_flags = BLEND_RGB_MULT)
 				#We draw out temporary changes.
 				#We are going to create a template to help make this part faster.
 				attr={}
@@ -303,7 +303,7 @@ class Card(object):
 					img = pygame.transform.smoothscale(img, CARD_SIZE)
 				#Finally, we "cut strips" out of the template image and blit them onto the card's image.
 				if self.temp_image != None:
-					cut_and_paste_strip(img, self.image, (75/394.,103/544.,273/394.,181/544.))
+					cut_and_paste_strip(img, self.image, (53/394.,75/544.,318/394.,236/544.))
 				if self.temp_printed_name != None:
 					cut_and_paste_strip(img, self.image, (83/392.,15/542.,297/392.,75/542.))
 				if self.temp_keywords != None:
