@@ -265,9 +265,9 @@ class Main(object):
 			self.tooltip_surface = pygame.Surface(size)
 			self.tooltip_surface.fill(c1)
 			if size != CARD_SIZE:
-				self.tooltip_surface.blit(pygame.transform.smoothscale(self.tooltip_text.image, size), (0,0))
+				self.tooltip_surface.blit(pygame.transform.smoothscale(self.tooltip_text.get_image(), size), (0,0))
 			else:
-				self.tooltip_surface.blit(self.tooltip_text.image, (0,0))
+				self.tooltip_surface.blit(self.tooltip_text.get_image(), (0,0))
 
 		self.main_element.flag_for_rerender()
 

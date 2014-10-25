@@ -81,7 +81,7 @@ class GameStartingController(Controller):
 			#print s3[:1000]
 			self.main.master_deck.unpickle_and_add_card(s3)
 			print "'"+self.main.master_deck.cards[-1].name+"' downloaded."
-			self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
+			self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].get_image(), self.card_size)
 			self.add_to_collage()
 			self.check_next()
 		elif message.startswith("CARDFILE_ATTRIBUTES:"):
@@ -97,7 +97,7 @@ class GameStartingController(Controller):
 				self.main.client.send("REQUEST_CARDFILE:"+str(self.card_index))
 			else:
 				self.main.master_deck.cards.append(self.matching_card)
-				self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].image, self.card_size)
+				self.card_img = pygame.transform.smoothscale(self.main.master_deck.cards[-1].get_image(), self.card_size)
 				self.add_to_collage()
 				self.check_next()
 		elif message == "CLIENT_READY":

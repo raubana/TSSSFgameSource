@@ -93,7 +93,7 @@ class GameServer(object):
 				else:
 					pc = open_pickledcard("cards/"+card)
 			pc_list.append(pc)
-		self.master_deck.load_all_cards(pc_list)
+		self.master_deck.load_all_cards(pc_list, False)
 		print "== MasterDeck loaded."
 
 	def run_main_loop(self):

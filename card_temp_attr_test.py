@@ -29,13 +29,19 @@ class Main(object):
 
 		print "C"
 
+		self.index = 0
+
 		self.reset()
 		self.run()
 
 	def reset(self):
 		self.card.imitate_card(self.imit_card)
 
+		self.card.set_temp_name("Braeburn", "Totally Braeburn")
+
 		self.card.rerender()
+		#pygame.image.save(self.card.image, "stills/"+str(self.index)+".png")
+		#self.index += 1
 
 	def update(self):
 		pass
@@ -48,7 +54,7 @@ class Main(object):
 
 		cardsize = (CARD_SIZE[0], CARD_SIZE[1])
 
-		new_img = pygame.transform.smoothscale(self.card.image, cardsize)
+		new_img = pygame.transform.smoothscale(self.card.get_image(), cardsize)
 		self.screen.blit(new_img, (0,0))
 
 		pygame.display.flip()

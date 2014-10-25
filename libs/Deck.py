@@ -90,7 +90,7 @@ class MasterDeck(object):
 		self.cards = []
 		self.pc_cards = []
 
-	def load_all_cards(self, pc_list=None):
+	def load_all_cards(self, pc_list=None, render=True):
 		if pc_list == None:
 			pc_list = []
 			from CustomDeck import CustomDeck
@@ -117,7 +117,7 @@ class MasterDeck(object):
 			self.pc_cards.append(org_pc)
 			pc_f.close()
 			c = Card()
-			c.parsePickledCard(pc)
+			c.parsePickledCard(pc, render)
 			self.cards.append(c)
 
 	def unpickle_and_add_card(self, s):
@@ -140,7 +140,7 @@ class Card(object):
 		self.power = None
 		self.attributes = ""
 
-		self.flagged_for_rerender = False
+		self.flagged_for_rerender = True
 
 		self.printed_name = None
 		self.printed_name_size = None
@@ -209,7 +209,7 @@ class Card(object):
 										  -int((86/544.)*card.original_image.get_height())))
 		self.set_temp_image(img)
 
-	def parsePickledCard(self, pc):
+	def parsePickledCard(self, pc, render=True):
 		#we need to parse each attribute individually in preparation for proper parsing.
 		self.attributes = str(pc.attr)
 		L = pc.attr.split("\n")
@@ -263,15 +263,16 @@ class Card(object):
 			for keyword in keywords:
 				self.temp_keywords.append(keyword.strip())
 
-		#finally we need our image
-		if "template" in attributes and attributes["template"] == "True":
-			img = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
-			template = Templatizer.create_template_from_attributes(attributes, img)
-			self.original_image = template.generate_image()
-		else:
-			self.original_image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
-		if self.original_image.get_size() != CARD_SIZE:
-			self.original_image = pygame.transform.smoothscale(self.original_image, CARD_SIZE)
+		if render:
+			#finally we need our image
+			if "template" in attributes and attributes["template"] == "True":
+				img = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
+				template = Templatizer.create_template_from_attributes(attributes, img)
+				self.original_image = template.generate_image()
+			else:
+				self.original_image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
+			if self.original_image.get_size() != CARD_SIZE:
+				self.original_image = pygame.transform.smoothscale(self.original_image, CARD_SIZE)
 		self.reset()
 		self.flag_for_rerender()
 
@@ -312,6 +313,10 @@ class Card(object):
 					cut_and_paste_strip(img, self.image, (23/392.,263/542.,64/392.,65/542.))
 				if self.temp_gender != None or self.temp_race != None:
 					cut_and_paste_strip(img, self.image, (21/392.,18/542.,68/392.,122/542.))
+
+	def get_image(self):
+		self.rerender()
+		return self.image
 
 
 
