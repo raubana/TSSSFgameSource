@@ -179,6 +179,8 @@ class GameController(Controller):
 		elif self._rm_your_turn(message): pass
 		elif self._rm_turn_almost_over(message): pass
 		elif self._rm_history_full(message): pass
+		elif self._rm_modified_card(message): pass
+		elif self._rm_unmodified_card(message): pass
 		else:
 			return False
 		return True
@@ -338,6 +340,89 @@ class GameController(Controller):
 			self.top_element.parse_full_history(s)
 			return True
 		return False
+	def _rm_modified_card(self, message):
+		if message.startswith("MODIFIED_CARD:"):
+			s = message[len("MODIFIED_CARD:"):]
+			parts = s.split("::")
+			print parts
+			if len(parts) == 9:
+				id = int(parts[0])
+				card = self.main.master_deck.cards[id]
+				#Temp Gender::Temp Race::Temp Keywords::Temp To Be Discarded::Temp Card Being Imitated
+				if parts[8] != "":
+					card.imitate_card(self.main.master_deck.cards[int(parts[8])], self.main.master_deck)
+
+				if parts[1] != "":
+					name = parts[1]
+				else:
+					name = None
+				if parts[2] != "":
+					printed_name = parts[2]
+				else:
+					printed_name = None
+				if parts[3] != "":
+					printed_name_size = int(parts[3])
+				else:
+					printed_name_size = None
+				card.set_temp_name(name, printed_name, printed_name_size)
+
+				if parts[4] != "":
+					gender = parts[4]
+				else:
+					gender = None
+				card.set_temp_gender(gender)
+
+				if parts[5] != "":
+					race = parts[5]
+				else:
+					race = None
+				card.set_temp_race(race)
+
+				if parts[6] != "":
+					keywords = parts[6].split(",")
+				else:
+					keywords = None
+				card.set_temp_keywords(keywords)
+
+				if parts[7] == "True":
+					to_be_discarded = True
+				else:
+					to_be_discarded = False
+				card.set_temp_to_be_discarded(to_be_discarded)
+
+				card.rerender()
+				element = self.find_element_for_card(card)
+				if element != None:
+					element.set_card(card,element.alpha,element.angle)
+			else:
+				print "ERROR! Received bad modified card info. A"
+			return True
+		return False
+	def _rm_unmodified_card(self, message):
+		if message.startswith("UNMODIFIED_CARD:"):
+			s = message[len("UNMODIFIED_CARD:"):]
+			i = int(s)
+			card = self.main.master_deck.cards[i]
+			card.reset()
+
+			card.rerender()
+			element = self.find_element_for_card(card)
+			if element != None:
+				element.set_card(card,element.alpha,element.angle)
+			return True
+		return False
+
+	#Misc. Functions
+	def find_element_for_card(self, card):
+		for child in self.bottom_element.children:
+			if type(child) == CardElement and child.card == card:
+				return child
+		for child in self.table_element.children:
+			if type(child) == CardElement and child.card == card:
+				return child
+		for child in self.public_goals_element.children:
+			if type(child) == CardElement and child.card == card:
+				return child
 
 	#Handler Functions
 	def handle_event_keydown(self, widget, unicode, key):

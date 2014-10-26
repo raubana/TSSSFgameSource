@@ -18,12 +18,16 @@ class Main(object):
 		self.framerate = 60
 		self.clock = pygame.time.Clock()
 
+		self.master_deck = libs.Deck.MasterDeck()
+
 		print "A"
 		self.card = libs.Deck.Card()
+		self.master_deck.cards.append(self.card)
 		self.card.parsePickledCard(open_pickledcard("data/default_cards/PonyChangelingEarth.tsssf"))
 
 		print "B"
 		self.imit_card = libs.Deck.Card()
+		self.master_deck.cards.append(self.imit_card)
 		#self.imit_card.parsePickledCard(open_pickledcard("data/default_cards/PonyApplejackTheCutestSmartestAllaroundbestBackgroundPony.tsssf"))
 		self.imit_card.parsePickledCard(open_pickledcard("data/default_cards/PonyBraeburn.tsssf"))
 
@@ -35,9 +39,12 @@ class Main(object):
 		self.run()
 
 	def reset(self):
-		self.card.imitate_card(self.imit_card)
+		self.card.imitate_card(self.imit_card, self.master_deck)
 
-		self.card.set_temp_name("Braeburn", "Totally Braeburn")
+		#self.card.set_temp_keywords(None)
+		#self.card.set_temp_name(None, None)
+		#self.card.set_temp_gender(None)
+		#self.card.set_temp_race(None)
 
 		self.card.rerender()
 		#pygame.image.save(self.card.image, "stills/"+str(self.index)+".png")

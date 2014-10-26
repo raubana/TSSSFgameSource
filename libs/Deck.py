@@ -26,7 +26,7 @@ def break_apart_line(line):
 	check_variable_name_is_legal(variable)
 	return (variable, value)
 
-def cut_and_paste_strip(src_img, dest_srf, p_rect):
+def cut_and_paste_strip(src_img, dest_srf, p_rect, tint, shadow_color=(0,0,0)):
 	size = dest_srf.get_size()
 	rect = pygame.Rect(lerp(0,size[0],p_rect[0]),
 					   lerp(0,size[1],p_rect[1]),
@@ -35,11 +35,11 @@ def cut_and_paste_strip(src_img, dest_srf, p_rect):
 	srf = pygame.Surface(rect.size,SRCALPHA)
 	srf.fill((255,255,255,0))
 	srf.blit(src_img,(-rect.left,-rect.top))
-	srf.fill((255,255,200), None, special_flags = BLEND_RGB_MULT)
-	pygame.draw.rect(srf, (255,255,255), (0,0,rect.width,rect.height), 4)
-	srf = apply_shadow(srf,8,32)
+	srf.fill(tint, None, special_flags = BLEND_RGB_MULT)
+	pygame.draw.rect(srf, (255,255,255), (0,0,rect.width,rect.height), 7)
+	srf = apply_shadow(srf,18,96,shadow_color)
 
-	offset = 3
+	offset = 2
 	p1 = (rect.left+lerp(-offset,offset,random.random()),rect.top+lerp(-offset,offset,random.random()))
 	p2 = (rect.right+lerp(-offset,offset,random.random()),rect.bottom+lerp(-offset,offset,random.random()))
 	center = ((p1[0]+p2[0])/2.0,(p1[1]+p2[1])/2.0)
@@ -151,8 +151,13 @@ class Card(object):
 		self.temp_gender = None
 		self.temp_race = None
 		self.temp_keywords = None
-		self.temp_image = None
 		self.temp_to_be_discarded = False
+
+		self.temp_image = None
+		self.temp_card_being_imitated = None
+
+		self.is_modified = False
+		self.must_transmit_modifications = False
 
 	def reset(self):
 		self.set_temp_name(None,None,None)
@@ -161,44 +166,98 @@ class Card(object):
 		self.set_temp_keywords(None)
 		self.set_temp_image(None)
 		self.set_temp_to_be_discarded(False)
+		self.temp_card_being_imitated = None
 
-	def set_temp_name(self, name, printed_name, printed_name_size = "None"):
+		self.is_modified = False
+		self.must_transmit_modifications = True
+
+	def get_modified_transmit(self, master_deck):
+		if self.is_modified:
+			s = "MODIFIED_CARD:"
+			#Any of these are left blank if they're 'None'.
+			#CARD ID::Temp Name::Temp Printed Name::Temp Printed Name Size::Temp Gender::Temp Race::Temp Keywords::Temp To Be Discarded::Temp Card Being Imitated
+			s += str(master_deck.cards.index(self)) + "::"
+			L = [self.temp_name,self.temp_printed_name,self.temp_printed_name_size,self.temp_gender,self.temp_race,
+				 self.temp_keywords,self.temp_to_be_discarded,self.temp_card_being_imitated]
+			#print L
+			i = 0
+			while i < len(L):
+				part = L[i]
+				if part != None:
+					t = type(part)
+					if t in (str,unicode):
+						s += part
+					elif t in (bool,int):
+						s += str(part)
+					elif t in (list, tuple):
+						s += string.join(part,",")
+				i += 1
+				if i < len(L):
+					s += "::"
+		else:
+			s = "UNMODIFIED_CARD:"
+			s += str(master_deck.cards.index(self))
+		#print s
+		return s
+
+	def set_temp_name(self, name, printed_name, printed_name_size = None):
 		if name != self.temp_name or printed_name != self.temp_printed_name or self.temp_printed_name_size != printed_name_size:
-			self.temp_name = name
-			self.temp_printed_name = printed_name
-			self.temp_printed_name_size = printed_name_size
+			if name == None:
+				self.temp_name = None
+			else:
+				self.temp_name = str(name)
+			if printed_name == None:
+				self.temp_printed_name = None
+			else:
+				self.temp_printed_name = str(printed_name)
+			if printed_name_size == None:
+				self.temp_printed_name_size = None
+			else:
+				self.temp_printed_name_size = str(printed_name_size)
 			self.flag_for_rerender()
+			self.is_modified = True
+			self.must_transmit_modifications = True
 
 	def set_temp_gender(self, gender):
 		if gender != self.temp_gender:
 			self.temp_gender = gender
 			self.flag_for_rerender()
+			self.is_modified = True
+			self.must_transmit_modifications = True
 
 	def set_temp_race(self, race):
 		if race != self.temp_race:
 			self.temp_race = race
 			self.flag_for_rerender()
+			self.is_modified = True
+			self.must_transmit_modifications = True
 
 	def set_temp_keywords(self, keywords):
 		if keywords != self.temp_keywords:
 			self.temp_keywords = keywords
 			self.flag_for_rerender()
+			self.is_modified = True
+			self.must_transmit_modifications = True
 
 	def set_temp_image(self, image):
 		if image != self.temp_image:
 			self.temp_image = image
 			self.flag_for_rerender()
+			self.is_modified = True
+			self.must_transmit_modifications = True
 
 	def set_temp_to_be_discarded(self, discarded):
 		if discarded != self.temp_to_be_discarded:
 			self.temp_to_be_discarded = discarded
 			self.flag_for_rerender()
+			self.is_modified = True
+			self.must_transmit_modifications = True
 
 	def flag_for_rerender(self):
 		self.flagged_for_rerender = True
 
-	def imitate_card(self, card):
-		self.set_temp_name(str(card.name), str(card.printed_name), str(card.printed_name_size))
+	def imitate_card(self, card, master_deck):
+		self.set_temp_name(card.name, card.printed_name, card.printed_name_size)
 		self.set_temp_gender(str(card.gender))
 		self.set_temp_race(str(card.race))
 		self.set_temp_keywords(list(card.keywords))
@@ -208,6 +267,7 @@ class Card(object):
 		img.blit(card.original_image, (-int((63/394.)*card.original_image.get_width()),
 										  -int((86/544.)*card.original_image.get_height())))
 		self.set_temp_image(img)
+		self.temp_card_being_imitated = master_deck.cards.index(card)
 
 	def parsePickledCard(self, pc, render=True):
 		#we need to parse each attribute individually in preparation for proper parsing.
@@ -286,6 +346,10 @@ class Card(object):
 				#We are going to create a template to help make this part faster.
 				attr={}
 				attr["template"] = "True"
+				tint = (255,255,160)
+				shadow_color = (0,0,0)
+				if self.temp_card_being_imitated != None:
+					attr["type"] = "pony"
 				if self.temp_printed_name != None: attr["name"] = self.temp_printed_name
 				if self.temp_printed_name_size != None: attr["name_font_size"] = self.temp_printed_name_size
 				if self.temp_gender != None: attr["gender"] = self.temp_gender
@@ -304,15 +368,15 @@ class Card(object):
 					img = pygame.transform.smoothscale(img, CARD_SIZE)
 				#Finally, we "cut strips" out of the template image and blit them onto the card's image.
 				if self.temp_image != None:
-					cut_and_paste_strip(img, self.image, (53/394.,75/544.,318/394.,236/544.))
+					cut_and_paste_strip(img, self.image, (65/394.,85/544.,294/394.,216/544.), tint, shadow_color)
 				if self.temp_printed_name != None:
-					cut_and_paste_strip(img, self.image, (83/392.,15/542.,297/392.,75/542.))
+					cut_and_paste_strip(img, self.image, (83/392.,15/542.,297/392.,75/542.), tint, shadow_color)
 				if self.temp_keywords != None:
-					cut_and_paste_strip(img, self.image, (47/392.,294/542.,325/392.,39/542.))
+					cut_and_paste_strip(img, self.image, (47/392.,294/542.,325/392.,39/542.), tint, shadow_color)
 				if self.temp_keywords != None and "DFP" in self.temp_keywords:
-					cut_and_paste_strip(img, self.image, (23/392.,263/542.,64/392.,65/542.))
+					cut_and_paste_strip(img, self.image, (23/392.,263/542.,64/392.,65/542.), tint, shadow_color)
 				if self.temp_gender != None or self.temp_race != None:
-					cut_and_paste_strip(img, self.image, (21/392.,18/542.,68/392.,122/542.))
+					cut_and_paste_strip(img, self.image, (21/392.,18/542.,68/392.,122/542.), tint, shadow_color)
 
 	def get_image(self):
 		self.rerender()

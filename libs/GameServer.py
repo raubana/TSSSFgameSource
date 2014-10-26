@@ -28,7 +28,7 @@ class GameServer(object):
 		self.server = None
 
 		self.throttled = True
-		self.delay = 0.1
+		self.delay = 0.01
 
 		self.players = []
 
@@ -129,6 +129,8 @@ class GameServer(object):
 				if self.timer_amount <= 0:
 					self.timer_running = False
 					self.triggerTimerDone()
+
+		self.check_for_modified_cards()
 
 		self.prev_timer_amount = float(self.timer_amount)
 
@@ -528,7 +530,8 @@ class GameServer(object):
 						if selected_card != None:
 							if len(self.goal_deck.cards) > 0:
 								#we attempt to replace with this card.
-								self.history.take_snapshot(SNAPSHOT_NEW_GOAL, player.name+" discarded '"+selected_card.name+"' to the bottom of the goal deck and drew a new one to replace it.")
+								new_goal = self.goal_deck.cards[-1]
+								self.history.take_snapshot(SNAPSHOT_NEW_GOAL, player.name+" discarded '"+selected_card.name+"' to the bottom of the goal deck and drew '"+new_goal.name+"' to replace it.")
 								self.send_full_history_all()
 								self.server.sendall("ALERT:draw_card_from_table")
 								self.public_goals.remove_card(selected_card)
@@ -680,6 +683,7 @@ class GameServer(object):
 			self.send_full_history_all()
 			self.controller = None
 	def nextPlayersTurn(self):
+		self.reset_modified_cards()
 		i = self.current_players_turn + 1
 		i %= len(self.players)
 		self.setPlayersTurn(i)
@@ -699,6 +703,21 @@ class GameServer(object):
 		else:
 			s += "N"
 		return s
+	def check_for_modified_cards(self):
+		for card in self.master_deck.cards:
+			if card.must_transmit_modifications:
+				card.must_transmit_modifications = False
+				self.server.sendall(card.get_modified_transmit(self.master_deck))
+	def check_for_cards_to_be_discarded(self):
+		#TODO: Finish check_for_cards_to_be_discarded function.
+		pass
+	def reset_modified_cards(self):
+		for card in self.master_deck.cards:
+			if card.is_modified:
+				card.reset()
+				if card.must_transmit_modifications:
+					card.must_transmit_modifications = False
+					self.server.sendall(card.get_modified_transmit(self.master_deck))
 
 	#Timer Stuff
 	def setTimerDuration(self, amount):
@@ -810,6 +829,11 @@ class GameServer(object):
 	def send_full_history_player(self, player):
 		history = self.history.get_full_transmit()
 		self.server.sendto(player.address, history)
+	def send_modified_cards_player(self, player):
+		for card in self.master_deck.cards:
+			if card.is_modified:
+				self.server.sendto(player.address,card.get_modified_transmit(self.master_deck))
+
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)
 		self.send_public_goals(player)
@@ -817,3 +841,4 @@ class GameServer(object):
 		self.send_timer_player(player)
 		self.send_decks_player(player)
 		self.send_full_history_player(player)
+		self.send_modified_cards_player(player)

@@ -117,6 +117,19 @@ class SetupNewgameServerController(ServerController):
 
 		self.gameserver.send_decks_all()
 
+		c1 = None
+		for card in self.gameserver.master_deck.cards:
+			if card.power == "startcard":
+				c1 = card
+				break
+
+		c2 = []
+		for card in self.gameserver.master_deck.cards:
+			if card.type == "pony":
+				c2.append(card)
+
+		c1.imitate_card(random.choice(c2), self.gameserver.master_deck)
+
 	def PickFirstPlayer(self, args):
 		#We actually scramble the player list.
 		random.shuffle(self.gameserver.players)
