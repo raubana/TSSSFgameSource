@@ -157,6 +157,7 @@ class Card(object):
 		self.temp_image = None
 		self.temp_card_being_imitated = None
 
+		self.was_modified = True
 		self.is_modified = False
 		self.must_transmit_modifications = False
 
@@ -331,21 +332,24 @@ class Card(object):
 			self.rerender()
 
 	def get_base_image(self):
-		if "template" in self.attributes and self.attributes["template"] == "True":
-			template = Templatizer.create_template_from_attributes(self.attributes, self.pc_image)
-			image = template.generate_image()
+		if (not self.is_modified and not self.flagged_for_rerender) or (not self.was_modified and self.flagged_for_rerender):
+			image = self.image.copy()
 		else:
-			image = self.pc_image.copy()
-		if image.get_size() != CARD_SIZE:
-			image = pygame.transform.smoothscale(image, CARD_SIZE)
-		#image = apply_shadow(image,5)
+			if "template" in self.attributes and self.attributes["template"] == "True":
+				template = Templatizer.create_template_from_attributes(self.attributes, self.pc_image)
+				image = template.generate_image()
+			else:
+				image = self.pc_image.copy()
+			if image.get_size() != CARD_SIZE:
+				image = pygame.transform.smoothscale(image, CARD_SIZE)
+			#image = apply_shadow(image,5)
 		return image
 
 	def rerender(self):
 		if self.flagged_for_rerender:
 			print self.name+", RERENDERED"
-			self.flagged_for_rerender = False
 			self.image = self.get_base_image()
+			self.flagged_for_rerender = False
 			if self.temp_image != None or self.temp_keywords!=None or self.temp_race!=None or self.temp_gender!=None:
 				#self.image.fill((220,220,220), None, special_flags = BLEND_RGB_MULT)
 				#We draw out temporary changes.
@@ -383,6 +387,7 @@ class Card(object):
 					cut_and_paste_strip(img, self.image, (23/392.,263/542.,64/392.,65/542.), tint, shadow_color)
 				if self.temp_gender != None or self.temp_race != None:
 					cut_and_paste_strip(img, self.image, (21/392.,18/542.,68/392.,122/542.), tint, shadow_color)
+			self.was_modified = bool(self.is_modified)
 
 	def get_image(self):
 		self.rerender()
