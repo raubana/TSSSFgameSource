@@ -24,7 +24,6 @@ def translate_size_to_pixels(size,remaining):
 		raise TypeError("Not a usable type")
 	return pixels
 
-
 def create_context_menu(main, element, pos, menu_list):
 	#'menu_list' is a list of (name, function) pairs
 	#first we determine the size of our context menu.
@@ -137,32 +136,26 @@ class Element(object):
 		self.flag_for_pack()
 
 		self.needs_to_pack = False # This is True when this element's children need to be refitted.
-
 	def __del__(self):
 		if self.main.focus == self:
 			self.unfocus()
-
 	def __str__(self):
 		if self.name != None:
 			return self.name
 		return super.__str__(self)
-
 	def init(self):
 		# Here you would do any other initialization stuff you might need to do.
 		#You'd want to setup this element for tick triggers in this function.
 		pass
-
 	def _add_child(self, child):
 		self.children.append(child)
 		child.flag_for_pack()
 		self.flag_for_rerender()
-
 	def _remove_child(self, child):
 		if child in self.children:
 			self.children.remove(child)
 			self._setup_for_pack()
 			self.flag_for_rerender()
-
 	def clear(self):
 		#This removes every child from this element.
 		self.flag_for_rerender()
@@ -173,7 +166,6 @@ class Element(object):
 		self.h_scrollbar = None
 		self.v_scrollbar = None
 		self.layout = LAYOUT_FLOW
-
 	def give_focus(self):
 		if self.main.focus != None:
 			if self.main.focus == self:
@@ -185,7 +177,6 @@ class Element(object):
 		self.triggerGetFocus()
 		for handler in self.losefocus_handlers:
 			handler.handle_event_getfocus(self)
-
 	def unfocus(self):
 		if self.main.focus == self:
 			if DEBUG_FOCUS_TRACE:
@@ -251,7 +242,6 @@ class Element(object):
 			for handler in self.mousehover_handlers:
 				handler.handle_event_mousehover(self, mouse_pos_local)
 		return self_hover or child_hover
-
 	def update_for_mouse_button_press(self, mouse_pos_local, button):
 		if DEBUG_MOUSEBUTTONPRESS_TRACE:
 			print ("-"*self.element_level) + " " + str(self)
@@ -289,7 +279,6 @@ class Element(object):
 				for handler in self.mousepress_handlers:
 					handler.handle_event_mousepress(self, mouse_pos_local, button)
 			return True
-
 	def update_for_mouse_button_release(self, mouse_pos_local, button):
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
@@ -314,35 +303,27 @@ class Element(object):
 				#Nothing else caught the event, so we catch it.
 				self.triggerMouseRelease(mouse_pos_local, button)
 			return True
-
 	def update_for_keydown(self, unicode, key):
 		if not self.ignore_all_input:
 			self.triggerKeyDown(unicode, key)
 			for handler in self.keydown_handlers:
 				handler.handle_event_keydown(self, unicode, key)
-
 	def update_for_keyup(self, key):
 		pass
 
 	#Handle functions are called when something handles another element's caught events.
 	def handle_event_keydown(self, widget, unicode, key):
 		pass
-
 	def handle_event_mousehover(self, widget, mouse_pos_local):
 		pass
-
 	def handle_event_mouseout(self, widget, mouse_pos_local):
 		pass
-
 	def handle_event_mousepress(self, widget, mouse_pos_local, button):
 		pass
-
 	def handle_event_getfocus(self, widget):
 		pass
-
 	def handle_event_losefocus(self, widget):
 		pass
-
 	def handle_event_scroll(self, widget, amount):
 		if widget in (self.h_scrollbar, self.v_scrollbar):
 			self._setup_for_pack()
@@ -350,44 +331,32 @@ class Element(object):
 	#Add Handler functions allow other elements to catch events that this element catches
 	def add_handler_keydown(self, handler):
 		self.keydown_handlers.append(handler)
-
 	def add_handler_mousehover(self, handler):
 		self.mousehover_handlers.append(handler)
-
 	def add_handler_mouseout(self, handler):
 		self.mouseout_handlers.append(handler)
-
 	def add_handler_mousepress(self, handler):
 		self.mousepress_handlers.append(handler)
-
 	def add_handler_getfocus(self, handler):
 		self.getfocus_handlers.append(handler)
-
 	def add_handler_losefocus(self, handler):
 		self.losefocus_handlers.append(handler)
 
 	#Triggers are called when an event is caught by this element
 	def triggerKeyDown(self, unicode, key):
 		pass
-
 	def triggerMouseMove(self, mouse_pos):
 		pass
-
 	def triggerMouseHover(self, mouse_pos):
 		pass
-
 	def triggerMouseOut(self, mouse_pos):
 		pass
-
 	def triggerMousePressed(self, mouse_pos, button):
 		pass
-
 	def triggerMouseRelease(self, mouse_pos, button):
 		pass
-
 	def triggerGetFocus(self):
 		pass
-
 	def triggerLoseFocus(self):
 		pass
 
@@ -406,22 +375,18 @@ class Element(object):
 		if new_size != self.preferred_size:
 			self.preferred_size = new_size
 			self.flag_for_pack()
-
 	def set_pos(self, new_pos):
 		if new_pos != self.preferred_pos:
 			self.preferred_pos = new_pos
 			self.flag_for_pack()
-
 	def set_text(self, new_text):
 		if new_text != self.text:
 			self.text = new_text
 			self.flag_for_rerender()
-
 	def set_text_align(self, new_align):
 		if new_align != self.text_align:
 			self.text_align = new_align
 			self.flag_for_rerender()
-
 	def set_text_color(self, new_color):
 		if new_color != self.text_color:
 			self.text_color = new_color
@@ -429,7 +394,6 @@ class Element(object):
 
 	def get_local_pos(self):
 		return (float(self.pos[0]), float(self.pos[1]))
-
 	def get_world_pos(self):
 		# this is recursive
 		if self.parent == self.main:
@@ -450,10 +414,8 @@ class Element(object):
 		if self.parent != self.main:
 			self.parent.flag_for_rerender()
 		self.needs_to_rerender = True
-
 	def flag_for_pack(self):
 		self.parent._setup_for_pack()
-
 	def _setup_for_pack(self):
 		#THIS SHOULD NOT BE CALLED UNLESS YOU KNOW WHAT YOU'RE DOING!!
 		if not self.needs_to_pack:
@@ -465,7 +427,6 @@ class Element(object):
 			else:
 				level = self.main.elements_to_pack[level_name]
 			level.append(self)
-
 	def pack(self):
 		if self.layout == LAYOUT_SPLIT:
 			if self.needs_to_pack: # NECESSARY
@@ -771,7 +732,6 @@ class Element(object):
 				self.rendered_surface.fill(self.bg)
 		else:
 			self.rendered_surface.fill((0,0,0,0))
-
 	def rerender_text(self):
 		if self.text != "":
 			img = self.font.render(self.text,True,self.text_color)
@@ -780,15 +740,12 @@ class Element(object):
 			elif self.text_align == ALIGN_MIDDLE:
 				rect = img.get_rect(center = (self.size[0]/2,self.size[1]/2))
 			self.rendered_surface.blit(img, rect)
-
 	def rerender_foreground(self):
 		pass
-
 	def rerender_children(self):
 		for child in self.children:
 			if child is not None:
 				child.render()
-
 	def rerender(self):
 		# this is redrawing it's elements to the rendered surface
 		if self.needs_to_rerender:
@@ -806,7 +763,6 @@ class Element(object):
 			self.rerender_text()
 			self.rerender_children()
 			self.rerender_foreground()
-
 	def render(self):
 		self.rerender()
 		if self.parent != self.main:
@@ -827,7 +783,6 @@ class InputBox(Element):
 
 	def add_handler_valuechange(self, handler):
 		self.valuechange_handlers.append(handler)
-
 	def add_handler_submit(self, handler):
 		self.submit_handlers.append(handler)
 
@@ -859,7 +814,6 @@ class InputBox(Element):
 
 		if prev_value != self.text:
 			self.update_for_valuechange()
-
 	def update_cursor_pos(self):
 		if self.size != None:
 			while True:
@@ -873,7 +827,6 @@ class InputBox(Element):
 
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
-
 	def triggerMousePressed(self, mouse_pos, button):
 		if self.parent:
 			corner = self.parent.get_world_pos()
@@ -910,16 +863,12 @@ class InputBox(Element):
 				self.index = min(max(self.index,0),len(self.text))
 		self.update_cursor_pos()
 		self.flag_for_rerender()
-
 	def triggerGetFocus(self):
 		self.flag_for_rerender()
-
 	def triggerLoseFocus(self):
 		self.flag_for_rerender()
-
 	def triggerValueChange(self):
 		pass
-
 	def triggerSubmit(self):
 		pass
 
@@ -927,7 +876,6 @@ class InputBox(Element):
 		self.triggerValueChange()
 		for handler in self.valuechange_handlers:
 			handler.handle_event_valuechange(self)
-
 	def update_for_submit(self):
 		self.triggerSubmit()
 		for handler in self.submit_handlers:
@@ -936,7 +884,6 @@ class InputBox(Element):
 	def rerender_foreground(self):
 		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*0.75),int(self.bg[1]*0.75),int(self.bg[2]*0.75)), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
 		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*0.9),int(self.bg[1]*0.9),int(self.bg[2]*0.9)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
-
 	def rerender_text(self):
 		img = self.main.font.render(self.text[max(self.offset,0):],True,self.text_color)
 		self.rendered_surface.blit(img,(2,2))
@@ -958,7 +905,6 @@ class Button(Element):
 
 	def add_handler_submit(self, handler):
 		self.submit_handlers.append(handler)
-
 	def update_for_submit(self):
 		self.triggerSubmit()
 		for handler in self.submit_handlers:
@@ -966,17 +912,14 @@ class Button(Element):
 
 	def triggerSubmit(self):
 		pass
-
 	def triggerMousePressed(self, mouse_pos, button):
 		if button == 1:
 			self.update_for_submit()
-
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
 
 	def handle_event_mousehover(self, widget, mouse_pos_local):
 		self.flag_for_rerender()
-
 	def handle_event_mouseout(self, widget, mouse_pos_local):
 		self.flag_for_rerender()
 
@@ -984,7 +927,6 @@ class Button(Element):
 		img = self.main.font.render(self.text, True, self.text_color)
 		rect = img.get_rect(center = (self.size[0]/2,self.size[1]/2))
 		self.rendered_surface.blit(img, rect)
-
 	def rerender_background(self):
 		if self.bg != None:
 			if self.hover:
@@ -992,7 +934,6 @@ class Button(Element):
 			else:
 				color = (int(self.bg[0]*0.80),int(self.bg[1]*0.80),int(self.bg[2]*0.80))
 			self.rendered_surface.fill(color)
-
 	def rerender_foreground(self):
 		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*1),int(self.bg[1]*1),int(self.bg[2]*1)), False, [(0,self.size[1]),(0,0),(self.size[0],0)], 1)
 		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*0.75),int(self.bg[1]*0.75),int(self.bg[2]*0.75)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)], 1)
@@ -1019,7 +960,6 @@ class ScrollBar(Element):
 	def triggerMousePressed(self, mouse_pos, button):
 		if button in (1,3):
 			self.grabbed = True
-
 	def triggerMouseMove(self, mouse_pos):
 		if self.grabbed:
 			if not (self.main.mouse_button[0] or self.main.mouse_button[2]):
@@ -1036,10 +976,8 @@ class ScrollBar(Element):
 					pos = min(max(pos,0),size)
 					size = float(size)
 					self.set_scrolled_amount(min(int(lerp(self.min_scroll,self.max_scroll+1,invlerp(0,size,pos))),self.max_scroll))
-
 	def triggerMouseHover(self, mouse_pos):
 		pygame.mouse.set_cursor(*pygame.cursors.tri_left)
-
 	def triggerScroll(self, amount):
 		pass
 
@@ -1050,7 +988,6 @@ class ScrollBar(Element):
 			if self.scrolled_amount < self.min_scroll or self.scrolled_amount > self.max_scroll:
 				self.set_scrolled_amount(min(max(self.scrolled_amount,self.min_scroll),self.max_scroll))
 			self.flag_for_rerender()
-
 	def set_scrolled_amount(self, amount):
 		if amount != self.scrolled_amount:
 			self.update_for_scroll(amount)
@@ -1059,14 +996,12 @@ class ScrollBar(Element):
 
 	def flag_for_pack(self):
 		pass
-
 	def _setup_for_pack(self):
 		pass
 
 	def rerender_background(self):
 		if self.bg != None:
 			self.rendered_surface.fill((self.bg[0]/2,self.bg[1]/2,self.bg[2]/2,127))
-
 	def rerender_foreground(self):
 		pygame.draw.rect(self.rendered_surface,(self.bg[0]/2,self.bg[1]/2,self.bg[2]/2),(0,0,self.size[0],self.size[1]),1)
 		#pygame.draw.lines(self.rendered_surface, (self.bg_color[0]/4,self.bg_color[1]/4,self.bg_color[2]/4), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
@@ -1096,7 +1031,6 @@ class ContextMenuElement(Element):
 
 	def triggerKeyDown(self, unicode, key):
 		self.delete_me()
-
 	def triggerLoseFocus(self):
 		self.delete_me()
 

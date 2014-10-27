@@ -170,6 +170,7 @@ class GameServer(object):
 				elif self._rm_replace_card(message, key, player): pass
 				elif self._rm_new_goal(message, key, player): pass
 				elif self._rm_swap_card(message, key, player): pass
+				elif self._rm_swap_gender(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -596,6 +597,53 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't swap right now!")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't swap a card, the game hasn't started...")
+			return True
+		return False
+	def _rm_swap_gender(self, message, key, player):
+		if message.startswith("SWAP_GENDER:"):
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("SWAP_GENDER:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						selected_card = None
+						for y in xrange(self.card_table.size[1]):
+							for x in xrange(self.card_table.size[0]):
+								card = self.card_table.pony_cards[y][x]
+								if card != None:
+									if self.master_deck.cards.index(card) == i:
+										selected_card = card
+										break
+							if selected_card != None:
+								break
+						if selected_card != None:
+							if (selected_card.temp_gender == None and selected_card.gender in ("male","female")) or (selected_card.temp_gender in ("male","female")):
+								#we swap this card's gender.
+								if selected_card.temp_gender == None:
+									gender = selected_card.gender
+								else:
+									gender = selected_card.temp_gender
+								if gender == "male":
+									gender = "female"
+								else:
+									gender = "male"
+								self.history.take_snapshot(SNAPSHOT_SWAP_GENDER, player.name+" swapped '"+selected_card.name+"'s gender! It is now "+gender+".")
+								selected_card.set_temp_gender(gender)
+								self.send_full_history_all()
+							else:
+								self.server.sendto(player.address,"ADD_CHAT:SERVER: This card's gender can't be swapped!")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...")
+					else:
+						print "ERROR! Couldn't find card with this id."
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't swap card's gender.")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't swap genders, the game hasn't started...")
 			return True
 		return False
 

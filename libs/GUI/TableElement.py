@@ -20,6 +20,8 @@ class TableElement(Element):
 		self.main.client.send("DISCARD_CARD:"+str(args[0]))
 	def swap_card(self, args):
 		self.main.client.send("SWAP_CARD:"+str(args[0]))
+	def swap_gender(self, args):
+		self.main.client.send("SWAP_GENDER:"+str(args[0]))
 
 	def get_graphical_pos(self, index, card_type):
 		if card_type == "pony":
@@ -114,7 +116,7 @@ class TableElement(Element):
 						element.set_card(card)
 						element.menu_info = [("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)])),
 											 ("Action: Swap", self.swap_card, tuple([self.main.master_deck.cards.index(card)])),
-											 ("Action: Set Gender", self.do_nothing),
+											 ("Action: Swap Gender", self.swap_gender, tuple([self.main.master_deck.cards.index(card)])),
 											 ("Action: Set Race", self.do_nothing),
 											 ("Action: Give Keyword", self.do_nothing),
 											 ("Action: Imitate Card", self.do_nothing)]
