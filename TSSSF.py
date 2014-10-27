@@ -260,7 +260,7 @@ class Main(object):
 				self.tooltip_surface.blit(text_img,(2,1+(i*self.tiny_font.get_height())))
 		elif type(self.tooltip_text) == Card:
 			size = (int((CARD_SIZE[0]*self.screen_size[1])/float(CARD_SIZE[1])),self.screen_size[1])
-			if size[1] > CARD_SIZE:
+			if size[1] > CARD_SIZE[1]:
 				size = list(CARD_SIZE)
 			self.tooltip_surface = pygame.Surface(size)
 			self.tooltip_surface.fill(c1)

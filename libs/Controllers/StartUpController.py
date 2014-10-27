@@ -41,7 +41,7 @@ class StartUpController(Controller):
 						print("loading and parsing '" + match + "'")
 						pc = open_pickledcard(match)
 						card = Card()
-						card.parsePickledCard(pc)
+						card.parsePickledCard(pc, CLIENT_PRERENDER_DECK)
 						card.filename = f
 						self.main.my_master_deck.cards.append(card)
 			else:

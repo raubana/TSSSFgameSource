@@ -130,8 +130,9 @@ class MasterDeck(object):
 
 class Card(object):
 	def __init__(self):
-		self.original_image = pygame.Surface(CARD_SIZE, pygame.SRCALPHA)
-		self.image = self.original_image.copy()
+		self.pc_image = None
+		self.pc_attributes = ""
+		self.image = pygame.Surface(CARD_SIZE, pygame.SRCALPHA)
 		self.name = None
 		self.type = None
 		self.gender = None
@@ -261,85 +262,90 @@ class Card(object):
 		self.set_temp_gender(str(card.gender))
 		self.set_temp_race(str(card.race))
 		self.set_temp_keywords(list(card.keywords))
-		img = pygame.Surface((int((297/394.)*card.original_image.get_width()),
-										  int((215/544.)*card.original_image.get_height())),
+		img = pygame.Surface((int((297/394.)*card.image.get_width()),
+										  int((215/544.)*card.image.get_height())),
 										 SRCALPHA)
-		img.blit(card.original_image, (-int((63/394.)*card.original_image.get_width()),
-										  -int((86/544.)*card.original_image.get_height())))
+		img.blit(card.get_base_image(), (-int((63/394.)*card.image.get_width()),
+										  -int((86/544.)*card.image.get_height())))
 		self.set_temp_image(img)
 		self.temp_card_being_imitated = master_deck.cards.index(card)
 
 	def parsePickledCard(self, pc, render=True):
 		#we need to parse each attribute individually in preparation for proper parsing.
-		self.attributes = str(pc.attr)
+		self.pc_attributes = str(pc.attr)
 		L = pc.attr.split("\n")
-		attributes = {}
+		self.attributes = {}
 		for l in L:
 			try:
 				spl = break_apart_line(l)
-				attributes[spl[0]] = spl[1]
+				self.attributes[spl[0]] = spl[1]
 			except:
 				pass
 		#now we get our type - this should be the very first attribute
-		if len(attributes) == 0:
+		if len(self.attributes) == 0:
 			raise EOFError("No attributes in card.")
-		if "type" not in attributes:
+		if "type" not in self.attributes:
 			raise EOFError("No type in card.")
-		elif attributes["type"] in ("pony", "ship", "goal"):
-			self.type = attributes["type"]
+		elif self.attributes["type"] in ("pony", "ship", "goal"):
+			self.type = self.attributes["type"]
 		else:
-			raise SyntaxError("Types are restricted to 'pony','ship', and 'goal'. Instead we got '" + attributes["type"] + "'")
+			raise SyntaxError("Types are restricted to 'pony','ship', and 'goal'. Instead we got '" + self.attributes["type"] + "'")
 		#TODO: Do individualized parsing of attributes for each type of card.
-		if "name" in attributes:
-			self.name = attributes["name"].replace("\\n"," ")
-			self.printed_name = attributes["name"]
-		if "name_font_size" in attributes:
-			self.printed_name_size = attributes["name_font_size"]
-		if "power" in attributes:
-			self.power = attributes["power"]
-		if "gender" in attributes:
-			self.gender = attributes["gender"]
-		if "race" in attributes:
-			self.race = attributes["race"]
-		if "keywords" in attributes:
-			keywords = attributes["keywords"].split(",")
+		if "name" in self.attributes:
+			self.name = self.attributes["name"].replace("\\n"," ")
+			self.printed_name = self.attributes["name"]
+		if "name_font_size" in self.attributes:
+			self.printed_name_size = self.attributes["name_font_size"]
+		if "power" in self.attributes:
+			self.power = self.attributes["power"]
+		if "gender" in self.attributes:
+			self.gender = self.attributes["gender"]
+		if "race" in self.attributes:
+			self.race = self.attributes["race"]
+		if "keywords" in self.attributes:
+			keywords = self.attributes["keywords"].split(",")
 			self.keywords = []
 			for keyword in keywords:
 				self.keywords.append(keyword.strip())
 		#THIS PART IS STRICTLY FOR TESTING PURPOSES
-		if "temp_name" in attributes:
-			self.temp_name = attributes["temp_name"]
-		if "temp_printed_name" in attributes:
-			self.temp_printed_name = attributes["temp_printed_name"]
-		if "temp_printed_name_size" in attributes:
-			self.temp_printed_name_size = attributes["temp_printed_name_size"]
-		if "temp_gender" in attributes:
-			self.temp_gender = attributes["temp_gender"]
-		if "temp_race" in attributes:
-			self.temp_race = attributes["temp_race"]
-		if "temp_keywords" in attributes:
-			keywords = attributes["temp_keywords"].split(",")
+		if "temp_name" in self.attributes:
+			self.temp_name = self.attributes["temp_name"]
+		if "temp_printed_name" in self.attributes:
+			self.temp_printed_name = self.attributes["temp_printed_name"]
+		if "temp_printed_name_size" in self.attributes:
+			self.temp_printed_name_size = self.attributes["temp_printed_name_size"]
+		if "temp_gender" in self.attributes:
+			self.temp_gender = self.attributes["temp_gender"]
+		if "temp_race" in self.attributes:
+			self.temp_race = self.attributes["temp_race"]
+		if "temp_keywords" in self.attributes:
+			keywords = self.attributes["temp_keywords"].split(",")
 			self.temp_keywords = []
 			for keyword in keywords:
 				self.temp_keywords.append(keyword.strip())
 
-		if render:
-			#finally we need our image
-			if "template" in attributes and attributes["template"] == "True":
-				img = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
-				template = Templatizer.create_template_from_attributes(attributes, img)
-				self.original_image = template.generate_image()
-			else:
-				self.original_image = pygame.image.load(io.BytesIO(pc.img))#.convert_alpha()
-			if self.original_image.get_size() != CARD_SIZE:
-				self.original_image = pygame.transform.smoothscale(self.original_image, CARD_SIZE)
+		self.pc_image = pygame.image.load(io.BytesIO(pc.img))
 		self.reset()
 		self.flag_for_rerender()
+		if render:
+			self.rerender()
+
+	def get_base_image(self):
+		if "template" in self.attributes and self.attributes["template"] == "True":
+			template = Templatizer.create_template_from_attributes(self.attributes, self.pc_image)
+			image = template.generate_image()
+		else:
+			image = self.pc_image.copy()
+		if image.get_size() != CARD_SIZE:
+			image = pygame.transform.smoothscale(image, CARD_SIZE)
+		#image = apply_shadow(image,5)
+		return image
 
 	def rerender(self):
 		if self.flagged_for_rerender:
+			print self.name+", RERENDERED"
 			self.flagged_for_rerender = False
-			self.image = self.original_image.copy()
+			self.image = self.get_base_image()
 			if self.temp_image != None or self.temp_keywords!=None or self.temp_race!=None or self.temp_gender!=None:
 				#self.image.fill((220,220,220), None, special_flags = BLEND_RGB_MULT)
 				#We draw out temporary changes.

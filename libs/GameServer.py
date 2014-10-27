@@ -262,7 +262,7 @@ class GameServer(object):
 	def _rm_request_cardfile_attributes(self, message, key, player):
 		if message.startswith("REQUEST_CARDFILE_ATTRIBUTES:"):
 			index = int(message[len("REQUEST_CARDFILE_ATTRIBUTES:"):])
-			data = "CARDFILE_ATTRIBUTES:"+str(index)+":"+self.master_deck.cards[index].attributes
+			data = "CARDFILE_ATTRIBUTES:"+str(index)+":"+self.master_deck.cards[index].pc_attributes
 			#print "SENDING CARD ATTRIBUTES: "+data[:100]
 			self.server.sendto(player.address,data)
 			return True
@@ -530,7 +530,7 @@ class GameServer(object):
 						if selected_card != None:
 							if len(self.goal_deck.cards) > 0:
 								#we attempt to replace with this card.
-								new_goal = self.goal_deck.cards[-1]
+								new_goal = self.goal_deck.cards[0]
 								self.history.take_snapshot(SNAPSHOT_NEW_GOAL, player.name+" discarded '"+selected_card.name+"' to the bottom of the goal deck and drew '"+new_goal.name+"' to replace it.")
 								self.send_full_history_all()
 								self.server.sendall("ALERT:draw_card_from_table")

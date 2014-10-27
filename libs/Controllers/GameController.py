@@ -7,11 +7,15 @@ from ..GUI.TimerElement import *
 from ..GUI.TableElement import *
 from ..GUI.HistoryGUI import *
 
-import string, os
+import string, os, time
 
 class GameController(Controller):
 	def init(self):
 		self.main.client.throttled = True
+
+		self.render_card_frequency = 0.5
+		self.last_rendered_card = 0
+		self.all_cards_rendered = bool(CLIENT_PRERENDER_DECK)
 
 		#Clear the gui
 		self.main.updated_elements = []
@@ -291,11 +295,11 @@ class GameController(Controller):
 							if part2[0] == "N":
 								self.pony_discard_element.set_bg((255,255,255))
 							else:
-								self.pony_discard_element.set_bg(ScaleImage(self.main.master_deck.card[int(part2[0])].image))
+								self.pony_discard_element.set_bg(ScaleImage(self.main.master_deck.card[int(part2[0])].get_image()))
 							if part2[1] == "N":
 								self.pony_discard_element.set_bg((255,255,255))
 							else:
-								self.ship_discard_element.set_bg(ScaleImage(self.main.master_deck.card[int(part2[1])].image))
+								self.ship_discard_element.set_bg(ScaleImage(self.main.master_deck.card[int(part2[1])].get_image()))
 						except:
 							print "ERROR! Received bad decks info. E"
 					else:
@@ -413,6 +417,21 @@ class GameController(Controller):
 		return False
 
 	#Misc. Functions
+	def update(self):
+		if not self.all_cards_rendered:
+			t = time.time()
+			if t-self.last_rendered_card >= self.render_card_frequency:
+				self.last_rendered_card = t
+				match = None
+				for card in self.main.master_deck.cards:
+					if card.flagged_for_rerender:
+						match = card
+						break
+				if match:
+					match.rerender()
+				else:
+					self.all_cards_rendered = True
+
 	def find_element_for_card(self, card):
 		for child in self.bottom_element.children:
 			if type(child) == CardElement and child.card == card:

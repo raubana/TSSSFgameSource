@@ -10,7 +10,7 @@ class CardElement(Element):
 	def set_card(self, card, alpha=255, angle=0):
 		self.card = card
 		self.tooltip = card
-		img = card.image.copy()
+		img = card.get_image().copy()
 		if alpha < 255:
 			img.fill((255,255,255,alpha),None,special_flags=BLEND_RGBA_MULT)
 			self.alpha = alpha
