@@ -3,7 +3,7 @@ import os
 
 import pygame
 from pygame.locals import *
-pygame.mixer.pre_init(buffer = 2**9)
+pygame.mixer.pre_init(frequency=44100 ,buffer = 2**9)
 pygame.init()
 
 from libs.GUI.GUI import *
@@ -69,6 +69,8 @@ class Main(object):
 		self.sounds["drink_call"] = pygame.mixer.Sound("snds/game/drink_call.ogg")
 		self.sounds["players_turn"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.ogg")
 		self.sounds["players_turn_not_focused"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.ogg")
+
+		self.sounds["gender_swapped"] = pygame.mixer.Sound("snds/game/attribute_change/gender_swapped.ogg")
 
 		pygame.key.set_repeat(300, 30)
 

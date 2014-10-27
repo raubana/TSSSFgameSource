@@ -632,6 +632,7 @@ class GameServer(object):
 								else:
 									gender = "male"
 								self.history.take_snapshot(SNAPSHOT_SWAP_GENDER, player.name+" swapped '"+selected_card.name+"'s gender! It is now "+gender+".")
+								self.server.sendall("ALERT:gender_swapped")
 								selected_card.set_temp_gender(gender)
 								self.send_full_history_all()
 							else:
