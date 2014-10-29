@@ -15,6 +15,13 @@ class Player(object):
 
 	def reset(self):
 		self.hand = Deck.Deck()
+		self.won_goals = Deck.Deck()
 		self.is_ready = False # This is the players vote regarding starting the game or not
 		self.last_toggled_ready = 0
+
+	def get_score(self):
+		score = 0
+		for card in self.won_goals.cards:
+			score += card.worth
+		return score
 

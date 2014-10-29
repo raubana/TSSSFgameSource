@@ -308,22 +308,8 @@ class Card(object):
 			self.keywords = []
 			for keyword in keywords:
 				self.keywords.append(keyword.strip())
-		#THIS PART IS STRICTLY FOR TESTING PURPOSES
-		if "temp_name" in self.attributes:
-			self.temp_name = self.attributes["temp_name"]
-		if "temp_printed_name" in self.attributes:
-			self.temp_printed_name = self.attributes["temp_printed_name"]
-		if "temp_printed_name_size" in self.attributes:
-			self.temp_printed_name_size = self.attributes["temp_printed_name_size"]
-		if "temp_gender" in self.attributes:
-			self.temp_gender = self.attributes["temp_gender"]
-		if "temp_race" in self.attributes:
-			self.temp_race = self.attributes["temp_race"]
-		if "temp_keywords" in self.attributes:
-			keywords = self.attributes["temp_keywords"].split(",")
-			self.temp_keywords = []
-			for keyword in keywords:
-				self.temp_keywords.append(keyword.strip())
+		if "worth" in self.attributes:
+			self.worth = int(self.attributes["worth"])
 
 		self.pc_image = pygame.image.load(io.BytesIO(pc.img))
 		self.reset()

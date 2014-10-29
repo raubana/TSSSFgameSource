@@ -11,6 +11,10 @@ import string, os, time
 
 class GameController(Controller):
 	def init(self):
+		#we try to get the user's attention.
+		if self.main.trayicon != None:
+			self.main.trayicon.ShowBalloon("Connected!","You're now loaded and on the server.", 15*1000)
+
 		self.main.client.throttled = True
 
 		self.render_card_frequency = 0.5
@@ -18,15 +22,17 @@ class GameController(Controller):
 		self.all_cards_rendered = bool(CLIENT_PRERENDER_DECK)
 
 		#Clear the gui
+		#LEVEL 0
 		self.main.updated_elements = []
 		self.main.main_element.clear()
 		self.main.main_element.set_text("")
 		#sets up main GUI
 		self.main.main_element.layout = LAYOUT_SPLIT
 
+		#LEVEL 1
 		self.left_element = None#Element(self.main, self.main.main_element, None, (0,"100%"))
 		self.main.main_element.children.append(None)
-		self.top_element = HistoryElement(self.main, self.main.main_element, None, ("100%",50))
+		self.top_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.right_element = Element(self.main, self.main.main_element, None, (150,"100%"))
 		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.table_element = TableElement(self.main, self.main.main_element, None, ("100%","100%"))
@@ -36,17 +42,14 @@ class GameController(Controller):
 		self.bottom_element.add_handler_keydown(self)
 		self.table_element.add_handler_keydown(self)
 
-		self.top_element.set_bg((175,125,175))
 		self.right_element.set_bg(None)
 		self.bottom_element.set_bg((175,125,175))
 		self.table_element.set_bg((182,169,208))
 
 		self.right_element.layout = LAYOUT_VERTICAL
-		self.top_element.layout = LAYOUT_HORIZONTAL
+		self.top_element.layout = LAYOUT_VERTICAL
 		self.bottom_element.layout = LAYOUT_HORIZONTAL
 
-		self.top_element.h_scrollable = True
-		self.top_element.always_show_h_scroll = True
 		self.bottom_element.h_scrollable = True
 		self.bottom_element.always_show_h_scroll = True
 		self.table_element.h_scrollable = True
@@ -56,6 +59,9 @@ class GameController(Controller):
 		self.table_element.allow_rightclick_multi_axis_scrolling = True
 		self.table_element.force_fullrange_scrolling = True
 
+		#LEVEL 2
+		self.history_element = HistoryElement(self.main, self.top_element, None, ("100%",50))
+		self.chat_element = Element(self.main, self.top_element, None, ("100%","100%"))
 		self.player_list_element = Element(self.main, self.right_element, None, ("100%",50))
 		self.timer_element = TimerElement(self.main, self.right_element, None, ("100%", int(self.main.timer_font.get_height()*1.2)))
 		self.decks_element = Element(self.main, self.right_element, None, ("100%",75))
@@ -73,24 +79,35 @@ class GameController(Controller):
 
 		self.timer_element.set_text_align(ALIGN_MIDDLE)
 
+		self.history_element.set_bg((175,125,175))
 		self.timer_element.set_bg((175,125,175))
 		self.decks_element.set_bg((175,125,175))
 		self.public_goals_element.set_bg((173,204,227))
 
+		self.history_element.layout = LAYOUT_HORIZONTAL
+		self.chat_element.layout = LAYOUT_VERTICAL
 		self.player_list_element.layout = LAYOUT_VERTICAL
 		self.public_goals_element.layout = LAYOUT_VERTICAL
 
+		self.history_element.h_scrollable = True
+		self.history_element.always_show_h_scroll = True
+		self.chat_element.v_scrollable = True
+		self.chat_element.always_show_v_scroll = True
 		self.public_goals_element.v_scrollable = True
 		self.public_goals_element.always_show_v_scroll = True
 
+		self.chat_element.snag_at_bottom = True
+
 		self.timer_element.menu_info.append(("End Turn", self.end_turn))
 
+		#LEVEL 3
 		self.pony_deck_wrapper_element = Element(self.main, self.decks_element, None, ("33%","50%"), bg=None)
 		self.ship_deck_wrapper_element = Element(self.main, self.decks_element, None, ("50%","50%"), bg=None)
 		self.goal_deck_wrapper_element = Element(self.main, self.decks_element, None, ("100%","50%"), bg=None)
 		self.pony_discard_wrapper_element = Element(self.main, self.decks_element, None, ("33%","100%"), bg=None)
 		self.ship_discard_wrapper_element = Element(self.main, self.decks_element, None, ("50%","100%"), bg=None)
 
+		#LEVEL 4
 		self.pony_deck_element = DeckElement(self.main, self.pony_deck_wrapper_element, None, ("50%","100%"),
 										 	bg=ScaleImage(pygame.image.load("imgs/cardbacks/cardback_pony.png")))
 		self.pony_deck_count_element = Element(self.main, self.pony_deck_wrapper_element, None, ("100%","100%"),
@@ -172,9 +189,12 @@ class GameController(Controller):
 		self.main.client.send("REPLACE_CARD:"+str(args[0]))
 	def new_goal(self, args):
 		self.main.client.send("NEW_GOAL:"+str(args[0]))
+	def win_goal(self, args):
+		self.main.client.send("WIN_GOAL:"+str(args[0]))
 
 	def read_message(self, message):
-		if self._rm_playerlist(message): pass
+		if self._rm_add_chat(message): pass
+		elif self._rm_playerlist(message): pass
 		elif self._rm_playerhand(message): pass
 		elif self._rm_publicgoals(message): pass
 		elif self._rm_cardtable(message): pass
@@ -190,6 +210,47 @@ class GameController(Controller):
 		return True
 
 	#Message Parsing Functions
+	def _rm_add_chat(self, message):
+		if message.startswith("ADD_CHAT:"):
+			chat = message[len("ADD_CHAT:"):]
+			if len(self.chat_element.children) >= 25:
+				self.chat_element._remove_child(self.chat_element.children[0])
+			element = Element(self.main, self.chat_element, None, ("100%",self.main.font.get_height()))
+			color = (0,0,0,255)
+			bg_color = (255,255,255,127)
+			if chat.startswith("SERVER:"):
+				chat = chat[len("SERVER:"):]
+				text = chat
+				color = (64,0,64,255)
+				bg_color = (255,127,255,127)
+			elif chat.startswith("PLAYER:"):
+				chat = chat[len("PLAYER:"):]
+				i = chat.find(":")
+				if i != -1:
+					name = chat[:i]
+					msg = chat[i+1:]
+				else:
+					name = "?"
+					msg = chat
+				msg = msg.strip()
+				if msg.startswith("/me "):
+					msg = msg[len("/me "):]
+					text = name+" "+msg
+					color = (64,64,64,255)
+				elif msg.startswith(">"):
+					msg = msg[len(">"):]
+					text = "> "+name+": "+msg
+					color = (0,96,0,255)
+				else:
+					text = chat
+				self.main.play_sound("chat")
+			else:
+				text = chat
+			element.set_text(text)
+			element.set_text_color(color)
+			element.set_bg(bg_color)
+			return True
+		return False
 	def _rm_playerlist(self, message):
 		if message.startswith("PLAYERLIST:"):
 			playerlist = message[len("PLAYERLIST:"):].split(",")
@@ -258,7 +319,7 @@ class GameController(Controller):
 				element = CardElement(self.main,self.public_goals_element,None,size)
 				element.set_card(card)
 				element.padding = (3,3,3,3)
-				element.menu_info = [("Win Goal", self.do_nothing),
+				element.menu_info = [("Win Goal", self.win_goal, tuple([self.main.master_deck.cards.index(card)])),
 									 ("Action: New Goal", self.new_goal, tuple([i]))]
 			return True
 		return False
@@ -341,7 +402,7 @@ class GameController(Controller):
 	def _rm_history_full(self, message):
 		if message.startswith("HISTORY_FULL:"):
 			s = message[len("HISTORY_FULL:"):]
-			self.top_element.parse_full_history(s)
+			self.history_element.parse_full_history(s)
 			return True
 		return False
 	def _rm_modified_card(self, message):
@@ -451,6 +512,8 @@ class GameController(Controller):
 			self.chat_input_element.add_handler_submit(self)
 			self.chat_input_element.add_handler_losefocus(self)
 			self.chat_input_element.give_focus()
+			self.top_element.set_size(("100%","100%"))
+
 
 	def handle_event_submit(self, widget):
 		if (not (self.chat_input_element == None)) and widget == self.chat_input_element:
@@ -466,3 +529,4 @@ class GameController(Controller):
 		if (not (self.chat_input_element == None)) and widget == self.chat_input_element:
 			self.main.main_element._remove_child(self.chat_input_element)
 			self.chat_input_element = None
+			self.top_element.set_size(("100%",100))

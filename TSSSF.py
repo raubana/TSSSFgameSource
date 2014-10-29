@@ -72,6 +72,8 @@ class Main(object):
 
 		self.sounds["gender_swapped"] = pygame.mixer.Sound("snds/game/attribute_change/gender_swapped.ogg")
 
+		self.sounds["won_goal"] = pygame.mixer.Sound("snds/game/misc/win_goal.ogg")
+
 		pygame.key.set_repeat(300, 30)
 
 		# SETS UP THE GUI
@@ -309,10 +311,7 @@ class Main(object):
 			if self.client.connected:
 				if len(self.client.received_messages) > 0:
 					message = self.client.received_messages.pop(0)
-					if message == PING_MESSAGE:
-						self.client.send(PONG_MESSAGE)
-					elif message == PONG_MESSAGE:
-						pass
+					"""
 					elif message.startswith("ADD_CHAT:"):
 						chat = message[len("ADD_CHAT:"):]
 						self.chat_sprites.append(ChatSprite(self,(0,0),(1,1),20))
@@ -341,6 +340,11 @@ class Main(object):
 						else:
 							self.chat_sprites[-1].set_text(chat)
 						self.main_element.flag_for_rerender()
+					"""
+					if message == PING_MESSAGE:
+						self.client.send(PONG_MESSAGE)
+					elif message == PONG_MESSAGE:
+						pass
 					elif message.startswith("ALERT:"):
 						sound_name = message[len("ALERT:"):]
 						self.play_sound(sound_name)
@@ -361,6 +365,10 @@ class Main(object):
 				self.play_sound("lost_connection")
 				self.controller = ConnectMenuController(self)
 				self.controller.message_element.set_text("Lost Connection")
+
+				#we try to get the user's attention.
+				if self.trayicon != None:
+					self.trayicon.ShowBalloon("Whoops","You've lost connection.", 15*1000)
 
 	def pack(self):
 		if self.needs_to_pack:

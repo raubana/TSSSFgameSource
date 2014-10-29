@@ -6,6 +6,9 @@ import string, os, random, math
 
 class ConnectMenuController(Controller):
 	def init(self):
+		for card in self.main.my_master_deck.cards:
+			card.reset()
+
 		#Clear the gui
 		self.main.updated_elements = []
 		self.main.main_element.clear()

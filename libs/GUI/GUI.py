@@ -4,7 +4,7 @@ from pygame.locals import*
 from ..locals import *
 from ..common import lerp, invlerp
 
-def translate_size_to_pixels(size,remaining):
+def translate_size_to_pixels(size,remaining,clamp=False):
 	pixels = 0
 	if type(size) == str:
 		size = size.replace(" ","")
@@ -22,6 +22,8 @@ def translate_size_to_pixels(size,remaining):
 		pixels = int(size)
 	else:
 		raise TypeError("Not a usable type")
+	if clamp:
+		pixels = min(pixels,remaining)
 	return pixels
 
 def create_context_menu(main, element, pos, menu_list):
@@ -107,6 +109,8 @@ class Element(object):
 
 		self.always_show_v_scroll = False
 		self.always_show_h_scroll = False
+
+		self.snag_at_bottom = False
 
 		self.force_fullrange_scrolling = False
 
@@ -446,8 +450,8 @@ class Element(object):
 				#First, we take care of our left child, which fills the entire left side of the element
 				child = self.children[0]
 				if child != None:
-					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
-											max(translate_size_to_pixels("100%",max_y-min_y),0))
+					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x,True),0),
+											max(translate_size_to_pixels("100%",max_y-min_y,True),0))
 					new_pos = (int(0+child.margin[0]+child.padding[0]),int(0+child.margin[1]+child.padding[1]))
 					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 					redo= False
@@ -465,8 +469,8 @@ class Element(object):
 				#next, we take care of our right child, which fills the entire right side of the element
 				child = self.children[2]
 				if child != None:
-					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
-											max(translate_size_to_pixels("100%",max_y-min_y),0))
+					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x,True),0),
+											max(translate_size_to_pixels("100%",max_y-min_y,True),0))
 					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 					new_pos = (int(max_x - new_size[0] - child.margin[2]), int(0+child.margin[1]+child.padding[1]))
 					redo= False
@@ -484,8 +488,8 @@ class Element(object):
 				#next we take care of our top child, which fills the top area between the left and right children
 				child = self.children[1]
 				if child != None:
-					size = (max(translate_size_to_pixels("100%",max_x-min_x),0),
-											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y),0))
+					size = (max(translate_size_to_pixels("100%",max_x-min_x,True),0),
+											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y,True),0))
 					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 					new_pos = (int(min_x + child.padding[0] + child.margin[0]), int(min_y + child.padding[0] + child.margin[0]))
 					redo= False
@@ -503,8 +507,8 @@ class Element(object):
 				#next we take care of our bottom child, which fills the bottom area between the left and right children
 				child = self.children[3]
 				if child != None:
-					size = (max(translate_size_to_pixels("100%",max_x-min_x),0),
-											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y),0))
+					size = (max(translate_size_to_pixels("100%",max_x-min_x,True),0),
+											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y,True),0))
 					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 					new_pos = (int(min_x + child.padding[0] + child.margin[0]), int(max_y - new_size[1] - child.margin[3]))
 					redo= False
@@ -522,8 +526,8 @@ class Element(object):
 				#finally, we add in our last element which fills the gap between the first 4 children
 				child = self.children[4]
 				if child != None:
-					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x),0),
-											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y),0))
+					size = (max(translate_size_to_pixels(child.preferred_size[0],max_x-min_x,True),0),
+											max(translate_size_to_pixels(child.preferred_size[1],max_y-min_y,True),0))
 					new_pos = (int(min_x + child.padding[0] + child.margin[0]), int(min_y + child.padding[1] + child.margin[1]))
 					new_size = 	(max(int(size[0]-child.padding[0]-child.padding[2]),1), max(int(size[1]-child.padding[1]-child.padding[3]),1))
 					redo= False
@@ -565,6 +569,8 @@ class Element(object):
 				offset[0] = -self.h_scrollbar.scrolled_amount
 			if self.v_scrollbar != None:
 				offset[1] = -self.v_scrollbar.scrolled_amount
+
+			snagged_at_bottom = self.v_scrollbar != None and self.v_scrollbar.scrolled_amount == self.v_scrollbar.max_scroll
 
 			if self.needs_to_pack: # NECESSARY
 				self.needs_to_pack = False # NECESSARY
@@ -662,7 +668,10 @@ class Element(object):
 						v_dif_max = bounds[3]
 					else:
 						v_dif_min = bounds[1]
-						v_dif_max = bounds[3] - (self.size[1]-SCROLLBAR_WIDTH)
+						if self.h_scrollable:
+							v_dif_max = bounds[3] - (self.size[1]-SCROLLBAR_WIDTH)
+						else:
+							v_dif_max = bounds[3] - (self.size[1])
 
 					if v_dif_min < 0 or v_dif_max > 0 or self.always_show_v_scroll:
 						#we will need the vertical scrollbar, so we check if one already exists, otherwise we create one
@@ -681,6 +690,10 @@ class Element(object):
 						#we need to make sure that our scrollbar is at the top of the children list
 						self.children.remove(self.v_scrollbar)
 						self.children.append(self.v_scrollbar)
+						if self.snag_at_bottom and snagged_at_bottom and self.v_scrollbar.scrolled_amount != self.v_scrollbar.max_scroll:
+							#We need to repack, this time with everything scrolled correctly.
+							self.v_scrollbar.set_scrolled_amount(self.v_scrollbar.max_scroll)
+							self._setup_for_pack()
 					else:
 						#We no longer need the vertical scrollbar, so we remove it.
 						if self.v_scrollbar != None:

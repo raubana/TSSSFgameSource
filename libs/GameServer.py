@@ -171,6 +171,7 @@ class GameServer(object):
 				elif self._rm_new_goal(message, key, player): pass
 				elif self._rm_swap_card(message, key, player): pass
 				elif self._rm_swap_gender(message, key, player): pass
+				elif self._rm_win_goal(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -647,6 +648,44 @@ class GameServer(object):
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't swap genders, the game hasn't started...")
 			return True
 		return False
+	def _rm_win_goal(self, message, key, player):
+		if message.startswith("WIN_GOAL:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("WIN_GOAL:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						selected_card = None
+						for card in self.public_goals.cards:
+							if self.master_deck.cards.index(card) == i:
+								selected_card = card
+								break
+						if selected_card != None:
+							#we attempt to replace with this card.
+							self.history.take_snapshot(SNAPSHOT_WIN_GOAL, player.name+" won the goal '"+selected_card.name+"'!")
+							self.send_full_history_all()
+							self.server.sendall("ALERT:won_goal")
+							self.public_goals.remove_card(selected_card)
+							self.server.sendall("ALERT:draw_card_from_table")
+							player.won_goals.add_card_to_top(selected_card)
+							self.server.sendall("ALERT:add_card_to_deck")
+							self.send_playerlist_all()
+							self.send_public_goals_all()
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...")
+					else:
+						print "ERROR! Couldn't find card with this id."
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't win goals!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't win a goal, the game hasn't started...")
+			return True
+		return False
 
 	#Other Stuff
 	def _check_player_status(self):
@@ -720,19 +759,23 @@ class GameServer(object):
 				self.stopTimer()
 				self.server.sendall("ADD_CHAT:SERVER: ...Aborted.")
 	def setPlayersTurn(self, i):
-		if i != self.current_players_turn:
-			self.current_players_turn = i
-			self.server.sendto(self.players[i].address, "YOUR_TURN")
-			self.send_playerlist_all()
-			self.stopTimer()
-			self.setTimerDuration(SERVER_TURN_START_DURATION)
-			self.runTimer()
-			self.history.clear()
-			self.history.take_snapshot(SNAPSHOT_TURN_START, self.players[i].name+"'s turn has started.")
-			self.send_full_history_all()
-			self.controller = None
+		self.current_players_turn = i
+		self.server.sendto(self.players[i].address, "YOUR_TURN")
+		self.send_playerlist_all()
+		self.stopTimer()
+		self.setTimerDuration(SERVER_TURN_START_DURATION)
+		self.runTimer()
+		self.history.clear()
+		self.history.take_snapshot(SNAPSHOT_TURN_START, self.players[i].name+"'s turn has started.")
+		self.send_full_history_all()
+		self.controller = None
 	def nextPlayersTurn(self):
 		self.reset_modified_cards()
+		update_goals = False
+		while len(self.public_goals.cards) < 3 and len(self.goal_deck.cards) > 0:
+			self.public_goals.add_card_to_top(self.goal_deck.draw())
+			update_goals = True
+		if update_goals: self.send_public_goals_all()
 		i = self.current_players_turn + 1
 		i %= len(self.players)
 		self.setPlayersTurn(i)
@@ -838,6 +881,7 @@ class GameServer(object):
 			if not player.is_loaded:
 				part += "L:"
 			part += player.name
+			part += " - " + str(player.get_score())
 			parts.append(part)
 			i += 1
 		i = 0
