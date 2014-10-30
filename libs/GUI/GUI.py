@@ -48,7 +48,7 @@ def create_context_menu(main, element, pos, menu_list):
 	cme.menu_list = menu_list
 	#finally we create our buttons to fill the context menu
 	for item in menu_list:
-		button = Button(main,cme,None,("100%",main.font.get_height()))
+		button = Button(main,cme,None,("100%",main.font.get_height()+4))
 		button.add_handler_submit(cme)
 		button.set_text(item[0])
 		button.set_bg((255,255,255))

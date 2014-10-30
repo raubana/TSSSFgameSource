@@ -24,6 +24,8 @@ class TableElement(Element):
 		self.main.client.send("SWAP_GENDER:"+str(args[0]))
 	def move_card(self, args):
 		self.main.client.send("MOVE_CARD:"+str(args[0]))
+	def imitate_card(self, args):
+		self.main.client.send("IMITATE_CARD:"+str(args[0]))
 
 	def get_graphical_pos(self, index, card_type):
 		if card_type == "pony":
@@ -122,7 +124,7 @@ class TableElement(Element):
 											 ("Action: Swap Gender", self.swap_gender, tuple([self.main.master_deck.cards.index(card)])),
 											 ("Action: Set Race", self.do_nothing),
 											 ("Action: Give Keyword", self.do_nothing),
-											 ("Action: Imitate Card", self.do_nothing)]
+											 ("Action: Imitate Card", self.imitate_card, tuple([self.main.master_deck.cards.index(card)]))]
 
 		#we dispose of the remaining old_elements
 		keys = old_elements.keys()

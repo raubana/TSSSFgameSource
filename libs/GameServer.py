@@ -9,6 +9,7 @@ from ServerControllers.PlayCardServerController import *
 from ServerControllers.ReplaceCardServerController import *
 from ServerControllers.SwapCardServerController import *
 from ServerControllers.MoveCardServerController import *
+from ServerControllers.ImitateCardServerController import *
 
 from ServerPlayer import Player
 import Deck
@@ -174,6 +175,8 @@ class GameServer(object):
 				elif self._rm_swap_gender(message, key, player): pass
 				elif self._rm_win_goal(message, key, player): pass
 				elif self._rm_move_card(message, key, player): pass
+				elif self._rm_imitate_card(message, key, player): pass
+				elif self._rm_cancel_action(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -451,9 +454,9 @@ class GameServer(object):
 									self.send_full_history_all()
 									self.server.sendall("ALERT:draw_card_from_hand")
 									if selected_card.type == "pony":
-										self.pony_discard.add_card_to_top(selected_card)
+										self.pony_discard.add_card_to_bottom(selected_card)
 									elif selected_card.type == "ship":
-										self.ship_discard.add_card_to_top(selected_card)
+										self.ship_discard.add_card_to_bottom(selected_card)
 									else:
 										print "ERROR! This card was of a type that can't be discarded."
 									player.hand.remove_card(selected_card)
@@ -464,10 +467,10 @@ class GameServer(object):
 									self.send_full_history_all()
 									self.server.sendall("ALERT:draw_card_from_table")
 									if location[0] == "pony":
-										self.pony_discard.add_card_to_top(selected_card)
+										self.pony_discard.add_card_to_bottom(selected_card)
 										self.card_table.pony_cards[location[2]][location[1]] = None
 									else:
-										self.ship_discard.add_card_to_top(selected_card)
+										self.ship_discard.add_card_to_bottom(selected_card)
 										if location[0] == "h ship":
 											self.card_table.h_ship_cards[location[2]][location[1]] = None
 										elif location[0] == "v ship":
@@ -733,6 +736,60 @@ class GameServer(object):
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't move a card, the game hasn't started...")
 			return True
 		return False
+	def _rm_imitate_card(self, message, key, player):
+		if message.startswith("IMITATE_CARD:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("IMITATE_CARD:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						location = None
+						selected_card = None
+						for y in xrange(self.card_table.size[1]):
+							for x in xrange(self.card_table.size[0]):
+								card = self.card_table.pony_cards[y][x]
+								if card != None:
+									if self.master_deck.cards.index(card) == i:
+										location = ("pony",x,y)
+										selected_card = card
+										break
+							if location != None:
+								break
+						if location != None:
+							#we attempt to replace with this card.
+							self.controller = ImitateCardServerController(self)
+							self.controller.selected_card = selected_card
+							self.controller.selected_card_location = location
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Pick which card you'd like to imitate.")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
+					else:
+						print "ERROR! Couldn't find card with this id."
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't make card's imitate right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't make card's imitate, the game hasn't started...")
+			return True
+		return False
+	def _rm_cancel_action(self, message, key, player):
+		if message == "CANCEL_ACTION":
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					if self.controller != None:
+						self.controller.cleanup()
+						self.controller = None
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:This action has been cancelled.")
+				else:
+					print "B"
+			else:
+				print "A"
+			return True
+		return False
 
 	#Other Stuff
 	def _check_player_status(self):
@@ -973,6 +1030,8 @@ class GameServer(object):
 		for card in self.master_deck.cards:
 			if card.is_modified:
 				self.server.sendto(player.address,card.get_modified_transmit(self.master_deck))
+	def send_card_selection_player(self, player, deck):
+		self.server.sendto(player.address,"CARDSELECTION:"+deck.get_transmit(self.master_deck))
 
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)

@@ -46,6 +46,10 @@ class SwapCardServerController(ServerController):
 							self.gameserver.server.sendall("ALERT:add_card_to_table")
 							self.gameserver.server.sendall("ALERT:add_card_to_table")
 							self.gameserver.pony_discard.add_card_to_top(selected_card)
+							if self.selected_card.temp_card_being_imitated != None:
+								self.selected_card.reset()
+							if selected_card.temp_card_being_imitated != None:
+								selected_card.reset()
 							self.gameserver.card_table.pony_cards[location[1]][location[0]] = self.selected_card
 							self.gameserver.card_table.pony_cards[self.selected_card_location[1]][self.selected_card_location[0]] = selected_card
 							self.gameserver.card_table.refactor() #Pointless, but I'm doing it anyways.

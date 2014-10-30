@@ -32,7 +32,7 @@ class GameController(Controller):
 		#LEVEL 1
 		self.left_element = None#Element(self.main, self.main.main_element, None, (0,"100%"))
 		self.main.main_element.children.append(None)
-		self.top_element = Element(self.main, self.main.main_element, None, ("100%",100))
+		self.top_element = Element(self.main, self.main.main_element, None, ("100%",75))
 		self.right_element = Element(self.main, self.main.main_element, None, (150,"100%"))
 		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.table_element = TableElement(self.main, self.main.main_element, None, ("100%","100%"))
@@ -48,10 +48,8 @@ class GameController(Controller):
 
 		self.right_element.layout = LAYOUT_VERTICAL
 		self.top_element.layout = LAYOUT_VERTICAL
-		self.bottom_element.layout = LAYOUT_HORIZONTAL
+		self.bottom_element.layout = LAYOUT_VERTICAL
 
-		self.bottom_element.h_scrollable = True
-		self.bottom_element.always_show_h_scroll = True
 		self.table_element.h_scrollable = True
 		self.table_element.v_scrollable = True
 		self.table_element.always_show_v_scroll = True
@@ -62,14 +60,20 @@ class GameController(Controller):
 		#LEVEL 2
 		self.history_element = HistoryElement(self.main, self.top_element, None, ("100%",50))
 		self.chat_element = Element(self.main, self.top_element, None, ("100%","100%"))
-		self.player_list_element = Element(self.main, self.right_element, None, ("100%",50))
+		self.player_list_element = Element(self.main, self.right_element, None, ("100%",10))
 		self.timer_element = TimerElement(self.main, self.right_element, None, ("100%", int(self.main.timer_font.get_height()*1.2)))
 		self.decks_element = Element(self.main, self.right_element, None, ("100%",75))
 		self.public_goals_element = Element(self.main, self.right_element, None, ("100%","100%"))
+		self.card_selection_element = Element(self.main, self.bottom_element, None, ("100%","0%"))
+		self.player_hand_element = Element(self.main, self.bottom_element, None, ("100%","100%"))
 
+		self.history_element.add_handler_keydown(self)
+		self.chat_element.add_handler_keydown(self)
 		self.player_list_element.add_handler_keydown(self)
 		self.decks_element.add_handler_keydown(self)
 		self.public_goals_element.add_handler_keydown(self)
+		self.card_selection_element.add_handler_keydown(self)
+		self.player_hand_element.add_handler_keydown(self)
 
 		self.timer_element.add_handler_mousepress(self)
 
@@ -83,11 +87,15 @@ class GameController(Controller):
 		self.timer_element.set_bg((175,125,175))
 		self.decks_element.set_bg((175,125,175))
 		self.public_goals_element.set_bg((173,204,227))
+		self.card_selection_element.set_bg((175/2,125/2,175/2))
+		self.player_hand_element.set_bg((175,125,175))
 
 		self.history_element.layout = LAYOUT_HORIZONTAL
 		self.chat_element.layout = LAYOUT_VERTICAL
 		self.player_list_element.layout = LAYOUT_VERTICAL
 		self.public_goals_element.layout = LAYOUT_VERTICAL
+		self.card_selection_element.layout = LAYOUT_HORIZONTAL
+		self.player_hand_element.layout = LAYOUT_HORIZONTAL
 
 		self.history_element.h_scrollable = True
 		self.history_element.always_show_h_scroll = True
@@ -95,6 +103,10 @@ class GameController(Controller):
 		self.chat_element.always_show_v_scroll = True
 		self.public_goals_element.v_scrollable = True
 		self.public_goals_element.always_show_v_scroll = True
+		self.card_selection_element.h_scrollable = True
+		self.card_selection_element.always_show_h_scroll = True
+		self.player_hand_element.h_scrollable = True
+		self.player_hand_element.always_show_h_scroll = True
 
 		self.chat_element.snag_at_bottom = True
 
@@ -196,6 +208,7 @@ class GameController(Controller):
 		if self._rm_add_chat(message): pass
 		elif self._rm_playerlist(message): pass
 		elif self._rm_playerhand(message): pass
+		elif self._rm_cardselection(message): pass
 		elif self._rm_publicgoals(message): pass
 		elif self._rm_cardtable(message): pass
 		elif self._rm_decks(message): pass
@@ -288,8 +301,8 @@ class GameController(Controller):
 	def _rm_playerhand(self, message):
 		if message.startswith("PLAYERHAND:"):
 			s = message[len("PLAYERHAND:"):]
-			self.bottom_element.clear()
-			self.bottom_element.layout = LAYOUT_HORIZONTAL
+			self.player_hand_element.clear()
+			self.player_hand_element.layout = LAYOUT_HORIZONTAL
 			if len(s) > 0:
 				hand = s.split(",")
 				scale = 0.325
@@ -298,7 +311,7 @@ class GameController(Controller):
 					s = hand[len(hand)-x-1]
 					i = int(s)
 					card = self.main.master_deck.cards[i]
-					element = CardElement(self.main,self.bottom_element,None,size)
+					element = CardElement(self.main,self.player_hand_element,None,size)
 					element.set_card(card)
 					element.padding = (3,3,3,3)
 					if card.type == "pony":
@@ -308,6 +321,27 @@ class GameController(Controller):
 					elif card.type == "ship":
 						element.menu_info = [("Play Card", self.play_card, tuple([i])),
 											 ("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
+			return True
+		return False
+	def _rm_cardselection(self, message):
+		if message.startswith("CARDSELECTION:"):
+			s = message[len("CARDSELECTION:"):]
+			self.card_selection_element.clear()
+			self.card_selection_element.layout = LAYOUT_HORIZONTAL
+			if len(s) > 0:
+				hand = s.split(",")
+				scale = 0.325
+				size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
+				for x in xrange(len(hand)):
+					s = hand[len(hand)-x-1]
+					i = int(s)
+					card = self.main.master_deck.cards[i]
+					element = CardElement(self.main,self.card_selection_element,None,size)
+					element.set_card(card)
+					element.padding = (3,3,3,3)
+				self.card_selection_element.set_size(("100%", "75%"))
+			else:
+				self.card_selection_element.set_size(("100%", "0%"))
 			return True
 		return False
 	def _rm_publicgoals(self, message):
@@ -525,6 +559,8 @@ class GameController(Controller):
 			self.chat_input_element.add_handler_losefocus(self)
 			self.chat_input_element.give_focus()
 			self.top_element.set_size(("100%","100%"))
+		elif key == K_ESCAPE:
+			self.main.client.send("CANCEL_ACTION")
 
 
 	def handle_event_submit(self, widget):
@@ -541,4 +577,4 @@ class GameController(Controller):
 		if (not (self.chat_input_element == None)) and widget == self.chat_input_element:
 			self.main.main_element._remove_child(self.chat_input_element)
 			self.chat_input_element = None
-			self.top_element.set_size(("100%",100))
+			self.top_element.set_size(("100%",75))

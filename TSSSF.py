@@ -24,7 +24,7 @@ class Main(object):
 		icon = pygame.image.load("imgs/window_icon.bmp")
 		pygame.display.set_icon(icon)
 
-		self.screen_size = (854, 480)
+		self.screen_size = (640, 480)
 		self.screen = pygame.display.set_mode(self.screen_size, RESIZABLE)
 
 		pygame.display.set_caption("TSSSF - Computer Game","TSSSF")
@@ -71,6 +71,7 @@ class Main(object):
 		self.sounds["players_turn_not_focused"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.ogg")
 
 		self.sounds["gender_swapped"] = pygame.mixer.Sound("snds/game/attribute_change/gender_swapped.ogg")
+		self.sounds["imitate_card"] = pygame.mixer.Sound("snds/game/attribute_change/imitate_card.ogg")
 
 		self.sounds["won_goal"] = pygame.mixer.Sound("snds/game/misc/win_goal.ogg")
 
@@ -167,27 +168,12 @@ class Main(object):
 			elif e.type == MOUSEBUTTONUP:
 				if e.button <= 3: self.mouse_button[e.button-1] = False
 				self.main_element.update_for_mouse_button_release(e.pos, e.button)
-
 			elif e.type == KEYDOWN:
 				self.keys[e.key] = True
 				if self.focus != None:
 					self.focus.update_for_keydown(e.unicode, e.key)
-				if self.focus == None or self.focus == self.main_element:
-					message = None
-					if e.key == K_1: message = "add_card_to_deck"
-					if e.key == K_2: message = "add_card_to_hand"
-					if e.key == K_3: message = "add_card_to_table"
-					if e.key == K_4: message = "draw_card_from_deck"
-					if e.key == K_5: message = "draw_card_from_hand"
-					if e.key == K_6: message = "draw_card_from_table"
-					if e.key == K_7: message = "place_deck"
-					if e.key == K_8: message = "remove_deck"
-					if e.key == K_9: message = "shuffle_deck"
-					if message != None:
-						self.chat_sprites.append(ChatSprite(self,(0,0),(1,1),3))
-						self.chat_sprites[-1].set_text("playing "+message,(255,255,255,255),(0,0,0,255))
-						self.play_sound(message)
-						self.main_element.flag_for_rerender()
+					if e.key == K_ESCAPE and self.client and self.focus == None:
+						self.client.send("CANCEL_ACTION")
 			elif e.type == KEYUP:
 				self.keys[e.key] = False
 				if self.focus != None:

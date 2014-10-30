@@ -41,6 +41,8 @@ class MoveCardServerController(ServerController):
 							if is_legal:
 								self.gameserver.history.take_snapshot(SNAPSHOT_MOVE_CARD, player.name+" moved the card '"+self.selected_card.name+"' on the shipping grid.")
 								self.gameserver.send_full_history_all()
+								if self.selected_card.temp_card_being_imitated != None:
+									self.selected_card.reset()
 								self.gameserver.card_table.pony_cards[self.selected_card_location[1]][self.selected_card_location[0]] = None
 								self.gameserver.card_table.pony_cards[index[1]][index[0]] = self.selected_card
 								#we remove the card from the players hand and then add the card to the shipping grid.
