@@ -12,59 +12,6 @@ OK! With that out of the way, let's get down to the nitty-gritty.
 
 
 
-
-==== INSTALLATION ====
-
-Ok, so to help test this out in it's unfinished state, there's a few things that you'll
-need to install... I'm sorry :(
-
-- Python 2.7.8              https://www.python.org/ftp/python/2.7.8/python-2.7.8.msi
-    (Do the full install)
-- Pygame 1.9.2a0            http://www.lfd.uci.edu/~gohlke/pythonlibs/#pygame
-    (Get the one that ends with win32-py2.7 and just keep clicking next)
-
-Optional, BUT RECOMMENDED:
-- GIT 2.1.0                 http://git-scm.com/downloads
-    (Just keep clicking next)
-
-Optional Stuff:
-- PIL 1.1.7                 http://effbot.org/downloads/PIL-1.1.7.win32-py2.7.exe
-    (This is only if you want to use the card editor)
-
-
-
-
-==== USING GIT ====
-
-Ok, so if you're reading this, it likely means you've already downloaded everything,
-but still...
-
-TO DOWNLOAD THIS PROJECT WITH GIT:
-  first find a location you'd like to download to.
-  Right-click that location and click 'GIT Bash'.
-  Then type in "git clone https://github.com/raubana/TSSSFgame.git".
-  and press enter. It'll automatically create a folder for you called "TSSSFgame"
-  and download the entire project to it.
-
-TO UPDATE THE PROJECT:
-  Right-click the "TSSSFgame" folder and open 'GIT Bash'. Type in 'git pull' and press
-  enter. It should update (or otherwise tell you everything is up to date).
-
-TO UPDATE THE PROJECT WHEN GIT WON'T LET YOU BECAUSE IT'S A BUTT:
-  Ok, something important to note here -
-
-  THIS METHOD IS GOING TO REMOVE EVERYTHING YOU'VE CHANGED OR ADDED
-  SO THINGS LIKE CUSTOM CARDS ARE GOING TO DISAPPEAR!!
-
-  So yeah, make sure to move them out of the folder first if you REALLY care about them.
-  OK anyways, just like the previous one, right-click the "TSSSFgame" folder and click
-  'open GIT Bash'. First type in 'git fetch --all' and press enter. Then, type in
-  'git reset --hard origin/master' and press enter. This will reset your folder and make
-  everything exactly as it is on Github.
-
-
-
-
 ==== SOMETHING WENT WRONG ====
 
 Ok, this is actually kind of a good thing, because I need to catch everything that
