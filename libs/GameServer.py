@@ -184,6 +184,7 @@ class GameServer(object):
 				elif self._rm_shuffle_ship_discard(message, key, player): pass
 				elif self._rm_discard_goal(message, key, player): pass
 				elif self._rm_draw_goal(message, key, player): pass
+				elif self._rm_draw_1_discard(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -461,9 +462,9 @@ class GameServer(object):
 									self.send_full_history_all()
 									self.server.sendall("ALERT:draw_card_from_hand")
 									if selected_card.type == "pony":
-										self.pony_discard.add_card_to_bottom(selected_card)
+										self.pony_discard.add_card_to_top(selected_card)
 									elif selected_card.type == "ship":
-										self.ship_discard.add_card_to_bottom(selected_card)
+										self.ship_discard.add_card_to_top(selected_card)
 									else:
 										print "ERROR! This card was of a type that can't be discarded."
 									player.hand.remove_card(selected_card)
@@ -474,10 +475,10 @@ class GameServer(object):
 									self.send_full_history_all()
 									self.server.sendall("ALERT:draw_card_from_table")
 									if location[0] == "pony":
-										self.pony_discard.add_card_to_bottom(selected_card)
+										self.pony_discard.add_card_to_top(selected_card)
 										self.card_table.pony_cards[location[2]][location[1]] = None
 									else:
-										self.ship_discard.add_card_to_bottom(selected_card)
+										self.ship_discard.add_card_to_top(selected_card)
 										if location[0] == "h ship":
 											self.card_table.h_ship_cards[location[2]][location[1]] = None
 										elif location[0] == "v ship":
@@ -951,6 +952,43 @@ class GameServer(object):
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw a Goal card, the game hasn't started...")
 			return True
 		return False
+	def _rm_draw_1_discard(self, message, key, player):
+		if message.startswith("DRAW_1_DISCARD:"):
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					s = message[len("DRAW_1_DISCARD:"):]
+					if s == "pony":
+						if len(self.pony_discard.cards) > 0:
+							self.history.take_snapshot(SNAPSHOT_DREW_PONY_CARD, player.name+" drew a Pony card from the discard pile.")
+							self.send_full_history_all()
+							self.server.sendall("ALERT:draw_card_from_deck")
+							self.server.sendall("ALERT:add_card_to_hand")
+							card = self.pony_discard.draw()
+							player.hand.add_card_to_top(card)
+							self.send_decks_all()
+							self.send_playerhand(player)
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:There are no Pony cards to draw...")
+					elif s == "ship":
+						if len(self.ship_discard.cards) > 0:
+							self.history.take_snapshot(SNAPSHOT_DREW_SHIP_CARD, player.name+" drew a Ship card from the discard pile.")
+							self.send_full_history_all()
+							self.server.sendall("ALERT:draw_card_from_deck")
+							self.server.sendall("ALERT:add_card_to_hand")
+							card = self.ship_discard.draw()
+							player.hand.add_card_to_top(card)
+							self.send_decks_all()
+							self.send_playerhand(player)
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:There are no Ship cards to draw...")
+					else:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw that type of card!")
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't draw a card right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw a card, the game hasn't started...")
+			return True
+		return False
 
 	#Other Stuff
 	def _check_player_status(self):
@@ -1052,11 +1090,11 @@ class GameServer(object):
 		s += str(len(self.pony_discard.cards))+","
 		s += str(len(self.ship_discard.cards))+":"
 		if len(self.pony_discard.cards) > 0:
-			s += str(self.master_deck.cards.index(self.pony_discard.cards[-1])) + ","
+			s += str(self.master_deck.cards.index(self.pony_discard.cards[0])) + ","
 		else:
 			s += "N,"
 		if len(self.ship_discard.cards) > 0:
-			s += str(self.master_deck.cards.index(self.ship_discard.cards[-1]))
+			s += str(self.master_deck.cards.index(self.ship_discard.cards[0]))
 		else:
 			s += "N"
 		return s

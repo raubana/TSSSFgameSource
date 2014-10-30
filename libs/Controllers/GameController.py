@@ -174,12 +174,12 @@ class GameController(Controller):
 		self.goal_deck_element.menu_info.append(("Shuffle",self.shuffle_goal_deck))
 		self.goal_deck_element.menu_info.append(("Draw Goal",self.draw_goal))
 
-		self.pony_discard_element.menu_info.append(("Draw Top",self.do_nothing))
+		self.pony_discard_element.menu_info.append(("Draw Top",self.draw_1_discard,tuple(["pony"])))
 		self.pony_discard_element.menu_info.append(("Draw...",self.do_nothing))
 		self.pony_discard_element.menu_info.append(("Shuffle",self.shuffle_pony_discard))
 		self.pony_discard_element.menu_info.append(("Swap Decks",self.do_nothing))
 
-		self.ship_discard_element.menu_info.append(("Draw Top",self.do_nothing))
+		self.ship_discard_element.menu_info.append(("Draw Top",self.draw_1_discard,tuple(["ship"])))
 		self.ship_discard_element.menu_info.append(("Draw...",self.do_nothing))
 		self.ship_discard_element.menu_info.append(("Shuffle",self.shuffle_ship_discard))
 		self.ship_discard_element.menu_info.append(("Swap Decks",self.do_nothing))
@@ -218,6 +218,8 @@ class GameController(Controller):
 		self.main.client.send("DISCARD_GOAL:"+str(args[0]))
 	def draw_goal(self):
 		self.main.client.send("DRAW_GOAL")
+	def draw_1_discard(self,args):
+		self.main.client.send("DRAW_1_DISCARD:"+str(args[0]))
 
 	def read_message(self, message):
 		if self._rm_add_chat(message): pass
