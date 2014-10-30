@@ -288,7 +288,7 @@ class GameServer(object):
 				#toggle this player's "is_ready" variable
 				t = time.time()
 				if t - player.last_toggled_ready < 3:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:You're doing that too often.")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You're doing that too often.")
 				else:
 					player.is_ready = not player.is_ready
 					player.last_toggled_ready = t
@@ -301,7 +301,7 @@ class GameServer(object):
 					self.send_playerlist_all()
 					self.check_ready()
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:The game's already started!")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:The game's already started!")
 			return True
 		return False
 	def _rm_end_turn(self, message, key, player):
@@ -311,14 +311,14 @@ class GameServer(object):
 				if self.players.index(player) == self.current_players_turn:
 					#We check if the player has the correct number of cards in their hand.
 					if len(player.hand.cards) < MIN_CARDS_IN_HAND:
-						self.server.sendto(player.address, "ADD_CHAT:SERVER:You need to draw up to "+str(MIN_CARDS_IN_HAND)+" before you can end your turn.")
+						self.server.sendto(player.address, "ADD_CHAT:SERVER:PM:You need to draw up to "+str(MIN_CARDS_IN_HAND)+" before you can end your turn.")
 					else:
 						self.server.sendto(player.address, "ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
 						self.nextPlayersTurn()
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, dummy!")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, dummy!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:The game hasn't started yet...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:The game hasn't started yet...")
 			return True
 		return False
 	def _rm_play_card(self, message, key, player):
@@ -343,44 +343,50 @@ class GameServer(object):
 							self.controller = PlayCardServerController(self)
 							self.controller.selected_card = card
 							self.server.sendall("ALERT:draw_card_from_hand")
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Click on the grid where you want to play this card.")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Click on the grid where you want to play this card.")
 						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...that card's not even in your hand!")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...that card's not even in your hand!")
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't play a card right now!")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't play a card right now!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't play a card, the game hasn't started...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't play a card, the game hasn't started...")
 			return True
 		return False
 	def _rm_draw_1(self, message, key, player):
 		if message.startswith("DRAW_1:"):
-			s = message[len("DRAW_1:"):]
-			if s == "pony":
-				if len(self.pony_deck.cards) > 0:
-					self.history.take_snapshot(SNAPSHOT_DREW_PONY_CARD, player.name+" drew a Pony card.")
-					self.send_full_history_all()
-					self.server.sendall("ALERT:draw_card_from_deck")
-					self.server.sendall("ALERT:add_card_to_hand")
-					card = self.pony_deck.draw()
-					player.hand.add_card_to_top(card)
-					self.send_decks_all()
-					self.send_playerhand(player)
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					s = message[len("DRAW_1:"):]
+					if s == "pony":
+						if len(self.pony_deck.cards) > 0:
+							self.history.take_snapshot(SNAPSHOT_DREW_PONY_CARD, player.name+" drew a Pony card.")
+							self.send_full_history_all()
+							self.server.sendall("ALERT:draw_card_from_deck")
+							self.server.sendall("ALERT:add_card_to_hand")
+							card = self.pony_deck.draw()
+							player.hand.add_card_to_top(card)
+							self.send_decks_all()
+							self.send_playerhand(player)
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:There are no Pony cards to draw...")
+					elif s == "ship":
+						if len(self.ship_deck.cards) > 0:
+							self.history.take_snapshot(SNAPSHOT_DREW_SHIP_CARD, player.name+" drew a Ship card.")
+							self.send_full_history_all()
+							self.server.sendall("ALERT:draw_card_from_deck")
+							self.server.sendall("ALERT:add_card_to_hand")
+							card = self.ship_deck.draw()
+							player.hand.add_card_to_top(card)
+							self.send_decks_all()
+							self.send_playerhand(player)
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:There are no Ship cards to draw...")
+					else:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw that type of card!")
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Pony cards to draw...")
-			elif s == "ship":
-				if len(self.ship_deck.cards) > 0:
-					self.history.take_snapshot(SNAPSHOT_DREW_SHIP_CARD, player.name+" drew a Ship card.")
-					self.send_full_history_all()
-					self.server.sendall("ALERT:draw_card_from_deck")
-					self.server.sendall("ALERT:add_card_to_hand")
-					card = self.ship_deck.draw()
-					player.hand.add_card_to_top(card)
-					self.send_decks_all()
-					self.send_playerhand(player)
-				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:There are no Ship cards to draw...")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't draw a card right now!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't draw that type of card!")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw a card, the game hasn't started...")
 			return True
 		return False
 	def _rm_discard_card(self, message, key, player):
@@ -437,7 +443,7 @@ class GameServer(object):
 									break
 						if location != None:
 							if selected_card.type == "pony" and selected_card.power == "startcard":
-								self.server.sendto(player.address,"ADD_CHAT:SERVER: You can't discard the start card!")
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't discard the start card!")
 							else:
 								if location[0] == "hand":
 									#we attempt to discard this card from the player's hand.
@@ -471,11 +477,11 @@ class GameServer(object):
 								self.send_decks_all()
 								self.server.sendall("ALERT:add_card_to_deck")
 						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even discard that card!")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...you can't even discard that card!")
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't discard right now!")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't discard right now!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't discard a card, the game hasn't started...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't discard a card, the game hasn't started...")
 			return True
 		return False
 	def _rm_replace_card(self, message, key, player):
@@ -501,17 +507,17 @@ class GameServer(object):
 								self.controller = ReplaceCardServerController(self)
 								self.controller.selected_card = selected_card
 								self.server.sendall("ALERT:draw_card_from_hand")
-								self.server.sendto(player.address,"ADD_CHAT:SERVER: Click on the card you want to replace.")
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Click on the card you want to replace.")
 							else:
-								self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even replace with that card!")
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...you can't even replace with that card!")
 						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even replace with that card!")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...you can't even replace with that card!")
 					else:
 						print "ERROR! Couldn't find card with this id."
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't replace right now!")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't replace right now!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't replace a card, the game hasn't started...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't replace a card, the game hasn't started...")
 			return True
 		return False
 	def _rm_new_goal(self, message, key, player):
@@ -550,15 +556,15 @@ class GameServer(object):
 								self.send_decks_all()
 								self.send_public_goals_all()
 							else:
-								self.server.sendto(player.address,"ADD_CHAT:SERVER: You can't set a new goal, the goal deck is empty.")
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't set a new goal, the goal deck is empty.")
 						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
 					else:
 						print "ERROR! Couldn't find card with this id."
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't set new goals!")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't set new goals!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't set a new goal, the game hasn't started...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't set a new goal, the game hasn't started...")
 			return True
 		return False
 	def _rm_swap_card(self, message, key, player):
@@ -591,15 +597,15 @@ class GameServer(object):
 							self.controller.selected_card = selected_card
 							self.controller.selected_card_location = location
 							self.server.sendall("ALERT:draw_card_from_table")
-							self.server.sendto(player.address,"ADD_CHAT:SERVER:Click on the grid where you want to move this card to.")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Click on the grid where you want to move this card to.")
 						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even swap with that card!")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...you can't even swap with that card!")
 					else:
 						print "ERROR! Couldn't find card with this id."
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't swap right now!")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't swap right now!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't swap a card, the game hasn't started...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't swap a card, the game hasn't started...")
 			return True
 		return False
 	def _rm_swap_gender(self, message, key, player):
@@ -639,15 +645,15 @@ class GameServer(object):
 								selected_card.set_temp_gender(gender)
 								self.send_full_history_all()
 							else:
-								self.server.sendto(player.address,"ADD_CHAT:SERVER: This card's gender can't be swapped!")
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:This card's gender can't be swapped!")
 						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
 					else:
 						print "ERROR! Couldn't find card with this id."
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't swap card's gender.")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't swap card's gender.")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't swap genders, the game hasn't started...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't swap genders, the game hasn't started...")
 			return True
 		return False
 	def _rm_win_goal(self, message, key, player):
@@ -679,13 +685,13 @@ class GameServer(object):
 							self.send_playerlist_all()
 							self.send_public_goals_all()
 						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
 					else:
 						print "ERROR! Couldn't find card with this id."
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't win goals!")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't win goals!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't win a goal, the game hasn't started...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't win a goal, the game hasn't started...")
 			return True
 		return False
 	def _rm_move_card(self, message, key, player):
@@ -718,13 +724,13 @@ class GameServer(object):
 							self.controller.selected_card = selected_card
 							self.controller.selected_card_location = location
 							self.server.sendall("ALERT:draw_card_from_hand")
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Click on the grid where you want to play this card.")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Click on the grid where you want to play this card.")
 						else:
-							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...that card's not even on the table!")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...that card's not even on the table!")
 				else:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't move cards right now!")
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't move cards right now!")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't move a card, the game hasn't started...")
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't move a card, the game hasn't started...")
 			return True
 		return False
 

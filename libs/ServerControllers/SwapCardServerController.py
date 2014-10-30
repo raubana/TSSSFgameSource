@@ -51,14 +51,14 @@ class SwapCardServerController(ServerController):
 							self.gameserver.card_table.refactor() #Pointless, but I'm doing it anyways.
 							self.gameserver.send_cardtable_all()
 						else:
-							self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You can not swap this card!")
+							self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can not swap this card!")
 					else:
 						print "ERROR! Something was wrong with this card's id."
 					self.gameserver.controller = None
 				else:
-					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't swap a card right now!")
+					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't swap a card right now!")
 			else:
-				self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You can't swap a card, the game hasn't started...")
+				self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't swap a card, the game hasn't started...")
 		else:
 			return False
 		return True

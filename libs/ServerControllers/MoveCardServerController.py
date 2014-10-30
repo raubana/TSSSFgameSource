@@ -51,13 +51,13 @@ class MoveCardServerController(ServerController):
 								self.gameserver.send_playerhand(player)
 								self.gameserver.send_cardtable_all()
 							else:
-								self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You can't put this card here!")
+								self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't put this card here!")
 								self.gameserver.server.sendall("ALERT:add_card_to_hand")
 							self.gameserver.controller = None
 				else:
-					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't move a card right now!")
+					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't move a card right now!")
 			else:
-				self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You can't move a card, the game hasn't started...")
+				self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't move a card, the game hasn't started...")
 		else:
 			return False
 		return True

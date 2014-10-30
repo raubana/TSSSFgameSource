@@ -40,7 +40,7 @@ class ReplaceCardServerController(ServerController):
 								break
 						if location != None:
 							if selected_card.type == "pony" and selected_card.power == "startcard":
-								self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER: You can't replace the start card!")
+								self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't replace the start card!")
 							else:
 								#we attempt to discard this card from the player's hand.
 								self.gameserver.history.take_snapshot(SNAPSHOT_REPLACED_CARD, player.name+" replaced '"+selected_card.name+"' with '"+self.selected_card.name+"'.")
@@ -56,14 +56,14 @@ class ReplaceCardServerController(ServerController):
 								self.gameserver.send_cardtable_all()
 								self.gameserver.send_playerhand(player)
 						else:
-							self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You can not replace this card!")
+							self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can not replace this card!")
 					else:
 						print "ERROR! Something was wrong with this card's id."
 					self.gameserver.controller = None
 				else:
-					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't replace a card right now!")
+					self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't replace a card right now!")
 			else:
-				self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:You can't replace a card, the game hasn't started...")
+				self.gameserver.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't replace a card, the game hasn't started...")
 		else:
 			return False
 		return True

@@ -38,8 +38,6 @@ class HistoryElement(Element):
 		self.clear()
 		self.layout = LAYOUT_HORIZONTAL
 
-		print message
-
 		i = message.find(":")
 		if i != -1:
 			try:

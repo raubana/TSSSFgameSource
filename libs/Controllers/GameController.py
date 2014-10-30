@@ -220,9 +220,14 @@ class GameController(Controller):
 			bg_color = (255,255,255,127)
 			if chat.startswith("SERVER:"):
 				chat = chat[len("SERVER:"):]
-				text = chat
-				color = (64,0,64,255)
-				bg_color = (255,127,255,127)
+				if chat.startswith("PM:"):
+					text = chat[len("PM:"):]
+					color = (64,0,32,255)
+					bg_color = (255,127,196,127)
+				else:
+					text = chat
+					color = (64,0,64,255)
+					bg_color = (255,127,255,127)
 			elif chat.startswith("PLAYER:"):
 				chat = chat[len("PLAYER:"):]
 				i = chat.find(":")
@@ -332,6 +337,7 @@ class GameController(Controller):
 		return False
 	def _rm_decks(self, message):
 		if message.startswith("DECKS:"):
+			print message
 			s = message[len("DECKS:"):]
 			parts = s.split(":")
 			if len(parts) == 2:
@@ -354,13 +360,19 @@ class GameController(Controller):
 					if len(part2) == 2:
 						try:
 							if part2[0] == "N":
-								self.pony_discard_element.set_bg((255,255,255))
+								self.pony_discard_element.tooltip = None
+								self.pony_discard_element.set_bg((255,255,255,127))
 							else:
-								self.pony_discard_element.set_bg(ScaleImage(self.main.master_deck.card[int(part2[0])].get_image()))
+								card = self.main.master_deck.cards[int(part2[0])]
+								self.pony_discard_element.tooltip = card
+								self.pony_discard_element.set_bg(ScaleImage(card.get_image()))
 							if part2[1] == "N":
-								self.pony_discard_element.set_bg((255,255,255))
+								self.ship_discard_element.tooltip = None
+								self.ship_discard_element.set_bg((255,255,255,127))
 							else:
-								self.ship_discard_element.set_bg(ScaleImage(self.main.master_deck.card[int(part2[1])].get_image()))
+								card = self.main.master_deck.cards[int(part2[1])]
+								self.ship_discard_element.tooltip = card
+								self.ship_discard_element.set_bg(ScaleImage(card.get_image()))
 						except:
 							print "ERROR! Received bad decks info. E"
 					else:
