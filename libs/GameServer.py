@@ -177,6 +177,11 @@ class GameServer(object):
 				elif self._rm_move_card(message, key, player): pass
 				elif self._rm_imitate_card(message, key, player): pass
 				elif self._rm_cancel_action(message, key, player): pass
+				elif self._rm_shuffle_pony_deck(message, key, player): pass
+				elif self._rm_shuffle_ship_deck(message, key, player): pass
+				elif self._rm_shuffle_goal_deck(message, key, player): pass
+				elif self._rm_shuffle_pony_discard(message, key, player): pass
+				elif self._rm_shuffle_ship_discard(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -795,10 +800,93 @@ class GameServer(object):
 						self.controller.cleanup()
 						self.controller = None
 						self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:This action has been cancelled.")
+			return True
+		return False
+	def _rm_shuffle_pony_deck(self, message, key, player):
+		if message == "SHUFFLE_PONY_DECK":
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					self.history.take_snapshot(SNAPSHOT_SHUFFLE_PONY_DECK, player.name+" shuffled the Pony deck.")
+					self.send_full_history_all()
+					self.pony_deck.shuffle()
+					self.server.sendall("ALERT:shuffle_deck")
+					if self.controller != None:
+						self.controller.cleanup()
+						self.controller = None
 				else:
-					print "B"
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Pony deck, it's not your turn!")
 			else:
-				print "A"
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Pony deck, the game hasn't started yet!")
+			return True
+		return False
+	def _rm_shuffle_ship_deck(self, message, key, player):
+		if message == "SHUFFLE_SHIP_DECK":
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					self.history.take_snapshot(SNAPSHOT_SHUFFLE_SHIP_DECK, player.name+" shuffled the Ship deck.")
+					self.send_full_history_all()
+					self.ship_deck.shuffle()
+					self.server.sendall("ALERT:shuffle_deck")
+					if self.controller != None:
+						self.controller.cleanup()
+						self.controller = None
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Ship deck, it's not your turn!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Ship deck, the game hasn't started yet!")
+			return True
+		return False
+	def _rm_shuffle_goal_deck(self, message, key, player):
+		if message == "SHUFFLE_GOAL_DECK":
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					self.history.take_snapshot(SNAPSHOT_SHUFFLE_GOAL_DECK, player.name+" shuffled the Goal deck.")
+					self.send_full_history_all()
+					self.goal_deck.shuffle()
+					self.server.sendall("ALERT:shuffle_deck")
+					if self.controller != None:
+						self.controller.cleanup()
+						self.controller = None
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Goal deck, it's not your turn!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Goal deck, the game hasn't started yet!")
+			return True
+		return False
+	def _rm_shuffle_pony_discard(self, message, key, player):
+		if message == "SHUFFLE_PONY_DISCARD":
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					self.history.take_snapshot(SNAPSHOT_SHUFFLE_PONY_DISCARD, player.name+" shuffled the Pony discard pile.")
+					self.send_full_history_all()
+					self.pony_discard.shuffle()
+					self.send_decks_all()
+					self.server.sendall("ALERT:shuffle_deck")
+					if self.controller != None:
+						self.controller.cleanup()
+						self.controller = None
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Pony discard pile, it's not your turn!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Pony discard pile, the game hasn't started yet!")
+			return True
+		return False
+	def _rm_shuffle_ship_discard(self, message, key, player):
+		if message == "SHUFFLE_SHIP_DISCARD":
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					self.history.take_snapshot(SNAPSHOT_SHUFFLE_SHIP_DISCARD, player.name+" shuffled the Ship discard pile.")
+					self.send_full_history_all()
+					self.ship_discard.shuffle()
+					self.send_decks_all()
+					self.server.sendall("ALERT:shuffle_deck")
+					if self.controller != None:
+						self.controller.cleanup()
+						self.controller = None
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Ship discard pile, it's not your turn!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Ship discard pile, the game hasn't started yet!")
 			return True
 		return False
 

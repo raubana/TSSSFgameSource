@@ -166,21 +166,21 @@ class GameController(Controller):
 		self.ship_discard_element.padding = (2,2,2,2)
 
 		self.pony_deck_element.menu_info.append(("Draw 1",self.draw_1,tuple(["pony"])))
-		self.pony_deck_element.menu_info.append(("Shuffle",self.do_nothing))
+		self.pony_deck_element.menu_info.append(("Shuffle",self.shuffle_pony_deck))
 
 		self.ship_deck_element.menu_info.append(("Draw 1",self.draw_1,tuple(["ship"])))
-		self.ship_deck_element.menu_info.append(("Shuffle",self.do_nothing))
+		self.ship_deck_element.menu_info.append(("Shuffle",self.shuffle_ship_deck))
 
-		self.goal_deck_element.menu_info.append(("Shuffle",self.do_nothing))
+		self.goal_deck_element.menu_info.append(("Shuffle",self.shuffle_goal_deck))
 
 		self.pony_discard_element.menu_info.append(("Draw Top",self.do_nothing))
 		self.pony_discard_element.menu_info.append(("Draw...",self.do_nothing))
-		self.pony_discard_element.menu_info.append(("Shuffle",self.do_nothing))
+		self.pony_discard_element.menu_info.append(("Shuffle",self.shuffle_pony_discard))
 		self.pony_discard_element.menu_info.append(("Swap Decks",self.do_nothing))
 
 		self.ship_discard_element.menu_info.append(("Draw Top",self.do_nothing))
 		self.ship_discard_element.menu_info.append(("Draw...",self.do_nothing))
-		self.ship_discard_element.menu_info.append(("Shuffle",self.do_nothing))
+		self.ship_discard_element.menu_info.append(("Shuffle",self.shuffle_ship_discard))
 		self.ship_discard_element.menu_info.append(("Swap Decks",self.do_nothing))
 
 		self.chat_input_element = None
@@ -203,6 +203,16 @@ class GameController(Controller):
 		self.main.client.send("NEW_GOAL:"+str(args[0]))
 	def win_goal(self, args):
 		self.main.client.send("WIN_GOAL:"+str(args[0]))
+	def shuffle_pony_deck(self):
+		self.main.client.send("SHUFFLE_PONY_DECK")
+	def shuffle_ship_deck(self):
+		self.main.client.send("SHUFFLE_SHIP_DECK")
+	def shuffle_goal_deck(self):
+		self.main.client.send("SHUFFLE_GOAL_DECK")
+	def shuffle_pony_discard(self):
+		self.main.client.send("SHUFFLE_PONY_DISCARD")
+	def shuffle_ship_discard(self):
+		self.main.client.send("SHUFFLE_SHIP_DISCARD")
 
 	def read_message(self, message):
 		if self._rm_add_chat(message): pass
