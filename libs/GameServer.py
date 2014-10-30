@@ -10,6 +10,7 @@ from ServerControllers.ReplaceCardServerController import *
 from ServerControllers.SwapCardServerController import *
 from ServerControllers.MoveCardServerController import *
 from ServerControllers.ImitateCardServerController import *
+from ServerControllers.DrawFromDiscardsServerController import *
 
 from ServerPlayer import Player
 import Deck
@@ -185,6 +186,7 @@ class GameServer(object):
 				elif self._rm_discard_goal(message, key, player): pass
 				elif self._rm_draw_goal(message, key, player): pass
 				elif self._rm_draw_1_discard(message, key, player): pass
+				elif self._rm_draw_from_discards(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -987,6 +989,28 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't draw a card right now!")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw a card, the game hasn't started...")
+			return True
+		return False
+	def _rm_draw_from_discards(self, message, key, player):
+		if message == "DRAW_FROM_DISCARDS":
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					if self.current_players_turn != None:
+						deck = Deck.Deck()
+						for card in self.pony_discard.cards:
+							deck.add_card_to_bottom(card)
+						for card in self.ship_discard.cards:
+							deck.add_card_to_bottom(card)
+						player = self.players[self.current_players_turn]
+						deck.sort()
+						self.send_card_selection_player(player,deck)
+					self.controller = DrawFromDiscardsServerController(self)
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Pick which card you'd like to draw.")
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't draw a discarded card right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw a discarded card right now, the game hasn't started...")
 			return True
 		return False
 
