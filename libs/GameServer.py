@@ -182,6 +182,8 @@ class GameServer(object):
 				elif self._rm_shuffle_goal_deck(message, key, player): pass
 				elif self._rm_shuffle_pony_discard(message, key, player): pass
 				elif self._rm_shuffle_ship_discard(message, key, player): pass
+				elif self._rm_discard_goal(message, key, player): pass
+				elif self._rm_draw_goal(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -887,6 +889,66 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Ship discard pile, it's not your turn!")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't shuffle the Ship discard pile, the game hasn't started yet!")
+			return True
+		return False
+	def _rm_discard_goal(self, message, key, player):
+		if message.startswith("DISCARD_GOAL:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("DISCARD_GOAL:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						selected_card = None
+						for card in self.public_goals.cards:
+							if self.master_deck.cards.index(card) == i:
+								selected_card = card
+								break
+						if selected_card != None:
+							#we attempt to replace with this card.
+							new_goal = self.goal_deck.cards[0]
+							self.history.take_snapshot(SNAPSHOT_NULL, player.name+" discarded the goal '"+selected_card.name+"'.")
+							self.send_full_history_all()
+							self.server.sendall("ALERT:draw_card_from_table")
+							self.public_goals.remove_card(selected_card)
+							self.server.sendall("ALERT:remove_deck")
+							self.server.sendall("ALERT:add_card_to_deck")
+							self.goal_deck.add_card_to_bottom(selected_card)
+							self.send_decks_all()
+							self.send_public_goals_all()
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
+					else:
+						print "ERROR! Couldn't find card with this id."
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't discard a goal!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't discard a goal, the game hasn't started...")
+			return True
+		return False
+	def _rm_draw_goal(self, message, key, player):
+		if message == "DRAW_GOAL":
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					if len(self.goal_deck.cards) > 0:
+						self.history.take_snapshot(SNAPSHOT_NULL, player.name+" drew a Goal card.")
+						self.send_full_history_all()
+						self.server.sendall("ALERT:draw_card_from_deck")
+						self.server.sendall("ALERT:add_card_to_table")
+						card = self.goal_deck.draw()
+						self.public_goals.add_card_to_top(card)
+						self.send_decks_all()
+						self.send_public_goals_all()
+					else:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:There are no Goal cards to draw...")
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't draw a Goal card right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw a Goal card, the game hasn't started...")
 			return True
 		return False
 

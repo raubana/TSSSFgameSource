@@ -172,6 +172,7 @@ class GameController(Controller):
 		self.ship_deck_element.menu_info.append(("Shuffle",self.shuffle_ship_deck))
 
 		self.goal_deck_element.menu_info.append(("Shuffle",self.shuffle_goal_deck))
+		self.goal_deck_element.menu_info.append(("Draw Goal",self.draw_goal))
 
 		self.pony_discard_element.menu_info.append(("Draw Top",self.do_nothing))
 		self.pony_discard_element.menu_info.append(("Draw...",self.do_nothing))
@@ -213,6 +214,10 @@ class GameController(Controller):
 		self.main.client.send("SHUFFLE_PONY_DISCARD")
 	def shuffle_ship_discard(self):
 		self.main.client.send("SHUFFLE_SHIP_DISCARD")
+	def discard_goal(self, args):
+		self.main.client.send("DISCARD_GOAL:"+str(args[0]))
+	def draw_goal(self):
+		self.main.client.send("DRAW_GOAL")
 
 	def read_message(self, message):
 		if self._rm_add_chat(message): pass
@@ -371,7 +376,8 @@ class GameController(Controller):
 				element.set_card(card)
 				element.padding = (3,3,3,3)
 				element.menu_info = [("Win Goal", self.win_goal, tuple([self.main.master_deck.cards.index(card)])),
-									 ("Action: New Goal", self.new_goal, tuple([i]))]
+										("Discard", self.discard_goal, tuple([self.main.master_deck.cards.index(card)])),
+									 	("Action: New Goal", self.new_goal, tuple([i]))]
 			return True
 		return False
 	def _rm_cardtable(self, message):
