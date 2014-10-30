@@ -8,6 +8,7 @@ import math
 from ServerControllers.PlayCardServerController import *
 from ServerControllers.ReplaceCardServerController import *
 from ServerControllers.SwapCardServerController import *
+from ServerControllers.MoveCardServerController import *
 
 from ServerPlayer import Player
 import Deck
@@ -172,6 +173,7 @@ class GameServer(object):
 				elif self._rm_swap_card(message, key, player): pass
 				elif self._rm_swap_gender(message, key, player): pass
 				elif self._rm_win_goal(message, key, player): pass
+				elif self._rm_move_card(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -589,7 +591,7 @@ class GameServer(object):
 							self.controller.selected_card = selected_card
 							self.controller.selected_card_location = location
 							self.server.sendall("ALERT:draw_card_from_table")
-							self.server.sendto(player.address,"ADD_CHAT:SERVER:Click on the card you want to swap with.")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:Click on the grid where you want to move this card to.")
 						else:
 							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...you can't even swap with that card!")
 					else:
@@ -684,6 +686,45 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't win goals!")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't win a goal, the game hasn't started...")
+			return True
+		return False
+	def _rm_move_card(self, message, key, player):
+		if message.startswith("MOVE_CARD:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("MOVE_CARD:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						location = None
+						selected_card = None
+						for y in xrange(self.card_table.size[1]):
+							for x in xrange(self.card_table.size[0]):
+								card = self.card_table.pony_cards[y][x]
+								if card != None:
+									if self.master_deck.cards.index(card) == i:
+										location = (x,y)
+										selected_card = card
+										break
+							if location != None:
+								break
+						if selected_card != None:
+							#we attempt to play this card.
+							self.controller = MoveCardServerController(self)
+							self.controller.selected_card = selected_card
+							self.controller.selected_card_location = location
+							self.server.sendall("ALERT:draw_card_from_hand")
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Click on the grid where you want to play this card.")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER: Whatthe-...that card's not even on the table!")
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:It's not your turn, you can't move cards right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:You can't move a card, the game hasn't started...")
 			return True
 		return False
 

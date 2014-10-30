@@ -33,7 +33,7 @@ def create_context_menu(main, element, pos, menu_list):
 	pos = list(pos)
 	for item in menu_list:
 		s = main.font.size(item[0])
-		size = (max(size[0],s[0]),size[1]+s[1])
+		size = (max(size[0],s[0])+4,size[1]+s[1]+4)
 	#next we determine if our menu will go off of the screen
 	if size[0] > main.screen_size[0]:
 		pos[0] = 0
