@@ -187,6 +187,8 @@ class GameServer(object):
 				elif self._rm_draw_goal(message, key, player): pass
 				elif self._rm_draw_1_discard(message, key, player): pass
 				elif self._rm_draw_from_discards(message, key, player): pass
+				elif self._rm_swap_pony_decks(message, key, player): pass
+				elif self._rm_swap_ship_decks(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -1011,6 +1013,42 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't draw a discarded card right now!")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't draw a discarded card right now, the game hasn't started...")
+			return True
+		return False
+	def _rm_swap_pony_decks(self, message, key, player):
+		if message == "SWAP_PONY_DECKS":
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we attempt to swap with this card.
+					self.history.take_snapshot(SNAPSHOT_NULL, player.name+" swapped the Pony decks.")
+					self.send_full_history_all()
+					self.server.sendall("ALERT:remove_deck")
+					self.pony_deck.cards,self.pony_discard.cards = (self.pony_discard.cards, self.pony_deck.cards)
+					self.server.sendall("ALERT:place_deck")
+					self.send_decks_all()
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't swap the Pony decks right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't swap the Pony decks, the game hasn't started...")
+			return True
+		return False
+	def _rm_swap_ship_decks(self, message, key, player):
+		if message == "SWAP_SHIP_DECKS":
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we attempt to swap with this card.
+					self.history.take_snapshot(SNAPSHOT_NULL, player.name+" swapped the Ship decks.")
+					self.send_full_history_all()
+					self.server.sendall("ALERT:remove_deck")
+					self.ship_deck.cards,self.ship_discard.cards = (self.ship_discard.cards, self.ship_deck.cards)
+					self.server.sendall("ALERT:place_deck")
+					self.send_decks_all()
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't swap the Pony decks right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't swap the Pony decks, the game hasn't started...")
 			return True
 		return False
 
