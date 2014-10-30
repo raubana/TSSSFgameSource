@@ -11,14 +11,6 @@ class ImitateCardServerController(ServerController):
 		self.selected_card = None
 		self.selected_card_location = None
 
-		if self.gameserver.current_players_turn != None:
-			deck = Deck()
-			for card in self.gameserver.master_deck.cards:
-				if card.type == "pony":
-					deck.add_card_to_bottom(card)
-			player = self.gameserver.players[self.gameserver.current_players_turn]
-			self.gameserver.send_card_selection_player(player,deck)
-
 	def cleanup(self):
 		if self.gameserver.current_players_turn != None:
 			deck = Deck()
@@ -42,7 +34,7 @@ class ImitateCardServerController(ServerController):
 						works = False
 					if works:
 						selected_card = self.gameserver.master_deck.cards[i]
-						if selected_card.type == "pony":
+						if selected_card.type == "pony" and self.selected_card.race == selected_card.race:
 							#we attempt to swap this card from the player's hand.
 							self.gameserver.history.take_snapshot(SNAPSHOT_IMITATE_CARD, player.name+" made '"+self.selected_card.name+"' imitate '"+selected_card.name+"'.")
 							self.gameserver.send_full_history_all()

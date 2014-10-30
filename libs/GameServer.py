@@ -761,11 +761,22 @@ class GameServer(object):
 							if location != None:
 								break
 						if location != None:
-							#we attempt to replace with this card.
-							self.controller = ImitateCardServerController(self)
-							self.controller.selected_card = selected_card
-							self.controller.selected_card_location = location
-							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Pick which card you'd like to imitate.")
+							if "changeling" in selected_card.name.lower():
+								if self.current_players_turn != None:
+									deck = Deck.Deck()
+									for card in self.master_deck.cards:
+										if card.type == "pony":
+											if "changeling" not in card.name.lower() and selected_card.race == card.race:
+												deck.add_card_to_bottom(card)
+									player = self.players[self.current_players_turn]
+									deck.sort()
+									self.send_card_selection_player(player,deck)
+								self.controller = ImitateCardServerController(self)
+								self.controller.selected_card = selected_card
+								self.controller.selected_card_location = location
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Pick which card you'd like to imitate.")
+							else:
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:This card can't imitate.")
 						else:
 							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
 					else:
@@ -1007,6 +1018,7 @@ class GameServer(object):
 	def send_public_goals(self, player):
 		self.server.sendto(player.address, "PUBLICGOALS:"+self.public_goals.get_transmit(self.master_deck))
 	def send_playerhand(self, player):
+		player.hand.sort()
 		self.server.sendto(player.address, "PLAYERHAND:"+player.hand.get_transmit(self.master_deck))
 	def send_cardtable_player(self, player):
 		self.server.sendto(player.address, "CARDTABLE:"+self.card_table.get_transmit(self.master_deck))

@@ -84,6 +84,33 @@ class Deck(object):
 				s +=","
 		return s
 
+	def alphabatize(self):
+		self.cards.sort(key=self._alphabatize_filter)
+
+	def _alphabatize_filter(self, card):
+		return card.printed_name
+
+	def sort(self):
+		self.cards.sort(key=self._sort_filter)
+
+	def _sort_filter(self, card):
+		s = ""
+		if card.type == "pony":
+			s += "1"
+		elif card.type == "ship":
+			s += "2"
+			if len(card.keywords) > 0:
+				s += "1"
+			else:
+				s += "2"
+		else:
+			s += "3"
+		if len(card.keywords) > 0:
+			for key in card.keywords:
+				s += key.lower()
+		s += card.printed_name.lower()
+		return s
+
 
 class MasterDeck(object):
 	def __init__(self):
@@ -179,8 +206,12 @@ class Card(object):
 			#Any of these are left blank if they're 'None'.
 			#CARD ID::Temp Name::Temp Printed Name::Temp Printed Name Size::Temp Gender::Temp Race::Temp Keywords::Temp To Be Discarded::Temp Card Being Imitated
 			s += str(master_deck.cards.index(self)) + "::"
-			L = [self.temp_name,self.temp_printed_name,self.temp_printed_name_size,self.temp_gender,self.temp_race,
-				 self.temp_keywords,self.temp_to_be_discarded,self.temp_card_being_imitated]
+			L = [self.temp_name,self.temp_printed_name,self.temp_printed_name_size,self.temp_gender,self.temp_race]
+			if self.temp_keywords == None:
+				L += ["NONE"]
+			else:
+				L += [self.temp_keywords]
+			L += [self.temp_to_be_discarded,self.temp_card_being_imitated]
 			#print L
 			i = 0
 			while i < len(L):
@@ -337,7 +368,7 @@ class Card(object):
 			self.image = self.get_base_image()
 			self.flagged_for_rerender = False
 			if self.temp_image != None or self.temp_keywords!=None or self.temp_race!=None or self.temp_gender!=None:
-				#self.image.fill((220,220,220), None, special_flags = BLEND_RGB_MULT)
+				self.image.fill((220,220,220), None, special_flags = BLEND_RGB_MULT)
 				#We draw out temporary changes.
 				#We are going to create a template to help make this part faster.
 				attr={}

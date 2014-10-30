@@ -1,6 +1,8 @@
 import traceback
 
 DEFAULT_COPYRIGHT = "Core 1.0.4 Copyright 2014 Horrible People Games. Art by Pixel Prism."
+DEV_MODE = False
+
 
 try:
 	import Tkinter
@@ -384,8 +386,10 @@ copyright = """
 	def prompt_open_file(self):
 		self.check_save_first()
 
-		#filename = askopenfilename(filetypes=[('Card file', '.tsf'), ('Card file', '.tsssf')], initialdir="cards")
-		filename = askopenfilename(filetypes=[('Card file', '.tsf')], initialdir="cards")
+		if DEV_MODE:
+			filename = askopenfilename(filetypes=[('Card file', '.tsssf')], initialdir="data/default_cards")
+		else:
+			filename = askopenfilename(filetypes=[('Card file', '.tsf')], initialdir="cards")
 		self.filename = filename
 		self.load_file(filename)
 
@@ -396,10 +400,12 @@ copyright = """
 	def prompt_save_file(self):
 		if self.imported_image != None:
 			suggested_filename = self.getSuggestedFilename()
-			#self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf'),('Old Card files', '.tsssf')], initialfile=suggested_filename,
-			#								  initialdir="cards")
-			self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf')], initialfile=suggested_filename,
-											  initialdir="cards")
+			if DEV_MODE:
+				self.filename = asksaveasfilename(filetypes=[('Old Card files', '.tsssf')], initialfile=suggested_filename,
+												  initialdir="data/default_cards")
+			else:
+				self.filename = asksaveasfilename(filetypes=[('Card files', '.tsf')], initialfile=suggested_filename,
+												  initialdir="cards")
 			self.save_file()
 
 	def prompt_export_image(self):
@@ -457,8 +463,12 @@ copyright = """
 
 	def save_file(self):
 		if self.filename != "" and self.imported_image != None:
-			if not self.filename.endswith(".tsf"):# and not self.filename.endswith(".tsssf"):
-				self.filename += ".tsf"
+			if DEV_MODE:
+				if not self.filename.endswith(".tsssf"):
+					self.filename += ".tsssf"
+			else:
+				if not self.filename.endswith(".tsf"):# and not self.filename.endswith(".tsssf"):
+					self.filename += ".tsf"
 			# We need to make our object first.
 			data = self.get_attributes_text()
 			L = data.split("\n")

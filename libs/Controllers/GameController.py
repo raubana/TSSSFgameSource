@@ -305,6 +305,7 @@ class GameController(Controller):
 			self.player_hand_element.layout = LAYOUT_HORIZONTAL
 			if len(s) > 0:
 				hand = s.split(",")
+				hand.reverse()
 				scale = 0.325
 				size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 				for x in xrange(len(hand)):
@@ -330,6 +331,7 @@ class GameController(Controller):
 			self.card_selection_element.layout = LAYOUT_HORIZONTAL
 			if len(s) > 0:
 				hand = s.split(",")
+				hand.reverse()
 				scale = 0.325
 				size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 				for x in xrange(len(hand)):
@@ -489,7 +491,7 @@ class GameController(Controller):
 					race = None
 				card.set_temp_race(race)
 
-				if parts[6] != "":
+				if parts[6] != "NONE":
 					keywords = parts[6].split(",")
 				else:
 					keywords = None
