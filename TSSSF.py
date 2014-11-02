@@ -47,33 +47,33 @@ class Main(object):
 
 		self.sounds = {}
 
-		self.sounds["connected"] = pygame.mixer.Sound("snds/app/connected.ogg")
-		self.sounds["lost_connection"] = pygame.mixer.Sound("snds/app/lost_connection.ogg")
+		self.sounds["connected"] = pygame.mixer.Sound("snds/app/connected.wav")
+		self.sounds["lost_connection"] = pygame.mixer.Sound("snds/app/lost_connection.wav")
 
-		self.sounds["game_timer"] = pygame.mixer.Sound("snds/game/misc/game_timer.ogg")
+		self.sounds["game_timer"] = pygame.mixer.Sound("snds/game/misc/game_timer.wav")
 
-		self.sounds["chat"] = pygame.mixer.Sound("snds/app/chat.ogg")
-		self.sounds["player_ready"] = pygame.mixer.Sound("snds/app/player_ready.ogg")
-		self.sounds["player_not_ready"] = pygame.mixer.Sound("snds/app/player_not_ready.ogg")
+		self.sounds["chat"] = pygame.mixer.Sound("snds/app/chat.wav")
+		self.sounds["player_ready"] = pygame.mixer.Sound("snds/app/player_ready.wav")
+		self.sounds["player_not_ready"] = pygame.mixer.Sound("snds/app/player_not_ready.wav")
 
-		self.sounds["add_card_to_deck"] = pygame.mixer.Sound("snds/card/add_card_to_deck.ogg")
-		self.sounds["add_card_to_hand"] = pygame.mixer.Sound("snds/card/add_card_to_hand.ogg")
-		self.sounds["add_card_to_table"] = pygame.mixer.Sound("snds/card/add_card_to_table.ogg")
-		self.sounds["draw_card_from_deck"] = pygame.mixer.Sound("snds/card/draw_card_from_deck.ogg")
-		self.sounds["draw_card_from_hand"] = pygame.mixer.Sound("snds/card/draw_card_from_hand.ogg")
-		self.sounds["draw_card_from_table"] = pygame.mixer.Sound("snds/card/draw_card_from_table.ogg")
-		self.sounds["place_deck"] = pygame.mixer.Sound("snds/card/place_deck.ogg")
-		self.sounds["remove_deck"] = pygame.mixer.Sound("snds/card/remove_deck.ogg")
-		self.sounds["shuffle_deck"] = pygame.mixer.Sound("snds/card/shuffle.ogg")
+		self.sounds["add_card_to_deck"] = pygame.mixer.Sound("snds/card/add_card_to_deck.wav")
+		self.sounds["add_card_to_hand"] = pygame.mixer.Sound("snds/card/add_card_to_hand.wav")
+		self.sounds["add_card_to_table"] = pygame.mixer.Sound("snds/card/add_card_to_table.wav")
+		self.sounds["draw_card_from_deck"] = pygame.mixer.Sound("snds/card/draw_card_from_deck.wav")
+		self.sounds["draw_card_from_hand"] = pygame.mixer.Sound("snds/card/draw_card_from_hand.wav")
+		self.sounds["draw_card_from_table"] = pygame.mixer.Sound("snds/card/draw_card_from_table.wav")
+		self.sounds["place_deck"] = pygame.mixer.Sound("snds/card/place_deck.wav")
+		self.sounds["remove_deck"] = pygame.mixer.Sound("snds/card/remove_deck.wav")
+		self.sounds["shuffle_deck"] = pygame.mixer.Sound("snds/card/shuffle.wav")
 
-		self.sounds["drink_call"] = pygame.mixer.Sound("snds/game/drink_call.ogg")
-		self.sounds["players_turn"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.ogg")
-		self.sounds["players_turn_not_focused"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.ogg")
+		self.sounds["drink_call"] = pygame.mixer.Sound("snds/game/drink_call.wav")
+		self.sounds["players_turn"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.wav")
+		self.sounds["players_turn_not_focused"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.wav")
 
-		self.sounds["gender_swapped"] = pygame.mixer.Sound("snds/game/attribute_change/gender_swapped.ogg")
-		self.sounds["imitate_card"] = pygame.mixer.Sound("snds/game/attribute_change/imitate_card.ogg")
+		self.sounds["gender_swapped"] = pygame.mixer.Sound("snds/game/attribute_change/gender_swapped.wav")
+		self.sounds["imitate_card"] = pygame.mixer.Sound("snds/game/attribute_change/imitate_card.wav")
 
-		self.sounds["won_goal"] = pygame.mixer.Sound("snds/game/misc/win_goal.ogg")
+		self.sounds["won_goal"] = pygame.mixer.Sound("snds/game/misc/win_goal.wav")
 
 		pygame.key.set_repeat(300, 30)
 

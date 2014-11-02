@@ -1102,9 +1102,14 @@ class GameServer(object):
 				if not self.game_started or t - player.time_of_disconnect >= 60:
 					#TODO: Discard player's hand
 					#TODO: Check if the game needs to reset
-					#TODO: Check if it was this player's turn. If it was, change whose turn it is
+					active_player = False
+					if self.game_started and self.players.index(player) == self.current_players_turn:
+						active_player = True
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has been removed from the game.")
 					del self.players[i]
+					if active_player:
+						self.current_players_turn -= 1
+						self.nextPlayersTurn()
 					self.send_playerlist_all()
 					self.check_ready()
 			i -= 1

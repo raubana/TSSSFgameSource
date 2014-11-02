@@ -376,16 +376,19 @@ class GameController(Controller):
 			self.public_goals_element.layout = LAYOUT_VERTICAL
 			scale = 0.4
 			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
-			for x in xrange(len(hand)):
-				s = hand[len(hand)-x-1]
-				i = int(s)
-				card = self.main.master_deck.cards[i]
-				element = CardElement(self.main,self.public_goals_element,None,size)
-				element.set_card(card)
-				element.padding = (3,3,3,3)
-				element.menu_info = [("Win Goal", self.win_goal, tuple([self.main.master_deck.cards.index(card)])),
-										("Discard", self.discard_goal, tuple([self.main.master_deck.cards.index(card)])),
-									 	("Action: New Goal", self.new_goal, tuple([i]))]
+			if len(hand) == 0 or (len(hand) == 1 and hand[0] == ""):
+				pass
+			else:
+				for x in xrange(len(hand)):
+					s = hand[len(hand)-x-1]
+					i = int(s)
+					card = self.main.master_deck.cards[i]
+					element = CardElement(self.main,self.public_goals_element,None,size)
+					element.set_card(card)
+					element.padding = (3,3,3,3)
+					element.menu_info = [("Win Goal", self.win_goal, tuple([self.main.master_deck.cards.index(card)])),
+											("Discard", self.discard_goal, tuple([self.main.master_deck.cards.index(card)])),
+											("Action: New Goal", self.new_goal, tuple([i]))]
 			return True
 		return False
 	def _rm_cardtable(self, message):
