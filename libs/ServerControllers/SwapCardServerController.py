@@ -45,7 +45,6 @@ class SwapCardServerController(ServerController):
 							self.gameserver.server.sendall("ALERT:draw_card_from_table")
 							self.gameserver.server.sendall("ALERT:add_card_to_table")
 							self.gameserver.server.sendall("ALERT:add_card_to_table")
-							self.gameserver.pony_discard.add_card_to_top(selected_card)
 							if self.selected_card.temp_card_being_imitated != None:
 								self.selected_card.reset()
 							if selected_card.temp_card_being_imitated != None:

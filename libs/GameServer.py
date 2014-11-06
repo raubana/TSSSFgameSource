@@ -773,12 +773,12 @@ class GameServer(object):
 							if location != None:
 								break
 						if location != None:
-							if "changeling" in selected_card.name.lower():
+							if "Changeling" in selected_card.keywords:
 								if self.current_players_turn != None:
 									deck = Deck.Deck()
 									for card in self.master_deck.cards:
 										if card.type == "pony":
-											if "changeling" not in card.name.lower() and selected_card.race == card.race:
+											if "Changeling" not in card.keywords and selected_card.race == card.race:
 												deck.add_card_to_bottom(card)
 									player = self.players[self.current_players_turn]
 									deck.sort()
@@ -1103,12 +1103,14 @@ class GameServer(object):
 					#TODO: Discard player's hand
 					#TODO: Check if the game needs to reset
 					active_player = False
-					if self.game_started and self.players.index(player) == self.current_players_turn:
+					index = self.players.index(player)
+					if self.game_started and index == self.current_players_turn:
 						active_player = True
+					if self.current_players_turn >= index:
+						self.current_players_turn -= 1
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has been removed from the game.")
 					del self.players[i]
 					if active_player:
-						self.current_players_turn -= 1
 						self.nextPlayersTurn()
 					self.send_playerlist_all()
 					self.check_ready()
