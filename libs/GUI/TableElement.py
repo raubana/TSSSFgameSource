@@ -26,6 +26,8 @@ class TableElement(Element):
 		self.main.client.send("MOVE_CARD:"+str(args[0]))
 	def imitate_card(self, args):
 		self.main.client.send("IMITATE_CARD:"+str(args[0]))
+	def change_race(self, args):
+		self.main.client.send("CHANGE_RACE:"+str(args[0]))
 
 	def get_graphical_pos(self, index, card_type):
 		if card_type == "pony":
@@ -47,10 +49,9 @@ class TableElement(Element):
 			child = self.children[i]
 			if type(child) == CardElement:
 				old_elements[child.card.name] = child
+			if type(child) != ScrollBar:
 				self._remove_child(child)
 			i -= 1
-
-		self.clear()
 
 		#creates the grid
 		for y in xrange(self.main.card_table.size[1]):
