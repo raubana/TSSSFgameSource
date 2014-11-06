@@ -27,7 +27,11 @@ class TableElement(Element):
 	def imitate_card(self, args):
 		self.main.client.send("IMITATE_CARD:"+str(args[0]))
 	def change_race(self, args):
-		self.main.client.send("CHANGE_RACE:"+str(args[0]))
+		self.main.client.send("CHANGE_RACE:"+str(args[0])+","+args[1])
+	def make_princess(self, args):
+		self.main.client.send("ADD_KEYWORD:"+str(args[0])+",Princess")
+	def make_dfp(self, args):
+		self.main.client.send("ADD_KEYWORD:"+str(args[0])+",DFP")
 
 	def get_graphical_pos(self, index, card_type):
 		if card_type == "pony":
@@ -120,12 +124,15 @@ class TableElement(Element):
 						element = CardElement(self.main,self,pos,self.card_size)
 						element.set_card(card)
 						element.menu_info = [("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)])),
-											 ("Action: Swap Card", self.swap_card, tuple([self.main.master_deck.cards.index(card)])),
-											 ("Action: Move Card", self.move_card, tuple([self.main.master_deck.cards.index(card)])),
-											 ("Action: Swap Gender", self.swap_gender, tuple([self.main.master_deck.cards.index(card)])),
-											 ("Action: Set Race", self.do_nothing),
-											 ("Action: Give Keyword", self.do_nothing),
-											 ("Action: Imitate Card", self.imitate_card, tuple([self.main.master_deck.cards.index(card)]))]
+											 ("Swap Card", self.swap_card, tuple([self.main.master_deck.cards.index(card)])),
+											 ("Move Card", self.move_card, tuple([self.main.master_deck.cards.index(card)])),
+											 ("Changeling: Imitate", self.imitate_card, tuple([self.main.master_deck.cards.index(card)])),
+											 ("Ship-Effect: Make Dystopian Future Pony", self.make_dfp, tuple([self.main.master_deck.cards.index(card)])),
+											 ("Ship-Effect: Make Princess", self.make_princess, tuple([self.main.master_deck.cards.index(card)])),
+											 ("Ship-Effect: Swap Gender", self.swap_gender, tuple([self.main.master_deck.cards.index(card)]))]
+						for t in ("Earth","Unicorn","Pegasus","Alicorn"):
+							element.menu_info.append(("Ship-Effect: Change Race to "+t, self.change_race, (self.main.master_deck.cards.index(card), t.lower())))
+
 
 		#we dispose of the remaining old_elements
 		keys = old_elements.keys()

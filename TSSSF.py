@@ -71,6 +71,8 @@ class Main(object):
 		self.sounds["players_turn_not_focused"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.wav")
 
 		self.sounds["gender_swapped"] = pygame.mixer.Sound("snds/game/attribute_change/gender_swapped.wav")
+		self.sounds["changed_race"] = pygame.mixer.Sound("snds/game/attribute_change/gender_swapped.wav")
+		self.sounds["added_keyword"] = pygame.mixer.Sound("snds/game/attribute_change/gender_swapped.wav")
 		self.sounds["imitate_card"] = pygame.mixer.Sound("snds/game/attribute_change/imitate_card.wav")
 
 		self.sounds["won_goal"] = pygame.mixer.Sound("snds/game/misc/win_goal.wav")

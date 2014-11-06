@@ -174,6 +174,8 @@ class GameServer(object):
 				elif self._rm_new_goal(message, key, player): pass
 				elif self._rm_swap_card(message, key, player): pass
 				elif self._rm_swap_gender(message, key, player): pass
+				elif self._rm_change_race(message, key, player): pass
+				elif self._rm_add_keyword(message, key, player): pass
 				elif self._rm_win_goal(message, key, player): pass
 				elif self._rm_move_card(message, key, player): pass
 				elif self._rm_imitate_card(message, key, player): pass
@@ -669,6 +671,99 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't swap card's gender.")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't swap genders, the game hasn't started...")
+			return True
+		return False
+	def _rm_change_race(self, message, key, player):
+		if message.startswith("CHANGE_RACE:"):
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					s = message[len("CHANGE_RACE:"):]
+					parts = s.split(",")
+					if len(parts) == 2:
+						race = parts[1]
+						try:
+							i = int(parts[0])
+							works = True
+						except:
+							works = False
+						if works:
+							selected_card = None
+							for y in xrange(self.card_table.size[1]):
+								for x in xrange(self.card_table.size[0]):
+									card = self.card_table.pony_cards[y][x]
+									if card != None:
+										if self.master_deck.cards.index(card) == i:
+											selected_card = card
+											break
+								if selected_card != None:
+									break
+							if selected_card != None:
+								if selected_card.race != None and selected_card.type == "pony":
+									#we swap this card's race.
+									self.history.take_snapshot(SNAPSHOT_NULL, player.name+" changed '"+selected_card.name+"'s race! It is now a "+race+".")
+									self.server.sendall("ALERT:changed_race")
+									selected_card.set_temp_race(race)
+									self.send_full_history_all()
+								else:
+									self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:This card's race can't be changed!")
+							else:
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
+						else:
+							print "ERROR! Couldn't find card with this id."
+					else:
+						print "ERROR! Bad change race message. A"
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't change a card's race.")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't change races, the game hasn't started...")
+			return True
+		return False
+	def _rm_add_keyword(self, message, key, player):
+		if message.startswith("ADD_KEYWORD:"):
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					s = message[len("ADD_KEYWORD:"):]
+					parts = s.split(",")
+					if len(parts) == 2:
+						keyword = parts[1]
+						try:
+							i = int(parts[0])
+							works = True
+						except:
+							works = False
+						if works:
+							selected_card = None
+							for y in xrange(self.card_table.size[1]):
+								for x in xrange(self.card_table.size[0]):
+									card = self.card_table.pony_cards[y][x]
+									if card != None:
+										if self.master_deck.cards.index(card) == i:
+											selected_card = card
+											break
+								if selected_card != None:
+									break
+							if selected_card != None:
+								if selected_card.type == "pony" and keyword not in selected_card.keywords and (selected_card.temp_keywords == None or keyword not in selected_card.temp_keywords):
+									#we swap this card's race.
+									self.history.take_snapshot(SNAPSHOT_NULL, player.name+" added the keyword "+keyword+" to the card '"+selected_card.name+"!")
+									self.server.sendall("ALERT:added_keywords")
+									if selected_card.temp_keywords == None:
+										selected_card.set_temp_keywords(selected_card.keywords + [keyword])
+									else:
+										selected_card.set_temp_keywords(selected_card.temp_keywords + [keyword])
+									self.send_full_history_all()
+								else:
+									self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:This keyword can't be added to this card!")
+							else:
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
+						else:
+							print "ERROR! Couldn't find card with this id."
+					else:
+						print "ERROR! Bad keyword add message. A"
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't add a keyword.")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't add a keyword, the game hasn't started...")
 			return True
 		return False
 	def _rm_win_goal(self, message, key, player):
