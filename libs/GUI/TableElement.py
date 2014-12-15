@@ -7,7 +7,7 @@ from ..CardTable import xcoords_to_index
 
 class TableElement(Element):
 	def init(self):
-		scale = 0.2
+		scale = 0.22
 		grid_offset = 15
 		self.card_size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 		self.grid_size = (int(self.card_size[0]+grid_offset*2), int(self.card_size[1]+grid_offset*2))
@@ -90,7 +90,7 @@ class TableElement(Element):
 						element.set_pos(pos)
 					else:
 						element = CardElement(self.main,self,pos,self.card_size)
-						element.set_card(card, 127)
+						element.set_card(card, 96)
 						element.menu_info = [("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
 
 		#creates the h ship cards
@@ -106,7 +106,7 @@ class TableElement(Element):
 						element.set_pos(pos)
 					else:
 						element = CardElement(self.main,self,pos,[self.card_size[1],self.card_size[0]])
-						element.set_card(card, 127, 90)
+						element.set_card(card, 96, 90)
 						element.menu_info = [("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
 
 		#creates the pony cards

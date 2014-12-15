@@ -329,7 +329,7 @@ class GameController(Controller):
 			if len(s) > 0:
 				hand = s.split(",")
 				hand.reverse()
-				scale = 0.325
+				scale = 0.425
 				size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 				for x in xrange(len(hand)):
 					s = hand[len(hand)-x-1]
