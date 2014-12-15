@@ -152,12 +152,15 @@ class CustomDeck(object):
 			raise RuntimeError("'"+args[0]+"' is not of an appropriate file type")
 		if "R:"+args[0] in self.list:
 			raise RuntimeError("A replacement for '"+args[0]+"' is already in the list")
+		if args[0] not in self.list:
+			raise RuntimeError("The card to replace '"+args[0]+"' isn't in the list")
 		files = os.listdir("data/default_cards")
 		if args[0] not in files:
 			raise LookupError("The file '"+args[0]+"' doesn't exists")
 		files = os.listdir("cards")
-		if args[1] in files:
+		if args[0] not in files:
 			raise LookupError("The custom file '"+args[0]+"' doesn't exists")
+		self.list.remove(args[0])
 		self.list.append("R:"+args[0])
 
 

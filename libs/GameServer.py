@@ -30,8 +30,8 @@ class GameServer(object):
 		self.controller = None
 		self.server = None
 
-		self.throttled = True
-		self.delay = 0.01
+		self.throttled = False # SHOULD BE True
+		self.delay = 0.001
 
 		self.players = []
 
@@ -254,7 +254,11 @@ class GameServer(object):
 			else:
 				name = player.name
 			chat = message[len("CHAT:"):]
-			self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
+			if chat.startswith("/dr "):
+				self.server.sendall("ADD_CHAT:SERVER:"+chat[len("/dr "):]+ " drink!")
+				self.server.sendall("ALERT:drink_call")
+			else:
+				self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
 			return True
 		return False
 	def _rm_request_deck(self, message, key, player):
@@ -1194,7 +1198,7 @@ class GameServer(object):
 					self.send_playerlist_all()
 					self.check_ready()
 			else:
-				if not self.game_started or t - player.time_of_disconnect >= 60:
+				if not self.game_started or t - player.time_of_disconnect >= 180:
 					#TODO: Discard player's hand
 					#TODO: Check if the game needs to reset
 					active_player = False

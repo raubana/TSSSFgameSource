@@ -66,7 +66,7 @@ class Main(object):
 		self.sounds["remove_deck"] = pygame.mixer.Sound("snds/card/remove_deck.wav")
 		self.sounds["shuffle_deck"] = pygame.mixer.Sound("snds/card/shuffle.wav")
 
-		self.sounds["drink_call"] = pygame.mixer.Sound("snds/game/drink_call.wav")
+		self.sounds["drink_call"] = pygame.mixer.Sound("snds/game/misc/drink_call.wav")
 		self.sounds["players_turn"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.wav")
 		self.sounds["players_turn_not_focused"] = pygame.mixer.Sound("snds/app/players_turn_not_focused.wav")
 
