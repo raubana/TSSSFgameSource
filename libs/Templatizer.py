@@ -35,13 +35,29 @@ SPRITE_UNICORN = 19
 DEFAULT_TITLE_FONT_SIZE = 55
 DEFAULT_POWER_FONT_SIZE = 40
 
+TEMPL_FONTS = {}
+
+def get_templ_font(font_name, font_size, is_bold=False):
+	font_location = "data/fonts/"+font_name+".ttf"
+	name = font_location+","+str(font_size)+","+str(is_bold)
+	if name not in TEMPL_FONTS:
+		TEMPL_FONTS[name] = pygame.font.Font(font_location,font_size)
+	return TEMPL_FONTS[name]
+
+"""
 TITLE_FONT = pygame.font.Font("data/fonts/Barth_Regular.ttf",DEFAULT_TITLE_FONT_SIZE)
 KEYWORDS_FONT = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",40)
 POWER_FONT= pygame.font.Font("data/fonts/Ubahn_newpony.ttf",DEFAULT_POWER_FONT_SIZE)
 QUOTE_FONT = pygame.font.Font("data/fonts/LinLibertine_RI.ttf",28)
 COPYRIGHT_FONT = pygame.font.Font("data/fonts/Ubahn-Light.ttf",17)
 COPYRIGHT_FONT.set_bold(True)
+"""
 
+TITLE_FONT = ("Barth_Regular", DEFAULT_TITLE_FONT_SIZE, False)
+KEYWORDS_FONT = ("Ubahn_newpony", 40, False)
+POWER_FONT = ("Ubahn_newpony", DEFAULT_POWER_FONT_SIZE, False)
+QUOTE_FONT = ("LinLibertine_RI", 28, False)
+COPYRIGHT_FONT = ("Ubahn-Light", 17, True)
 
 
 def autowrap_text(text, font, max_width):
@@ -216,12 +232,14 @@ class Templatizer(object):
 		img = pygame.Surface((788, 1088), pygame.SRCALPHA)
 		img.fill((0,0,0,0))
 
+		"""
 		TITLE_FONT = pygame.font.Font("data/fonts/Barth_Regular.ttf",self.title_font_size)
 		KEYWORDS_FONT = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",40)
 		POWER_FONT= pygame.font.Font("data/fonts/Ubahn_newpony.ttf",self.power_font_size)
 		QUOTE_FONT = pygame.font.Font("data/fonts/LinLibertine_RI.ttf",28)
 		COPYRIGHT_FONT = pygame.font.Font("data/fonts/Ubahn-Light.ttf",17)
 		COPYRIGHT_FONT.set_bold(True)
+		"""
 
 		#loads the card back
 		if self.cardback == CARDBACK_START:
@@ -250,33 +268,40 @@ class Templatizer(object):
 		img.blit(cardback, (0, 0))
 
 		#we render the card title
+		"""
 		if self.title_font_size != DEFAULT_TITLE_FONT_SIZE:
 			font = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",self.title_font_size)
 		else:
 			font = TITLE_FONT
-		title_lines = autowrap_text(self.title, TITLE_FONT, 560)
-		line_spacing = int(TITLE_FONT.get_height()*0.15)
-		height = (TITLE_FONT.get_height())*len(title_lines) - (line_spacing)*(len(title_lines)-1)
+		"""
+		font = get_templ_font(TITLE_FONT[0],self.title_font_size,TITLE_FONT[2])
+		title_lines = autowrap_text(self.title, font, 560)
+		line_spacing = int(font.get_height()*0.15)
+		height = (font.get_height())*len(title_lines) - (line_spacing)*(len(title_lines)-1)
 		mid = 100
 		y_pos = mid - (height/2)
 		for line in title_lines:
 			#print "'"+line+"'"
-			srf = TITLE_FONT.render(line,True,color)
+			srf = font.render(line,True,color)
 			img.blit(srf,(173+550-srf.get_width(), y_pos))
 			y_pos += srf.get_height()-line_spacing
 
 		#we render the card's keywords
+		font = get_templ_font(*KEYWORDS_FONT)
 		if len(self.keywords) > 0 and second_color != None:
 			keywords = string.join(self.keywords,", ")
-			srf = KEYWORDS_FONT.render(keywords, True, second_color)
+			srf = font.render(keywords, True, second_color)
 			rect = srf.get_rect(topright = (722,607))
 			img.blit(srf,rect)
 
 		#render the card's power
+		"""
 		if self.power_font_size != DEFAULT_POWER_FONT_SIZE:
 			font = pygame.font.Font("data/fonts/Ubahn_newpony.ttf",self.power_font_size)
 		else:
 			font = POWER_FONT
+		"""
+		font = get_templ_font(POWER_FONT[0],self.power_font_size,POWER_FONT[2])
 		y_pos = 650 + font.get_height()*0.65
 		power_lines = autowrap_text(self.power, font, 679)
 		line_spacing = int(font.get_height()*0.05)
@@ -288,19 +313,21 @@ class Templatizer(object):
 			y_pos += rect.height-line_spacing
 
 		#render the card's quote
-		quote_lines = autowrap_text(self.quote, QUOTE_FONT, 682)
+		font = get_templ_font(*QUOTE_FONT)
+		quote_lines = autowrap_text(self.quote, font, 682)
 		quote_lines.reverse()
-		line_spacing = int(QUOTE_FONT.get_height()*0.05)
+		line_spacing = int(font.get_height()*0.05)
 		y_pos = 1040
 		for line in quote_lines:
 			#print "'"+line+"'"
-			srf = QUOTE_FONT.render(line, True, lerp_colors(color,(0,0,0),0.3))
+			srf = font.render(line, True, lerp_colors(color,(0,0,0),0.3))
 			rect = srf.get_rect(midbottom = (395,y_pos))
 			img.blit(srf,rect)
 			y_pos -= rect.height-line_spacing
 
 		#we render the card's copyright
-		srf = COPYRIGHT_FONT.render(self.copyright,True,(255,255,255))
+		font = get_templ_font(*COPYRIGHT_FONT)
+		srf = font.render(self.copyright,True,(255,255,255))
 		rect = srf.get_rect(topright = (750,1055))
 		img.blit(srf,rect)
 

@@ -251,7 +251,7 @@ class Element(object):
 			print ("-"*self.element_level) + " " + str(self)
 		# We need to check if the mouse is even over our rect.
 		#This returns a boolean that will be true if this element is the one that catches the event.
-		if not self.ignore_all_input and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
+		if not self.ignore_all_input and self.rect != None and self.rect.collidepoint(mouse_pos_local[0], mouse_pos_local[1]):
 			#We know that at least the mouse was inside this element when it clicked.
 			#The question is, did something inside of this element get clicked?
 			#In order to properly test this, we need to iterate in reverse order.
