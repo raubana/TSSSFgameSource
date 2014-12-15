@@ -93,6 +93,7 @@ class Server(object):
 							sent = clientsocket.send(message)
 							message = message[sent:]
 						if kick:
+							time.sleep(1.0) #This is to ensure the kick message is transmitted.
 							print "-Kick message sent. Disconnecting..."
 							self.disconnect(address)
 				except:

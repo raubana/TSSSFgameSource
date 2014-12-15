@@ -51,6 +51,8 @@ class GameServer(object):
 		self.card_table = CardTable()
 		self.game_started = False
 
+		self.kicked_players_cards = Deck.Deck()
+
 		self.timer_start_amount = 0.0
 		self.timer_amount = 0.0
 		self.prev_timer_amount = 0.0
@@ -62,8 +64,11 @@ class GameServer(object):
 		self.current_players_turn = None
 		for pl in self.players:
 			pl.reset()
+		for pl in self.players:
+			self.give_fullupdate(pl)
+
 		if self.server != None:
-			self.send_playerlist_all()
+			self.server.sendall("ADD_CHAT:SERVER:The server has been reset.")
 
 	def load_custom_deck(self):
 		print "== loading the MasterDeck"
@@ -1197,10 +1202,11 @@ class GameServer(object):
 						self.controller.triggerPlayerDisconnect(player)
 					self.send_playerlist_all()
 					self.check_ready()
+
 			else:
-				if not self.game_started or t - player.time_of_disconnect >= 180:
-					#TODO: Discard player's hand
-					#TODO: Check if the game needs to reset
+				if not self.game_started or t - player.time_of_disconnect >= 120:
+					for card in player.hand.cards:
+						self.kicked_players_cards.add_card_to_top(card)
 					active_player = False
 					index = self.players.index(player)
 					if self.game_started and index == self.current_players_turn:
@@ -1225,11 +1231,21 @@ class GameServer(object):
 
 			if ready and not self.timer_running:
 				self.runTimer()
-				self.server.sendall("ADD_CHAT:SERVER: The game will start in...")
+				self.server.sendall("ADD_CHAT:SERVER:The game will start in...")
 			elif not ready and self.timer_running:
 				self.stopTimer()
-				self.server.sendall("ADD_CHAT:SERVER: ...Aborted.")
+				self.server.sendall("ADD_CHAT:SERVER:...Aborted.")
+		else:
+			if len(self.players) < MIN_PLAYERS:
+				self.reset()
 	def setPlayersTurn(self, i):
+		#Here we put kicked players' cards into the discard piles.
+		for card in self.kicked_players_cards.cards:
+			if card.type == "pony":
+				self.pony_discard.add_card_to_bottom(card)
+			elif card.type == "ship":
+				self.ship_discard.add_card_to_bottom(card)
+		self.kicked_players_cards = Deck.Deck()
 		self.current_players_turn = i
 		self.server.sendto(self.players[i].address, "YOUR_TURN")
 		self.send_playerlist_all()
