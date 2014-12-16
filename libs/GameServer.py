@@ -40,6 +40,8 @@ class GameServer(object):
 		self.reset()
 
 	def reset(self):
+		self.reset_modified_cards()
+
 		self.history = HistoryMachine()
 
 		self.pony_deck = Deck.Deck()
