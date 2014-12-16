@@ -36,6 +36,7 @@ DEFAULT_TITLE_FONT_SIZE = 55
 DEFAULT_POWER_FONT_SIZE = 40
 
 TEMPL_FONTS = {}
+TEMPL_IMAGES = {}
 
 def get_templ_font(font_name, font_size, is_bold=False):
 	font_location = "data/fonts/"+font_name+".ttf"
@@ -43,6 +44,12 @@ def get_templ_font(font_name, font_size, is_bold=False):
 	if name not in TEMPL_FONTS:
 		TEMPL_FONTS[name] = pygame.font.Font(font_location,font_size)
 	return TEMPL_FONTS[name]
+
+
+def get_templ_image(image_location):
+	if image_location not in TEMPL_IMAGES:
+		TEMPL_IMAGES[image_location] = pygame.image.load(image_location)
+	return TEMPL_IMAGES[image_location].copy()
 
 """
 TITLE_FONT = pygame.font.Font("data/fonts/Barth_Regular.ttf",DEFAULT_TITLE_FONT_SIZE)
@@ -243,23 +250,23 @@ class Templatizer(object):
 
 		#loads the card back
 		if self.cardback == CARDBACK_START:
-			cardback = pygame.image.load("imgs/template/card/Start.png")
+			cardback = get_templ_image("imgs/template/card/Start.png")
 			color = (58,50,53)
 			second_color = (237,239,239)
 		elif self.cardback == CARDBACK_PONY:
-			cardback = pygame.image.load("imgs/template/card/Pony.png")
+			cardback = get_templ_image("imgs/template/card/Pony.png")
 			color = (69,43,137)
 			second_color = (234,220,236)
 		elif self.cardback == CARDBACK_SHIP:
-			cardback = pygame.image.load("imgs/template/card/Ship.png")
+			cardback = get_templ_image("imgs/template/card/Ship.png")
 			color = (206,27,105)
 			second_color = (234,220,236)
 		elif self.cardback == CARDBACK_GOAL:
-			cardback = pygame.image.load("imgs/template/card/Goal.png")
+			cardback = get_templ_image("imgs/template/card/Goal.png")
 			color = (18,57,98)
 			second_color = None#this doesn't have a second color because goals don't have keywords
 		else:
-			cardback = pygame.image.load("imgs/template/card/Unknown.png")
+			cardback = get_templ_image("imgs/template/card/Unknown.png")
 			color = (64,64,64)
 			second_color = (220,220,220)
 
@@ -339,46 +346,46 @@ class Templatizer(object):
 			#print sp
 			#this is a sprite that goes in the bottom left corner
 			if sp == SPRITE_DFP:
-				bottomleft_sprite = pygame.image.load("imgs/template/symbols/DystopianFuture.png")
+				bottomleft_sprite = get_templ_image("imgs/template/symbols/DystopianFuture.png")
 			elif sp == SPRITE_0:
-				bottomleft_sprite = pygame.image.load("imgs/template/symbols/0.png")
+				bottomleft_sprite = get_templ_image("imgs/template/symbols/0.png")
 			elif sp == SPRITE_1:
-				bottomleft_sprite = pygame.image.load("imgs/template/symbols/1.png")
+				bottomleft_sprite = get_templ_image("imgs/template/symbols/1.png")
 			elif sp == SPRITE_2:
-				bottomleft_sprite = pygame.image.load("imgs/template/symbols/2.png")
+				bottomleft_sprite = get_templ_image("imgs/template/symbols/2.png")
 			elif sp == SPRITE_3:
-				bottomleft_sprite = pygame.image.load("imgs/template/symbols/3.png")
+				bottomleft_sprite = get_templ_image("imgs/template/symbols/3.png")
 			elif sp == SPRITE_4:
-				bottomleft_sprite = pygame.image.load("imgs/template/symbols/4.png")
+				bottomleft_sprite = get_templ_image("imgs/template/symbols/4.png")
 			elif sp == SPRITE_23:
-				bottomleft_sprite = pygame.image.load("imgs/template/symbols/23.png")
+				bottomleft_sprite = get_templ_image("imgs/template/symbols/23.png")
 			#this is a sprite that goes in the top left corner
 			elif sp == SPRITE_CHANGELING_ALICORN:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/ChangelingAlicorn.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/ChangelingAlicorn.png"))
 			elif sp == SPRITE_CHANGELING_EARTH:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/ChangelingEarthPony.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/ChangelingEarthPony.png"))
 			elif sp == SPRITE_CHANGELING_PEGASUS:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/ChangelingPegasus.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/ChangelingPegasus.png"))
 			elif sp == SPRITE_CHANGELING_UNICORN:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/ChangelingUnicorn.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/ChangelingUnicorn.png"))
 			elif sp == SPRITE_ALICORN:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/Alicorn.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/Alicorn.png"))
 			elif sp == SPRITE_EARTH:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/EarthPony.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/EarthPony.png"))
 			elif sp == SPRITE_PEGASUS:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/Pegasus.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/Pegasus.png"))
 			elif sp == SPRITE_UNICORN:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/Unicorn.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/Unicorn.png"))
 			elif sp == SPRITE_MALE:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/Male.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/Male.png"))
 			elif sp == SPRITE_FEMALE:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/Female.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/Female.png"))
 			elif sp == SPRITE_MALE_FEMALE:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/MaleFemale.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/MaleFemale.png"))
 			elif sp == SPRITE_SHIP:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/Ship.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/Ship.png"))
 			elif sp == SPRITE_GOAL:
-				topleft_sprites.append(pygame.image.load("imgs/template/symbols/Goal.png"))
+				topleft_sprites.append(get_templ_image("imgs/template/symbols/Goal.png"))
 
 		#first we render the bottom left sprite
 		if bottomleft_sprite != None:

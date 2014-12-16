@@ -310,24 +310,27 @@ class GameServer(object):
 		return False
 	def _rm_ready(self, message, key, player):
 		if message == "READY":
-			if not self.game_started:
-				#toggle this player's "is_ready" variable
-				t = time.time()
-				if t - player.last_toggled_ready < 3:
-					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You're doing that too often.")
-				else:
-					player.is_ready = not player.is_ready
-					player.last_toggled_ready = t
-					if player.is_ready:
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
-						self.server.sendall("ALERT:player_ready")
-					else:
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
-						self.server.sendall("ALERT:player_not_ready")
-					self.send_playerlist_all()
-					self.check_ready()
+			#toggle this player's "is_ready" variable
+			t = time.time()
+			if t - player.last_toggled_ready < 3:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You're doing that too often.")
 			else:
-				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:The game's already started!")
+				player.is_ready = not player.is_ready
+				player.last_toggled_ready = t
+				if player.is_ready:
+					if not self.game_started:
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
+					else:
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' wants to end the game.")
+					self.server.sendall("ALERT:player_ready")
+				else:
+					if not self.game_started:
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
+					else:
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' does NOT want to end the game.")
+					self.server.sendall("ALERT:player_not_ready")
+				self.send_playerlist_all()
+				self.check_ready()
 			return True
 		return False
 	def _rm_end_turn(self, message, key, player):
@@ -1236,7 +1239,13 @@ class GameServer(object):
 				self.stopTimer()
 				self.server.sendall("ADD_CHAT:SERVER:...Aborted.")
 		else:
-			if len(self.players) < MIN_PLAYERS:
+			ready = 0
+			count = 0
+			for pl in self.players:
+				if pl.is_ready:
+					ready += 1
+				count += 1
+			if count < MIN_PLAYERS or ready == count:
 				self.reset()
 	def setPlayersTurn(self, i):
 		#Here we put kicked players' cards into the discard piles.
@@ -1340,6 +1349,8 @@ class GameServer(object):
 
 		if not self.game_started:
 			#This must be the game start timer, so we start the game.
+			for pl in self.players:
+				pl.is_ready = False
 			self.game_started = True
 			self.send_playerlist_all()
 			import libs.ServerControllers.SetupNewgameServerController as SetupNewgameServerController
@@ -1360,11 +1371,10 @@ class GameServer(object):
 				part += "CT:"
 			if not player.is_connected:
 				part += "DC:"
-			if not self.game_started:
-				if player.is_ready:
-					part += "R:"
-				else:
-					part += "NR:"
+			if player.is_ready:
+				part += "R:"
+			elif not self.game_started:
+				part += "NR:"
 			if not player.is_loaded:
 				part += "L:"
 			part += player.name
