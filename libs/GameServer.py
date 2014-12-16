@@ -67,6 +67,8 @@ class GameServer(object):
 		for pl in self.players:
 			self.give_fullupdate(pl)
 
+		self.send_playerlist_all()
+
 		if self.server != None:
 			self.server.sendall("ADD_CHAT:SERVER:The server has been reset.")
 
