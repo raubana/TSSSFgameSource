@@ -242,16 +242,16 @@ class GameServer(object):
 							#we kick this one, since the player is already connected.
 							self.server.kick(key,"This player is already connected.")
 					else:
-						if not self.game_started:
-							#connect new player
-							self.server.sendto(key,"CONNECTED:"+name)
-							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
-							self.players.append(Player(key, name, player_key))
-							if self.controller != None:
-								self.controller.triggerNewPlayer(self.players[-1])
-							print "=Player '"+name+"'", key, "has joined the game."
-						else:
-							self.server.kick(key,"The game's already started. Please come back later.")
+						#if not self.game_started:
+						#connect new player
+						self.server.sendto(key,"CONNECTED:"+name)
+						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
+						self.players.append(Player(key, name, player_key))
+						if self.controller != None:
+							self.controller.triggerNewPlayer(self.players[-1])
+						print "=Player '"+name+"'", key, "has joined the game."
+						#else:
+						#	self.server.kick(key,"The game's already started. Please come back later.")
 					self.send_playerlist_all()
 					self.check_ready()
 			return True
@@ -319,22 +319,25 @@ class GameServer(object):
 			if t - player.last_toggled_ready < 3:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You're doing that too often.")
 			else:
-				player.is_ready = not player.is_ready
-				player.last_toggled_ready = t
-				if player.is_ready:
-					if not self.game_started:
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
+				if not (self.game_started and player.is_spectating):
+					player.is_ready = not player.is_ready
+					player.last_toggled_ready = t
+					if player.is_ready:
+						if not self.game_started:
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is ready.")
+							player.is_spectating = False
+						else:
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' wants to end the game.")
+						self.server.sendall("ALERT:player_ready")
 					else:
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' wants to end the game.")
-					self.server.sendall("ALERT:player_ready")
-				else:
-					if not self.game_started:
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
-					else:
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' does NOT want to end the game.")
-					self.server.sendall("ALERT:player_not_ready")
-				self.send_playerlist_all()
-				self.check_ready()
+						if not self.game_started:
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' is NOT ready.")
+							player.is_spectating = True
+						else:
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' does NOT want to end the game.")
+						self.server.sendall("ALERT:player_not_ready")
+					self.send_playerlist_all()
+					self.check_ready()
 			return True
 		return False
 	def _rm_end_turn(self, message, key, player):
@@ -1211,7 +1214,7 @@ class GameServer(object):
 					self.check_ready()
 
 			else:
-				if not self.game_started or t - player.time_of_disconnect >= 120:
+				if player.is_spectating or not self.game_started or t - player.time_of_disconnect >= 120:
 					for card in player.hand.cards:
 						self.kicked_players_cards.add_card_to_top(card)
 					active_player = False
@@ -1231,10 +1234,10 @@ class GameServer(object):
 		if not self.game_started:
 			number_ready = 0
 			for player in self.players:
-				if player.is_connected and player.is_ready:
+				if player.is_connected and player.is_ready and not player.is_spectating:
 					number_ready += 1
 
-			ready = number_ready >= MIN_PLAYERS and number_ready == len(self.players)
+			ready = number_ready >= MIN_PLAYERS
 
 			if ready and not self.timer_running:
 				self.runTimer()
@@ -1248,16 +1251,20 @@ class GameServer(object):
 			for pl in self.players:
 				if pl.is_ready:
 					ready += 1
-				count += 1
+				if not pl.is_spectating:
+					count += 1
 			if count < MIN_PLAYERS or ready == count:
 				self.reset()
 	def setPlayersTurn(self, i):
 		#Here we put kicked players' cards into the discard piles.
+		updateDecks = len(self.kicked_players_cards.cards) > 0
 		for card in self.kicked_players_cards.cards:
 			if card.type == "pony":
 				self.pony_discard.add_card_to_bottom(card)
 			elif card.type == "ship":
 				self.ship_discard.add_card_to_bottom(card)
+		if updateDecks:
+			self.send_decks_all()
 		self.kicked_players_cards = Deck.Deck()
 		self.current_players_turn = i
 		self.server.sendto(self.players[i].address, "YOUR_TURN")
@@ -1277,7 +1284,9 @@ class GameServer(object):
 			update_goals = True
 		if update_goals: self.send_public_goals_all()
 		i = self.current_players_turn + 1
-		i %= len(self.players)
+		while self.players[self.current_players_turn].is_spectating:
+			i = self.current_players_turn + 1
+			i %= len(self.players)
 		self.setPlayersTurn(i)
 	def get_decks_transmit(self):
 		s = "DECKS:"
@@ -1377,7 +1386,7 @@ class GameServer(object):
 				part += "DC:"
 			if player.is_ready:
 				part += "R:"
-			elif not self.game_started:
+			elif player.is_spectating:#not self.game_started:
 				part += "NR:"
 			if not player.is_loaded:
 				part += "L:"

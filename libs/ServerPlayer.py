@@ -19,6 +19,8 @@ class Player(object):
 		self.is_ready = False # This is the players vote regarding starting the game or not
 		self.last_toggled_ready = 0
 
+		self.is_spectating = True
+
 	def get_score(self):
 		score = 0
 		for card in self.won_goals.cards:

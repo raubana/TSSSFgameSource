@@ -50,13 +50,6 @@ class GameController(Controller):
 		self.top_element.layout = LAYOUT_VERTICAL
 		self.bottom_element.layout = LAYOUT_VERTICAL
 
-		self.table_element.h_scrollable = True
-		self.table_element.v_scrollable = True
-		self.table_element.always_show_v_scroll = True
-		self.table_element.always_show_h_scroll = True
-		self.table_element.allow_rightclick_multi_axis_scrolling = True
-		self.table_element.force_fullrange_scrolling = True
-
 		#LEVEL 2
 		self.history_element = HistoryElement(self.main, self.top_element, None, ("100%",50))
 		self.chat_element = Element(self.main, self.top_element, None, ("100%","100%"))

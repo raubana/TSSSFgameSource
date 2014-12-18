@@ -4,7 +4,7 @@ import os
 CARD_SIZE = (394, 544)
 CARD_ART_SIZE = (385, 284)
 MIN_PLAYERS = 2
-MAX_PLAYERS = 5
+MAX_PLAYERS = 10
 MIN_CARDS_IN_HAND = 7
 
 # SOCKET CONSTANTS
@@ -13,7 +13,7 @@ PONG_MESSAGE = "PONG" # response sent back to the server/client by the client/se
 TIMEOUT_TIME = 10.0  # seconds before a player is dropped for timing-out
 PING_FREQUENCY = 2.0  # ping the server/client every X seconds to ensure there's still a connection.
 BUFFERSIZE = 2048 # the size of the buffer used in the sockets
-MESSAGE_DELAY = 0.1 # the delay between sent messages to prevent buffer overflows
+MESSAGE_DELAY = 0.0 # the delay between sent messages to prevent buffer overflows
 ESCAPE_CHARACTER = str(chr(3))+str(chr(4))+str(chr(5))+str(chr(6))
 DEBUG_LOCALHOST = False #This is for testing on one machine.
 if not DEBUG_LOCALHOST:
@@ -58,7 +58,7 @@ CLIENT_PRERENDER_DECK = False
 CLIENT_RERENDER_DECK_IN_BACKGROUND = True
 
 #SERVER-SIDE
-SERVER_GAMESTART_DELAY = 3
+SERVER_GAMESTART_DELAY = 30
 SERVER_TURN_MAX_DURATION = 60*10.0 #This is the length of a player's turn once they've played their first card.
 SERVER_TURN_START_DURATION = 60*3.0 #This is the length of a player's before they've played their first card.
 SERVER_TURN_ALERT_DURATION = 60*1.0 #When the timer reaches this amount, the server will alert the player that their turn is almost over.

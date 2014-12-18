@@ -32,7 +32,7 @@ class Server(object):
 		self.serversocket = socket.socket(
 			socket.AF_INET, socket.SOCK_STREAM)
 		self.serversocket.bind((host, port))
-		self.serversocket.listen(5)
+		self.serversocket.listen(10)
 
 		self.accept_thread = thread.start_new_thread(self.accept, tuple([]))
 

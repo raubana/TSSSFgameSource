@@ -102,11 +102,12 @@ class SetupNewgameServerController(ServerController):
 
 	def GivePlayersStartHands(self, args):
 		for player in self.gameserver.players:
-			for i in xrange(4):
-				player.hand.add_card_to_top(self.gameserver.pony_deck.draw())
-			for i in xrange(3):
-				player.hand.add_card_to_top(self.gameserver.ship_deck.draw())
-			self.gameserver.send_playerhand(player)
+			if not player.is_spectating:
+				for i in xrange(4):
+					player.hand.add_card_to_top(self.gameserver.pony_deck.draw())
+				for i in xrange(3):
+					player.hand.add_card_to_top(self.gameserver.ship_deck.draw())
+				self.gameserver.send_playerhand(player)
 
 		self.gameserver.send_decks_all()
 
@@ -119,7 +120,14 @@ class SetupNewgameServerController(ServerController):
 
 	def PickFirstPlayer(self, args):
 		#We actually scramble the player list.
+		specs = []
+		i = len(self.gameserver.players)-1
+		while i > 0:
+			if self.gameserver.players[i].is_spectating:
+				specs.append(self.gameserver.players.pop(i))
+			i -= 1
 		random.shuffle(self.gameserver.players)
+		self.gameserver.players += specs
 		self.gameserver.server.sendall("ADD_CHAT:SERVER:"+self.gameserver.players[0].name+" goes first!")
 		self.gameserver.setPlayersTurn(0)
 
