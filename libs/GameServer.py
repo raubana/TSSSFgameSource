@@ -1266,16 +1266,24 @@ class GameServer(object):
 		if updateDecks:
 			self.send_decks_all()
 		self.kicked_players_cards = Deck.Deck()
-		self.current_players_turn = i
-		self.server.sendto(self.players[i].address, "YOUR_TURN")
-		self.send_playerlist_all()
-		self.stopTimer()
-		self.setTimerDuration(SERVER_TURN_START_DURATION)
-		self.runTimer()
-		self.history.clear()
-		self.history.take_snapshot(SNAPSHOT_TURN_START, self.players[i].name+"'s turn has started.")
-		self.send_full_history_all()
-		self.controller = None
+		if self.game_started:
+			count = 0
+			for pl in self.players:
+				if not pl.is_spectating:
+					count += 1
+			if count >= MIN_PLAYERS:
+				self.current_players_turn = i
+				self.server.sendto(self.players[i].address, "YOUR_TURN")
+				self.send_playerlist_all()
+				self.stopTimer()
+				self.setTimerDuration(SERVER_TURN_START_DURATION)
+				self.runTimer()
+				self.history.clear()
+				self.history.take_snapshot(SNAPSHOT_TURN_START, self.players[i].name+"'s turn has started.")
+				self.send_full_history_all()
+				self.controller = None
+			else:
+				self.current_players_turn = None
 	def nextPlayersTurn(self):
 		self.reset_modified_cards()
 		update_goals = False
@@ -1283,8 +1291,9 @@ class GameServer(object):
 			self.public_goals.add_card_to_top(self.goal_deck.draw())
 			update_goals = True
 		if update_goals: self.send_public_goals_all()
+		i = self.current_players_turn
 		while True:
-			i = self.current_players_turn + 1
+			i += 1
 			i %= len(self.players)
 			if not self.players[i].is_spectating:
 				break

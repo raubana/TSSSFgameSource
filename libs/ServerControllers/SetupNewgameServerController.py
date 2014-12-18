@@ -122,7 +122,7 @@ class SetupNewgameServerController(ServerController):
 		#We actually scramble the player list.
 		specs = []
 		i = len(self.gameserver.players)-1
-		while i > 0:
+		while i >= 0:
 			if self.gameserver.players[i].is_spectating:
 				specs.append(self.gameserver.players.pop(i))
 			i -= 1
