@@ -1283,10 +1283,11 @@ class GameServer(object):
 			self.public_goals.add_card_to_top(self.goal_deck.draw())
 			update_goals = True
 		if update_goals: self.send_public_goals_all()
-		i = self.current_players_turn + 1
-		while self.players[self.current_players_turn].is_spectating:
+		while True:
 			i = self.current_players_turn + 1
 			i %= len(self.players)
+			if not self.players[i].is_spectating:
+				break
 		self.setPlayersTurn(i)
 	def get_decks_transmit(self):
 		s = "DECKS:"
