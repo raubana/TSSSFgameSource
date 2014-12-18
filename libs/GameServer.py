@@ -1241,7 +1241,7 @@ class GameServer(object):
 
 			if ready and not self.timer_running:
 				self.runTimer()
-				self.server.sendall("ADD_CHAT:SERVER:The game will start in...")
+				self.server.sendall("ADD_CHAT:SERVER:The game will start in "+str(SERVER_GAMESTART_DELAY)+" seconds.")
 			elif not ready and self.timer_running:
 				self.stopTimer()
 				self.server.sendall("ADD_CHAT:SERVER:...Aborted.")
@@ -1348,9 +1348,10 @@ class GameServer(object):
 		if self.controller != None:
 			self.controller.triggerTimerTick(amount)
 
-		if not self.game_started:
-			self.server.sendall("ADD_CHAT:SERVER:..."+str(amount)+"...")
-		else:
+		#if not self.game_started:
+		#	self.server.sendall("ADD_CHAT:SERVER:..."+str(amount)+"...")
+		#else:
+		if self.game_started:
 			if floorint(self.timer_amount) == SERVER_TURN_ALERT_DURATION:
 				self.server.sendto(self.players[self.current_players_turn].address, "TURN_ALMOST_OVER")
 	def triggerTimerDone(self):
@@ -1391,7 +1392,8 @@ class GameServer(object):
 			if not player.is_loaded:
 				part += "L:"
 			part += player.name
-			part += " - " + str(player.get_score())
+			if self.game_started and not player.is_spectating:
+				part += " - " + str(player.get_score())
 			parts.append(part)
 			i += 1
 		i = 0
