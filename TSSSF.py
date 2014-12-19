@@ -3,7 +3,7 @@ import os
 
 import pygame
 from pygame.locals import *
-pygame.mixer.pre_init(frequency=44100 ,buffer = 2**9)
+pygame.mixer.pre_init(frequency=44100 ,buffer = 2**10)
 pygame.init()
 
 from libs.GUI.GUI import *

@@ -1381,7 +1381,7 @@ class GameServer(object):
 			self.controller = SetupNewgameServerController.SetupNewgameServerController(self)
 		else:
 			#This means a player ran out of time for their turn.
-			self.server.sendall("ADD_CHAT:SERVER: "+self.players[self.current_players_turn].name+" ran out of time.")
+			self.server.sendall("ADD_CHAT:SERVER:"+self.players[self.current_players_turn].name+" ran out of time.")
 			self.nextPlayersTurn()
 
 	#Send Commands
