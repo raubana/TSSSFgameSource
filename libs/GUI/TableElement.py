@@ -19,7 +19,7 @@ class TableElement(Element):
 
 		self.min_zoom = 0.1
 		self.max_zoom = 0.6
-		self.zoom_ticks = 5
+		self.zoom_ticks = 10
 		self.set_zoom(0)
 
 		self.being_dragged = False
@@ -343,6 +343,14 @@ class TableElement(Element):
 			index = info[1]
 			if info[0] == "pony":
 				pos = self.get_graphical_pos(index, "pony")
+				"""
+				size = 10
+				srf = pygame.Surface(self.card_size,SRCALPHA)
+				srf.fill((0,0,0,0))
+				srf = apply_shadow(srf,size,color=(127,0,255))
+				rect = srf.get_rect(center = (pos[0]+(self.card_size[0]/2), pos[1]+(self.card_size[1]/2)))
+				self.rendered_surface.blit(srf,rect)
+				"""
 				pygame.draw.rect(self.rendered_surface, (127,0,255), (pos[0],pos[1],self.card_size[0],self.card_size[1]), 2)
 
 
