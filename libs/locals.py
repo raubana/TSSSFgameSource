@@ -13,7 +13,7 @@ PONG_MESSAGE = "PONG" # response sent back to the server/client by the client/se
 TIMEOUT_TIME = 10.0  # seconds before a player is dropped for timing-out
 PING_FREQUENCY = 2.0  # ping the server/client every X seconds to ensure there's still a connection.
 BUFFERSIZE = 2048 # the size of the buffer used in the sockets
-MESSAGE_DELAY = 0.0 # the delay between sent messages to prevent buffer overflows
+MESSAGE_DELAY = 0.025 # the delay between sent messages to prevent buffer overflows
 ESCAPE_CHARACTER = str(chr(3))+str(chr(4))+str(chr(5))+str(chr(6))
 DEBUG_LOCALHOST = False #This is for testing on one machine.
 if not DEBUG_LOCALHOST:

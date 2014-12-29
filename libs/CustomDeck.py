@@ -121,14 +121,20 @@ class CustomDeck(object):
 			raise TypeError("'add_all_default' doesn't take any arguments")
 		files = os.listdir("data/default_cards")
 		for file in files:
-			self._add([file])
+			try:
+				self._add([file])
+			except:
+				pass
 
 	def _add_all_cards(self, args):
 		if len(args) != 0:
 			raise TypeError("'add_all_cards' doesn't take any arguments")
 		files = os.listdir("cards")
 		for file in files:
-			self._add([file])
+			try:
+				self._add([file])
+			except:
+				pass
 
 	def _add_all(self, args):
 		if len(args) != 0:

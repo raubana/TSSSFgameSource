@@ -30,7 +30,7 @@ class GameServer(object):
 		self.controller = None
 		self.server = None
 
-		self.throttled = False # SHOULD BE True
+		self.throttled = True # SHOULD BE True
 		self.delay = 0.001
 
 		self.players = []

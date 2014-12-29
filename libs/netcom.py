@@ -45,7 +45,7 @@ class Server(object):
 		self.received_messages = {}
 		self.messages_to_send = {}
 
-		self.throttled = False#SHOULD BE True
+		self.throttled = True#SHOULD BE True
 
 		print "-Server running."
 
