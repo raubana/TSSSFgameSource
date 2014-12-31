@@ -83,8 +83,7 @@ class GameServer(object):
 				self.shutting_down = True
 				for pl in self.players:
 					self.server.kick(pl.address,"The server is shutting down. Thanks for playing :)")
-				self.setTimerDuration(3)
-				self.runTimer()
+				self.shutdown_time = time.time() + 3
 
 	def load_custom_deck(self):
 		print "== loading the MasterDeck"
@@ -178,6 +177,10 @@ class GameServer(object):
 	def _update(self):
 		t = time.time()
 
+		if self.shutting_down and t >= self.shutdown_time:
+			self.running = False
+			self.server.close()
+
 		if self.timer_running:
 			dif = t - self.timer_start_time
 			self.timer_amount = self.timer_start_amount - dif
@@ -186,8 +189,8 @@ class GameServer(object):
 			self.send_timer_all()
 			if self.timer_running:
 				for t in xrange(dif):
-					self.triggerTimerTick(ceilint(self.prev_timer_amount-1)-t)
-				if self.timer_amount < 1:
+					self.triggerTimerTick(ceilint(self.prev_timer_amount)-1-t)
+				if ceilint(self.timer_amount) < 1:
 					self.timer_running = False
 					self.triggerTimerDone()
 
@@ -319,8 +322,15 @@ class GameServer(object):
 	def _rm_disconnect(self, message, key, player):
 		if message == "DISCONNECT":
 			if player != None:
-				player.time_of_disconnect = time.time()-120
 				self.server.kick(player.address,"See ya :)")
+				player.is_connected = False
+				player.is_ready = False
+				player.time_of_disconnect = time.time()-120
+				self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
+				if self.controller != None:
+					self.controller.triggerPlayerDisconnect(player)
+				self.send_playerlist_all()
+				self.check_ready()
 			return True
 		return False
 	def _rm_kick(self, message, key, player):
@@ -343,9 +353,19 @@ class GameServer(object):
 								match = pl
 								break
 						if match:
-							self.server.kick(match.address,"YOU'VE BEEN KICKED! Reason: "+reason)
+							match.is_connected = False
+							match.is_ready = False
 							if message.startswith("HARD_KICK:"):
+								self.server.kick(match.address,"YOU'VE BEEN HARD KICKED! Reason: "+reason)
 								match.time_of_disconnect = time.time()-120
+							else:
+								self.server.kick(match.address,"YOU'VE BEEN KICKED! Reason: "+reason)
+								match.time_of_disconnect = time.time()
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+match.name+"' has been kicked!")
+							if self.controller != None:
+								self.controller.triggerPlayerDisconnect(match)
+							self.send_playerlist_all()
+							self.check_ready()
 						else:
 							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:No player found whose name starts with '"+target+"'.")
 				else:
@@ -360,8 +380,11 @@ class GameServer(object):
 				name = player.name
 			chat = message[len("CHAT:"):]
 			if chat.startswith("/dr "):
-				self.server.sendall("ADD_CHAT:SERVER:"+chat[len("/dr "):]+ " drink!")
-				self.server.sendall("ALERT:drink_call")
+				if player.is_admin or player.is_dev:
+					self.server.sendall("ADD_CHAT:SERVER:"+chat[len("/dr "):]+ " drink!")
+					self.server.sendall("ALERT:drink_call")
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't do drink calls. Sorry :/")
 			else:
 				self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
 			return True
@@ -1303,12 +1326,11 @@ class GameServer(object):
 					player.is_connected = False
 					player.is_ready = False
 					player.time_of_disconnect = time.time()
-					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
+					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has lost connection.")
 					if self.controller != None:
 						self.controller.triggerPlayerDisconnect(player)
 					self.send_playerlist_all()
 					self.check_ready()
-
 			else:
 				if player.is_spectating or not self.game_started or t - player.time_of_disconnect >= 120:
 					for card in player.hand.cards:
@@ -1478,17 +1500,13 @@ class GameServer(object):
 			self.controller = None
 
 		if not self.game_started:
-			if self.shutting_down:
-				print "Shutting down. Goodbye <3"
-				self.running = False
-			else:
-				#This must be the game start timer, so we start the game.
-				for pl in self.players:
-					pl.is_ready = False
-				self.game_started = True
-				self.send_playerlist_all()
-				import libs.ServerControllers.SetupNewgameServerController as SetupNewgameServerController
-				self.controller = SetupNewgameServerController.SetupNewgameServerController(self)
+			#This must be the game start timer, so we start the game.
+			for pl in self.players:
+				pl.is_ready = False
+			self.game_started = True
+			self.send_playerlist_all()
+			import libs.ServerControllers.SetupNewgameServerController as SetupNewgameServerController
+			self.controller = SetupNewgameServerController.SetupNewgameServerController(self)
 		else:
 			#This means a player ran out of time for their turn.
 			self.server.sendall("ADD_CHAT:SERVER:"+self.players[self.current_players_turn].name+" ran out of time.")

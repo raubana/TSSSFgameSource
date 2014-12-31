@@ -298,12 +298,15 @@ class GameController(Controller):
 				name = parts.pop()
 				color = (0,0,0)
 				bg_color = None
+				tooltip = None
 				if "YOU" in parts:
 					name = "("+name+")"
 				if "ADMIN" in parts:
 					bg_color = (192,192,255)
+					tooltip = "ADMIN"
 				if "DEV" in parts:
 					bg_color = (192,255,192)
+					tooltip = "DEVELOPER"
 
 				if "L" in parts:
 					color = (96,96,96)
@@ -321,9 +324,9 @@ class GameController(Controller):
 
 				element = PlayerElement(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
 				element.set_text(name)
+				element.tooltip = tooltip
 				if "YOU" in parts:
 					element.menu_info = [("Disconnect",self.disconnect)]
-
 
 			return True
 		return False
@@ -605,8 +608,8 @@ class GameController(Controller):
 					self.main.client.send("READY")
 				elif message.startswith("!kick:"):
 					self.main.client.send("KICK:"+message[len("!kick:"):])
-				elif message.startswith("!hard_kick:"):
-					self.main.client.send("HARD_KICK:"+message[len("!hard_kick:"):])
+				elif message.startswith("!hardkick:"):
+					self.main.client.send("HARD_KICK:"+message[len("!hardkick:"):])
 				else:
 					self.main.client.send("CHAT:"+self.chat_input_element.text)
 			self.bottom_element.give_focus()
