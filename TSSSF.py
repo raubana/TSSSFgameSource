@@ -342,7 +342,7 @@ class Main(object):
 						self.client = None
 						self.play_sound("lost_connection")
 						self.controller = ConnectMenuController(self)
-						self.controller.message_element.set_text("You were kicked: "+chat)
+						self.controller.message_element.set_text(chat)
 					else:
 						attempt = self.controller.read_message(message)
 						if not attempt:

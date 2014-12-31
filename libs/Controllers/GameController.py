@@ -222,6 +222,10 @@ class GameController(Controller):
 		self.main.client.send("SWAP_SHIP_DECKS")
 	def disconnect(self):
 		self.main.client.send("DISCONNECT")
+	def kick(self,args):
+		self.main.client.send("KICK:"+args[0]+","+"No reason supplied.")
+	def hard_kick(self,args):
+		self.main.client.send("HARD_KICK:"+args[0]+","+"No reason supplied.")
 
 	def read_message(self, message):
 		if self._rm_add_chat(message): pass
@@ -295,7 +299,14 @@ class GameController(Controller):
 			self.player_list_element.set_size(("100%",len(playerlist)*self.main.font.get_height()))
 			for player in playerlist:
 				parts = player.split(":")
-				name = parts.pop()
+				name = parts.pop().strip()
+				if " - " in name:
+					i = name.index(" - ")
+					score = int(name[i + len(" - "):])
+					name = name[:i]
+				else:
+					score = None
+				realname = str(name)
 				color = (0,0,0)
 				bg_color = None
 				tooltip = None
@@ -326,7 +337,10 @@ class GameController(Controller):
 				element.set_text(name)
 				element.tooltip = tooltip
 				if "YOU" in parts:
-					element.menu_info = [("Disconnect",self.disconnect)]
+					element.menu_info.append(("Disconnect",self.disconnect))
+				element.menu_info.append(("Admin: Kick",self.kick,tuple([realname])))
+				element.menu_info.append(("Admin: Hard-Kick",self.hard_kick,tuple([realname])))
+
 
 			return True
 		return False

@@ -44,7 +44,7 @@ class AttemptConnectController(Controller):
 						import ConnectMenuController
 						self.main.play_sound("lost_connection")
 						self.main.controller = ConnectMenuController.ConnectMenuController(self.main)
-						self.main.controller.message_element.set_text("You were kicked: "+chat)
+						self.main.controller.message_element.set_text(chat)
 						self.client = None
 				elif self.main.time-self.connect_time > TIMEOUT_TIME:
 					self.client.close()

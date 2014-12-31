@@ -307,7 +307,7 @@ class GameServer(object):
 							if name in self.__reserved_names and self.__reserved_names[name][0] == player_password:
 								if "admin" in self.__reserved_names[name][1]:
 									self.players[-1].is_admin = True
-								elif "developer" in self.__reserved_names[name][1]:
+								if "developer" in self.__reserved_names[name][1]:
 									self.players[-1].is_dev = True
 							if self.controller != None:
 								self.controller.triggerNewPlayer(self.players[-1])
