@@ -19,6 +19,8 @@ try:
     import operator
 except ImportError, message:
     raise SystemExit,  "Unable to load module. %s" % message
+
+from libs.locals import CLIENT_VERSION
  
 #hack which fixes the pygame mixer and pygame font
 origIsSystemDLL = py2exe.build_exe.isSystemDLL # save the orginal before we edit it
@@ -45,13 +47,13 @@ class BuildExe:
         self.script = "TSSSF.py"
  
         #Name of program
-        self.project_name = "TSSSFgame"
+        self.project_name = "TSSSFgame("+CLIENT_VERSION+")"
  
         #Project url
         self.project_url = ""
  
         #Version of program
-        self.project_version = "0.0"
+        self.project_version = CLIENT_VERSION
  
         #License of the program
         self.license = ""
@@ -68,7 +70,7 @@ class BuildExe:
         self.icon_file = None
  
         #Extra files/dirs copied to game
-        self.extra_datas = ["cards","data","imgs","snds","your_deck.txt","README.txt"]
+        self.extra_datas = []
  
         #Extra/excludes python modules
         self.extra_modules = []
@@ -83,7 +85,7 @@ class BuildExe:
         self.zipfile_name = None
  
         #Dist directory
-        self.dist_dir ='dist'
+        self.dist_dir ='client_dist'
  
     ## Code from DistUtils tutorial at http://wiki.python.org/moin/Distutils/Tutorial
     ## Originally borrowed from wxPython's setup and config files
