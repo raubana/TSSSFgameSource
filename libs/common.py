@@ -12,6 +12,8 @@ IMG_SHADOW_SIDE = pygame.image.load("imgs/misc/shadow/side.png")
 def floorint(x):
 	return int(math.floor(x))
 
+def ceilint(x):
+	return int(math.ceil(x))
 
 def lerp(a, b, p):
 	return a + (b - a) * p

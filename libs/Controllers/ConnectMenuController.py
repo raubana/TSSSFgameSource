@@ -4,6 +4,8 @@ from ..GUI.GUI import *
 
 import string, os, random, math
 
+from libs.encrypt import encode, decode
+
 class ConnectMenuController(Controller):
 	def init(self):
 		for card in self.main.my_master_deck.cards:
@@ -48,6 +50,10 @@ class ConnectMenuController(Controller):
 		self.title_element.margin = [10,10,0,10]
 
 		#sets up the rest of the GUI
+		text = "Version "+CLIENT_VERSION
+		version_element = Element(self.main, self.main.main_element, None, self.main.font.size(text), None, text_color=(96,96,96))
+		version_element.text = text
+		version_element.margin = [10,0,0,2+self.main.font.get_height()]
 
 		#element2 = Element(self.main, self.main.main_element, None, self.main.font.size("Please note that elements have been moved around."), None, text_color=(0,96,0))
 		#element2.text = "Please note that elements have been moved around."
@@ -62,7 +68,21 @@ class ConnectMenuController(Controller):
 		self.name_inputbox.legal_characters = string.letters + string.digits + " "
 		self.name_inputbox.max_characters = PLAYERNAME_MAX_LENGTH
 
-		tooltip = "Right click for more options."
+		tooltip = "This is for users with reserved names.\nThese names are usually admins.\nYou don't need to type anything in here."
+
+		element6 = Element(self.main, self.main.main_element, None, self.main.font.size("USER PASSWORD"), None, text_color=(32,32,32))
+		element6.text = "USER PASSWORD"
+		element6.margin = [10,0,0,2]
+		element6.tooltip = tooltip
+
+		self.password_inputbox = InputBox(self.main, self.main.main_element, None, (self.main.font.size("M"*20)[0]+4, self.main.font.get_height()+4), (255,255,255))
+		self.password_inputbox.margin = [10,0,0,2]
+		self.password_inputbox.legal_characters = string.letters + string.digits
+		self.password_inputbox.max_characters = 20
+		self.password_inputbox.hide_password = True
+		self.password_inputbox.tooltip = tooltip
+
+		tooltip = "This is for reserving a slot on a server, in case you disconnect.\nRight click for more options."
 
 		element5 = Element(self.main, self.main.main_element, None, self.main.font.size("KEY"), None, text_color=(32,32,32))
 		element5.text = "KEY"
@@ -119,6 +139,8 @@ class ConnectMenuController(Controller):
 		self.ip_inputbox.add_handler_submit(self)
 		self.port_inputbox.add_handler_submit(self)
 		self.name_inputbox.add_handler_submit(self)
+		self.key_inputbox.add_handler_submit(self)
+		self.password_inputbox.add_handler_submit(self)
 		#self.genkey_button.add_handler_submit(self)
 		self.connect_button.add_handler_submit(self)
 
@@ -155,10 +177,12 @@ class ConnectMenuController(Controller):
 						port = data[1]
 						name = data[2]
 						key = data[3]
+						password = data[4]
 						self.ip_inputbox.set_text(ip)
 						self.port_inputbox.set_text(port)
 						self.name_inputbox.set_text(name)
 						self.key_inputbox.set_text(key)
+						self.password_inputbox.set_text(decode(password))
 						f.close()
 					except:
 						f.close()
@@ -169,7 +193,7 @@ class ConnectMenuController(Controller):
 		if DATA_LOCATION != None:
 			filename = DATA_LOCATION+"/connectmenu.data"
 			f = open(filename,"w")
-			data = self.ip_inputbox.text+"\n"+self.port_inputbox.text+"\n"+self.name_inputbox.text+"\n"+self.key_inputbox.text
+			data = self.ip_inputbox.text+"\n"+self.port_inputbox.text+"\n"+self.name_inputbox.text+"\n"+self.key_inputbox.text+"\n"+encode(self.password_inputbox.text)
 			f.write(data)
 			f.close()
 
@@ -200,9 +224,8 @@ class ConnectMenuController(Controller):
 				self.message_element.set_text("")
 
 			if legal:
-				#TODO: Attempt to make connection
 				self.save_to_appdata()
-				self.main.connect_data = (str(self.ip_inputbox.text), int(self.port_inputbox.text), str(self.name_inputbox.text), str(self.key_inputbox.text))
+				self.main.connect_data = (str(self.ip_inputbox.text), int(self.port_inputbox.text), str(self.name_inputbox.text), str(self.key_inputbox.text), encode(str(self.password_inputbox.text)))
 				import AttemptConnectController
 				self.main.controller = AttemptConnectController.AttemptConnectController(self.main)
 				print "IS ALL LEGAL"

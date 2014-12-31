@@ -11,6 +11,9 @@ class Player(object):
 		self.time_of_disconnect = 0 # This is the time when the player became disconnected, if they disconnected
 		self.is_pinged = False # This is for if the player had to be pinged to check that they're still connected
 
+		self.is_admin = False
+		self.is_dev = False
+
 		self.reset()
 
 	def reset(self):

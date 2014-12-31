@@ -29,11 +29,14 @@ def translate_size_to_pixels(size,remaining,clamp=False):
 def create_context_menu(main, element, pos, menu_list):
 	#'menu_list' is a list of (name, function) pairs
 	#first we determine the size of our context menu.
-	size = (0,0)
+	gap = 5
+	size = (gap*2,gap*2)
 	pos = list(pos)
-	for item in menu_list:
+	for i,item in enumerate(menu_list):
 		s = main.font.size(item[0])
-		size = (max(size[0],s[0])+4,size[1]+s[1]+4)
+		size = (max(size[0],s[0])+4+(gap*2),size[1]+s[1]+2)
+		if i < len(menu_list) - 1:
+			size = (size[0],size[1]+gap)
 	#next we determine if our menu will go off of the screen
 	if size[0] > main.screen_size[0]:
 		pos[0] = 0
@@ -44,15 +47,19 @@ def create_context_menu(main, element, pos, menu_list):
 	elif pos[1] + size[1] > main.screen_size[1]:
 		pos[1] = main.screen_size[1] - size[1]
 	#next we create our context menu element
-	cme = ContextMenuElement(main, element, pos, size, bg=None)
+	cme = ContextMenuElement(main, element, pos, size, bg=(0,0,0,127))
 	cme.menu_list = menu_list
 	#finally we create our buttons to fill the context menu
-	for item in menu_list:
-		button = Button(main,cme,None,("100%",main.font.get_height()+4))
+
+	for i,item in enumerate(menu_list):
+		button = Button(main,cme,None,("100%-"+str(gap*2)+"px",main.font.get_height()+2))
 		button.add_handler_submit(cme)
 		button.set_text(item[0])
 		button.set_bg((255,255,255))
-
+		if i == 0:
+			button.margin = (gap,gap,gap,gap)
+		else:
+			button.margin = (gap,0,gap,gap)
 
 class ScaleImage(object):
 	def __init__(self, img, copy = True):
@@ -791,6 +798,8 @@ class InputBox(Element):
 		self.max_characters = None
 		self.legal_characters = PRINTABLE_CHARS
 
+		self.hide_password = False
+
 		self.valuechange_handlers = []
 		self.submit_handlers = []
 
@@ -815,7 +824,7 @@ class InputBox(Element):
 			self.flag_for_rerender()
 		elif key == K_RETURN:
 			self.update_for_submit()
-		elif (unicode in (u"",u" ") and key == K_SPACE) or (unicode not in (u"",u" ") and unicode in self.legal_characters and unicode in PRINTABLE_CHARS):
+		elif ((unicode in (u"",u" ") and key == K_SPACE) or (unicode not in (u"",u" "))) and unicode in self.legal_characters and unicode in PRINTABLE_CHARS:
 			#We know this is printable, so we add this character to the string.
 			if self.max_characters == None or len(self.text) < self.max_characters:
 				self.text = self.text[:self.index] + unicode + self.text[self.index:]
@@ -898,7 +907,11 @@ class InputBox(Element):
 		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*0.75),int(self.bg[1]*0.75),int(self.bg[2]*0.75)), False, [(0,self.size[1]),(0,0),(self.size[0],0)])
 		pygame.draw.lines(self.rendered_surface, (int(self.bg[0]*0.9),int(self.bg[1]*0.9),int(self.bg[2]*0.9)), False, [(0,self.size[1]-1),(self.size[0]-1,self.size[1]-1),(self.size[0]-1,0)])
 	def rerender_text(self):
-		img = self.main.font.render(self.text[max(self.offset,0):],True,self.text_color)
+		if self.hide_password:
+			bg = self.text_color
+		else:
+			bg = None
+		img = self.main.font.render(self.text[max(self.offset,0):],True,self.text_color, bg)
 		self.rendered_surface.blit(img,(2,2))
 
 		if self.main.focus == self:

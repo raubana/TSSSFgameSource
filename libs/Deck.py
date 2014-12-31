@@ -39,12 +39,16 @@ def cut_and_paste_strip(src_img, dest_srf, p_rect, tint, shadow_color=(0,0,0)):
 	pygame.draw.rect(srf, (255,255,255), (0,0,rect.width,rect.height), 7)
 	srf = apply_shadow(srf,18,96,shadow_color)
 
+	"""
 	offset = 2
 	p1 = (rect.left+lerp(-offset,offset,random.random()),rect.top+lerp(-offset,offset,random.random()))
 	p2 = (rect.right+lerp(-offset,offset,random.random()),rect.bottom+lerp(-offset,offset,random.random()))
 	center = ((p1[0]+p2[0])/2.0,(p1[1]+p2[1])/2.0)
 	angle = math.degrees(math.atan2(rect.height,rect.width)-math.atan2(p2[1]-p1[1],p2[0]-p1[0]))
 	new_srf = pygame.transform.rotozoom(srf, angle, 1.0)
+	"""
+	new_srf = srf
+	center = rect.center
 
 	#new_srf = srf
 	new_rect = new_srf.get_rect(center = center)#rect.center)

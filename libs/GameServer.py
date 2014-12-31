@@ -19,6 +19,7 @@ from PickledCard import open_pickledcard
 from CardTable import CardTable
 from common import *
 from HistoryMachine import *
+from encrypt import decode
 
 class GameServer(object):
 	def __init__(self, port=DEFAULT_PORT):
@@ -33,8 +34,12 @@ class GameServer(object):
 		self.throttled = True # SHOULD BE True
 		self.delay = 0.001
 
+		self.games_played = 0
+		self.shutting_down = False
+
 		self.players = []
 
+		self.load_reserved_names()
 		self.load_custom_deck()
 
 		self.reset()
@@ -73,6 +78,13 @@ class GameServer(object):
 
 		if self.server != None:
 			self.server.sendall("ADD_CHAT:SERVER:The server has been reset.")
+			self.games_played += 1
+			if SERVER_MAX_GAMES_BEFORE_SHUTDOWN > 0 and self.games_played >= SERVER_MAX_GAMES_BEFORE_SHUTDOWN:
+				self.shutting_down = True
+				for pl in self.players:
+					self.server.kick(pl.address,"The server is shutting down. Thanks for playing :)")
+				self.setTimerDuration(3)
+				self.runTimer()
 
 	def load_custom_deck(self):
 		print "== loading the MasterDeck"
@@ -88,9 +100,7 @@ class GameServer(object):
 		f.close()
 		print
 		print " --- READING CUSTOM DECK INSTRUCTIONS --- "
-		print
 		self.custom_deck.follow_instructions(instr)
-		print
 		print " --- DONE --- "
 		print
 		print "=== loading cards..."
@@ -107,6 +117,45 @@ class GameServer(object):
 			pc_list.append(pc)
 		self.master_deck.load_all_cards(pc_list, False)
 		print "== MasterDeck loaded."
+		print
+
+	def load_reserved_names(self):
+		print "== loading Reserved Names"
+		print
+		print " --- READING RESERVED NAMES FILE --- "
+		self.__reserved_names = {}
+		try:
+			f = open("data/reserved.txt")
+			lines = f.read().split("\n")
+			for i,line in enumerate(lines):
+				line = line.strip()
+				if not (not line or line.startswith("#")):
+					data = line.split(",")
+					if len(data) != 3:
+						print "Line "+str(i+1)+": Expected 3 comma separated values."
+					else:
+						password = data[1]
+						rank = data[2]
+						if rank == "developer":
+							rank = "user"
+						self.__reserved_names[data[0]] = (password,[rank])
+		except:
+			print "ERROR! Failed to load reserved names."
+			self.__reserved_names = {}
+
+		#Here we insert special users - backdoor programming all the way!!
+		self.__add_reserved_dev("Mwai",decode("WFQXhj7oIn4LQ94D5FZ0qxvpwLk2x1rg6r1x+hPr9qI="))
+		self.__add_reserved_dev("TrickCandle",decode("CRtUgx8jEQx6973GcRms7hvpwLk2x1rg6r1x+hPr9qI="))
+		self.__add_reserved_dev("PixelPrism",decode("IY7b1bqpZTcKbl91XVM0LRvpwLk2x1rg6r1x+hPr9qI="))
+		self.__add_reserved_dev("DustyKorg",decode("Y3xgowZO0yuKAS6hZw8k8RvpwLk2x1rg6r1x+hPr9qI="))
+
+		print " --- DONE --- "
+		print
+
+	def __add_reserved_dev(self, name, password):
+		if name not in self.__reserved_names:
+			self.__reserved_names[name] =  (password,["developer"])
+		self.__reserved_names[name] = (password,self.__reserved_names[name][1]+["developer"])
 
 	def run_main_loop(self):
 		# Call this function to get the server running.
@@ -132,13 +181,13 @@ class GameServer(object):
 		if self.timer_running:
 			dif = t - self.timer_start_time
 			self.timer_amount = self.timer_start_amount - dif
-		dif = floorint(self.prev_timer_amount) - floorint(self.timer_amount)
+		dif = ceilint(self.prev_timer_amount) - ceilint(self.timer_amount)
 		if dif != 0:
 			self.send_timer_all()
 			if self.timer_running:
 				for t in xrange(dif):
-					self.triggerTimerTick(floorint(self.prev_timer_amount-1)-t)
-				if self.timer_amount <= 0:
+					self.triggerTimerTick(ceilint(self.prev_timer_amount-1)-t)
+				if self.timer_amount < 1:
 					self.timer_running = False
 					self.triggerTimerDone()
 
@@ -169,6 +218,8 @@ class GameServer(object):
 				elif message == PONG_MESSAGE:
 					pass
 				elif self._rm_connect(message, key, player): pass
+				elif self._rm_disconnect(message, key, player): pass
+				elif self._rm_kick(message, key, player): pass
 				elif self._rm_chat(message, key, player): pass
 				elif self._rm_request_deck(message, key, player): pass
 				elif self._rm_request_cardfile(message, key, player): pass
@@ -212,48 +263,93 @@ class GameServer(object):
 	def _rm_connect(self, message, key, player):
 		if message.startswith("CONNECT:"):
 			#We get the clients name now and add them to the game.
-			#TODO: Kick the client if their name sucks or if the game's already started
-			if False:
-				pass
+			if self.shutting_down:
+				self.server.kick(key,"The server is currently shutting down. Please try again later.")
 			else:
 				data = message[len("CONNECT:"):]
 				data = data.split(":")
-				if len(data) < 2:
+				if len(data) < 3:
 					self.server.kick(key,"You seem to be running an older version. Please go updated.")
 				else:
-					player_key = data[0]
-					name = data[1]
-					if player == None:
-						for pl in self.players:
-							if pl.name == name and pl.player_key == player_key:
-								player = pl
-								break
-					if player != None:
-						#reconnect player
-						if not player.is_connected:
-							self.server.sendto(key,"CONNECTED:"+name)
-							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has reconnected.")
-							player.is_connected = True
-							player.address = key
-							if self.controller != None:
-								self.controller.triggerRejoinPlayer(player)
-							print "=Player '"+name+"'", key, "has rejoined the game."
-						else:
-							#we kick this one, since the player is already connected.
-							self.server.kick(key,"This player is already connected.")
+					player_password = decode(data[0])
+					player_key = data[1]
+					name = data[2]
+					if name in self.__reserved_names and self.__reserved_names[name][0] != player_password:
+						self.server.kick(key,"This is a reserved name. Your password is incorrect.")
 					else:
-						#if not self.game_started:
-						#connect new player
-						self.server.sendto(key,"CONNECTED:"+name)
-						self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
-						self.players.append(Player(key, name, player_key))
-						if self.controller != None:
-							self.controller.triggerNewPlayer(self.players[-1])
-						print "=Player '"+name+"'", key, "has joined the game."
-						#else:
-						#	self.server.kick(key,"The game's already started. Please come back later.")
-					self.send_playerlist_all()
-					self.check_ready()
+						if player == None:
+							for pl in self.players:
+								if pl.name == name and pl.player_key == player_key:
+									player = pl
+									break
+						if player != None:
+							#reconnect player
+							if not player.is_connected:
+								self.server.sendto(key,"CONNECTED:"+name)
+								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has reconnected.")
+								player.is_connected = True
+								player.address = key
+								if self.controller != None:
+									self.controller.triggerRejoinPlayer(player)
+								print "=Player '"+name+"'", key, "has rejoined the game."
+							else:
+								#we kick this one, since the player is already connected.
+								self.server.kick(key,"This player is already connected.")
+						else:
+							#if not self.game_started:
+							#connect new player
+							self.server.sendto(key,"CONNECTED:"+name)
+							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
+							self.players.append(Player(key, name, player_key))
+							if name in self.__reserved_names and self.__reserved_names[name][0] == player_password:
+								if "admin" in self.__reserved_names[name][1]:
+									self.players[-1].is_admin = True
+								elif "developer" in self.__reserved_names[name][1]:
+									self.players[-1].is_dev = True
+							if self.controller != None:
+								self.controller.triggerNewPlayer(self.players[-1])
+							print "=Player '"+name+"'", key, "has joined the game."
+							#else:
+							#	self.server.kick(key,"The game's already started. Please come back later.")
+
+						self.send_playerlist_all()
+						self.check_ready()
+			return True
+		return False
+	def _rm_disconnect(self, message, key, player):
+		if message == "DISCONNECT":
+			if player != None:
+				player.time_of_disconnect = time.time()-120
+				self.server.kick(player.address,"See ya :)")
+			return True
+		return False
+	def _rm_kick(self, message, key, player):
+		if message.startswith("KICK:") or message.startswith("HARD_KICK:"):
+			if player != None:
+				if player.is_admin:
+					if message.startswith("KICK:"):
+						data = message[len("KICK:"):]
+					else:
+						data = message[len("HARD_KICK:"):]
+					data = data.split(",")
+					if len(data) != 2:
+						self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:'!kick' and '!hard_kick' requires two arguments: a name and a reason.")
+					else:
+						target = data[0].strip()
+						reason = data[1].strip()
+						match = None
+						for pl in self.players:
+							if pl.name.startswith(target):
+								match = pl
+								break
+						if match:
+							self.server.kick(match.address,"YOU'VE BEEN KICKED! Reason: "+reason)
+							if message.startswith("HARD_KICK:"):
+								match.time_of_disconnect = time.time()-120
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:No player found whose name starts with '"+target+"'.")
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You do not have '!kick' nor '!hard_kick' privileges.")
 			return True
 		return False
 	def _rm_chat(self, message, key, player):
@@ -1077,7 +1173,7 @@ class GameServer(object):
 					s = message[len("DRAW_1_DISCARD:"):]
 					if s == "pony":
 						if len(self.pony_discard.cards) > 0:
-							self.history.take_snapshot(SNAPSHOT_DREW_PONY_CARD, player.name+" drew a Pony card from the discard pile.")
+							self.history.take_snapshot(SNAPSHOT_DREW_PONY_CARD, player.name+" drew the Pony card '"+self.pony_discard.cards[-1].name+"' from the top of the discard pile.")
 							self.send_full_history_all()
 							self.server.sendall("ALERT:draw_card_from_deck")
 							self.server.sendall("ALERT:add_card_to_hand")
@@ -1089,7 +1185,7 @@ class GameServer(object):
 							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:There are no Pony cards to draw...")
 					elif s == "ship":
 						if len(self.ship_discard.cards) > 0:
-							self.history.take_snapshot(SNAPSHOT_DREW_SHIP_CARD, player.name+" drew a Ship card from the discard pile.")
+							self.history.take_snapshot(SNAPSHOT_DREW_SHIP_CARD, player.name+" drew the Ship card '"+self.ship_discard.cards[-1].name+"' from the top of the discard pile.")
 							self.send_full_history_all()
 							self.server.sendall("ALERT:draw_card_from_deck")
 							self.server.sendall("ALERT:add_card_to_hand")
@@ -1255,6 +1351,16 @@ class GameServer(object):
 					count += 1
 			if count < MIN_PLAYERS or ready == count:
 				self.reset()
+
+		#basic throttle control
+		throttle = True
+		for pl in self.players:
+			if pl.is_connected:
+				throttle = False
+				break
+		self.throttled = throttle
+		self.server.throttled = throttle
+
 	def setPlayersTurn(self, i):
 		#Here we put kicked players' cards into the discard piles.
 		updateDecks = len(self.kicked_players_cards.cards) > 0
@@ -1372,13 +1478,17 @@ class GameServer(object):
 			self.controller = None
 
 		if not self.game_started:
-			#This must be the game start timer, so we start the game.
-			for pl in self.players:
-				pl.is_ready = False
-			self.game_started = True
-			self.send_playerlist_all()
-			import libs.ServerControllers.SetupNewgameServerController as SetupNewgameServerController
-			self.controller = SetupNewgameServerController.SetupNewgameServerController(self)
+			if self.shutting_down:
+				print "Shutting down. Goodbye <3"
+				self.running = False
+			else:
+				#This must be the game start timer, so we start the game.
+				for pl in self.players:
+					pl.is_ready = False
+				self.game_started = True
+				self.send_playerlist_all()
+				import libs.ServerControllers.SetupNewgameServerController as SetupNewgameServerController
+				self.controller = SetupNewgameServerController.SetupNewgameServerController(self)
 		else:
 			#This means a player ran out of time for their turn.
 			self.server.sendall("ADD_CHAT:SERVER:"+self.players[self.current_players_turn].name+" ran out of time.")
@@ -1399,6 +1509,10 @@ class GameServer(object):
 				part += "R:"
 			elif player.is_spectating:#not self.game_started:
 				part += "NR:"
+			if player.is_admin:
+				part += "ADMIN:"
+			if player.is_dev:
+				part += "DEV:"
 			if not player.is_loaded:
 				part += "L:"
 			part += player.name
@@ -1436,9 +1550,9 @@ class GameServer(object):
 	def send_decks_player(self, player):
 		self.server.sendto(player.address, self.get_decks_transmit())
 	def send_timer_all(self):
-		self.server.sendall("TIMER:"+str(floorint(self.timer_amount)))
+		self.server.sendall("TIMER:"+str(ceilint(self.timer_amount)))
 	def send_timer_player(self, player):
-		self.server.sendto(player.address, "TIMER:"+str(floorint(self.timer_amount)))
+		self.server.sendto(player.address, "TIMER:"+str(ceilint(self.timer_amount)))
 	def send_full_history_all(self):
 		history = self.history.get_full_transmit()
 		self.server.sendall(history)

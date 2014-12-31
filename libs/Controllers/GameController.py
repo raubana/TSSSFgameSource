@@ -6,13 +6,14 @@ from ..GUI.CardElement import *
 from ..GUI.TimerElement import *
 from ..GUI.TableElement import *
 from ..GUI.HistoryGUI import *
+from ..GUI.PlayerElement import *
 
 import string, os, time
 
 class GameController(Controller):
 	def init(self):
 		#we try to get the user's attention.
-		if self.main.trayicon != None:
+		if self.main.trayicon != None and not pygame.key.get_focused():
 			self.main.trayicon.ShowBalloon("Connected!","You're now loaded and on the server.", 15*1000)
 
 		self.main.client.throttled = True
@@ -33,7 +34,7 @@ class GameController(Controller):
 		self.left_element = None#Element(self.main, self.main.main_element, None, (0,"100%"))
 		self.main.main_element.children.append(None)
 		self.top_element = Element(self.main, self.main.main_element, None, ("100%",75))
-		self.right_element = Element(self.main, self.main.main_element, None, (150,"100%"))
+		self.right_element = Element(self.main, self.main.main_element, None, (self.main.font.size(">("+("M"*(PLAYERNAME_MAX_LENGTH))+" - 00")[0]+4,"100%"))
 		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.table_element = TableElement(self.main, self.main.main_element, None, ("100%","100%"))
 
@@ -55,7 +56,7 @@ class GameController(Controller):
 		self.chat_element = Element(self.main, self.top_element, None, ("100%","100%"))
 		self.player_list_element = Element(self.main, self.right_element, None, ("100%",10))
 		self.timer_element = TimerElement(self.main, self.right_element, None, ("100%", int(self.main.timer_font.get_height()*1.2)))
-		self.decks_element = Element(self.main, self.right_element, None, ("100%",75))
+		self.decks_element = Element(self.main, self.right_element, None, ("100%",90))
 		self.public_goals_element = Element(self.main, self.right_element, None, ("100%","100%"))
 		self.card_selection_element = Element(self.main, self.bottom_element, None, ("100%","0%"))
 		self.player_hand_element = Element(self.main, self.bottom_element, None, ("100%","100%"))
@@ -219,6 +220,8 @@ class GameController(Controller):
 		self.main.client.send("SWAP_PONY_DECKS")
 	def swap_ship_decks(self):
 		self.main.client.send("SWAP_SHIP_DECKS")
+	def disconnect(self):
+		self.main.client.send("DISCONNECT")
 
 	def read_message(self, message):
 		if self._rm_add_chat(message): pass
@@ -295,6 +298,13 @@ class GameController(Controller):
 				name = parts.pop()
 				color = (0,0,0)
 				bg_color = None
+				if "YOU" in parts:
+					name = "("+name+")"
+				if "ADMIN" in parts:
+					bg_color = (192,192,255)
+				if "DEV" in parts:
+					bg_color = (192,255,192)
+
 				if "L" in parts:
 					color = (96,96,96)
 				else:
@@ -307,11 +317,14 @@ class GameController(Controller):
 				if "CT" in parts:
 					name = ">"+name
 				else:
-					name = " "+name
-				element = Element(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
+					name = "_"+name
+
+				element = PlayerElement(self.main,self.player_list_element,None,("100%",self.main.font.get_height()),bg_color,color)
 				element.set_text(name)
 				if "YOU" in parts:
-					element.font = self.main.font_bold
+					element.menu_info = [("Disconnect",self.disconnect)]
+
+
 			return True
 		return False
 	def _rm_playerhand(self, message):
@@ -584,13 +597,16 @@ class GameController(Controller):
 		elif key == K_ESCAPE:
 			self.main.client.send("CANCEL_ACTION")
 
-
 	def handle_event_submit(self, widget):
 		if (not (self.chat_input_element == None)) and widget == self.chat_input_element:
 			message = self.chat_input_element.text.strip()
 			if len(message) > 0:
 				if message == "!ready":
 					self.main.client.send("READY")
+				elif message.startswith("!kick:"):
+					self.main.client.send("KICK:"+message[len("!kick:"):])
+				elif message.startswith("!hard_kick:"):
+					self.main.client.send("HARD_KICK:"+message[len("!hard_kick:"):])
 				else:
 					self.main.client.send("CHAT:"+self.chat_input_element.text)
 			self.bottom_element.give_focus()

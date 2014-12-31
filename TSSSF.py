@@ -41,8 +41,8 @@ class Main(object):
 		self.font = pygame.font.Font("data/fonts/Ubahn-Light.ttf",14)
 		self.font_bold = pygame.font.Font("data/fonts/Ubahn-Light.ttf",14)
 		self.font_bold.set_bold(True)
-		self.timer_font = pygame.font.Font("data/fonts/Barth_Regular.ttf",18)
-		self.deck_count_font = pygame.font.Font("data/fonts/PackardAntique-Bold.ttf",18)
+		self.timer_font = pygame.font.Font("data/fonts/Barth_Regular.ttf",24)
+		self.deck_count_font = pygame.font.Font("data/fonts/PackardAntique-Bold.ttf",24)
 		self.tiny_font = pygame.font.SysFont("Tahoma",9)
 
 		self.sounds = {}
@@ -233,7 +233,7 @@ class Main(object):
 			self.main_element.flag_for_rerender()
 
 	def create_tooltip_surface(self):
-		c1 = (255,255,196)
+		c1 = (255,255,196,192)
 		c2 = (127,64,64)
 
 		if type(self.tooltip_text) in (str,unicode):
@@ -244,7 +244,7 @@ class Main(object):
 				size[0] = max(size[0], line_size[0])
 				size[1] = size[1]+line_size[1]
 			size = (size[0]+3,size[1]+2)
-			self.tooltip_surface = pygame.Surface(size)
+			self.tooltip_surface = pygame.Surface(size,SRCALPHA)
 			self.tooltip_surface.fill(c1)
 			pygame.draw.rect(self.tooltip_surface,c2,(0,0,size[0],size[1]),1)
 			for i in xrange(len(lines)):
@@ -254,7 +254,7 @@ class Main(object):
 			size = (int((CARD_SIZE[0]*self.screen_size[1])/float(CARD_SIZE[1])),self.screen_size[1])
 			if size[1] > CARD_SIZE[1]:
 				size = list(CARD_SIZE)
-			self.tooltip_surface = pygame.Surface(size)
+			self.tooltip_surface = pygame.Surface(size,SRCALPHA)
 			self.tooltip_surface.fill(c1)
 			if size != CARD_SIZE:
 				self.tooltip_surface.blit(pygame.transform.smoothscale(self.tooltip_text.get_image(), size), (0,0))
@@ -355,7 +355,7 @@ class Main(object):
 				self.controller.message_element.set_text("Lost Connection")
 
 				#we try to get the user's attention.
-				if self.trayicon != None:
+				if self.trayicon != None and not pygame.key.get_focused():
 					self.trayicon.ShowBalloon("Whoops","You've lost connection.", 15*1000)
 
 	def pack(self):
