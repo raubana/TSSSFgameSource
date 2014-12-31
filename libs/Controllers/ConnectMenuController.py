@@ -4,7 +4,7 @@ from ..GUI.GUI import *
 
 import string, os, random, math
 
-from libs.encrypt import encode, decode
+from libs.encode import encode, decode
 
 class ConnectMenuController(Controller):
 	def init(self):

@@ -147,7 +147,7 @@ class BuildExe:
             license = self.license,
  
             # targets to build
-            console = [{
+            windows = [{
                 'script': self.script,
                 'icon_resources': [(0, self.icon_file)],
                 'copyright': self.copyright

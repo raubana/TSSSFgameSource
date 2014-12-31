@@ -19,7 +19,7 @@ from PickledCard import open_pickledcard
 from CardTable import CardTable
 from common import *
 from HistoryMachine import *
-from encrypt import decode
+from encode import decode
 
 class GameServer(object):
 	def __init__(self, port=DEFAULT_PORT):
