@@ -237,7 +237,7 @@ class Templatizer(object):
 	def generate_image(self):
 		# starts with the surface we'll be blitting to
 		img = pygame.Surface((788, 1088), pygame.SRCALPHA)
-		img.fill((0,0,0,0))
+		img.fill((255,255,255,255))
 
 		"""
 		TITLE_FONT = pygame.font.Font("data/fonts/Barth_Regular.ttf",self.title_font_size)
@@ -270,7 +270,10 @@ class Templatizer(object):
 			color = (64,64,64)
 			second_color = (220,220,220)
 
-		img.blit(pygame.transform.smoothscale(self.card_img, (600, 442)), (123, 164))
+		#TODO: Segmentation Faults frequently occur here!
+		if self.card_img != None:
+			scaled = pygame.transform.smoothscale(self.card_img, (600, 442))
+			img.blit(scaled, (123, 164))
 
 		img.blit(cardback, (0, 0))
 
@@ -298,6 +301,9 @@ class Templatizer(object):
 		if len(self.keywords) > 0 and second_color != None:
 			keywords = string.join(self.keywords,", ")
 			srf = font.render(keywords, True, second_color)
+			mx = 530
+			if srf.get_width() > mx:
+				srf = pygame.transform.smoothscale(srf,(mx,srf.get_height()))
 			rect = srf.get_rect(topright = (722,607))
 			img.blit(srf,rect)
 

@@ -579,7 +579,7 @@ class Element(object):
 
 			snagged_at_bottom = self.v_scrollbar != None and self.v_scrollbar.scrolled_amount == self.v_scrollbar.max_scroll
 
-			if self.needs_to_pack: # NECESSARY
+			if self.needs_to_pack and self.size != None: # NECESSARY
 				self.needs_to_pack = False # NECESSARY
 				#In this case, our pack function will order our elements using a flow layout
 				x_pos = 0

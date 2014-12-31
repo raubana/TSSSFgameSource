@@ -45,6 +45,10 @@ class GameServer(object):
 		self.reset()
 
 	def reset(self):
+		if self.controller != None:
+			self.controller.cleanup()
+			self.controller = None
+
 		self.reset_modified_cards()
 
 		self.history = HistoryMachine()
@@ -1343,7 +1347,7 @@ class GameServer(object):
 						self.current_players_turn -= 1
 					self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has been removed from the game.")
 					del self.players[i]
-					if active_player:
+					if active_player and len(self.players) > 0:
 						self.nextPlayersTurn()
 					self.send_playerlist_all()
 					self.check_ready()
