@@ -37,7 +37,7 @@ def cut_and_paste_strip(src_img, dest_srf, p_rect, tint, shadow_color=(0,0,0)):
 	srf.blit(src_img,(-rect.left,-rect.top))
 	srf.fill(tint, None, special_flags = BLEND_RGB_MULT)
 	pygame.draw.rect(srf, (255,255,255), (0,0,rect.width,rect.height), 7)
-	srf = apply_shadow(srf,18,96,shadow_color)
+	#srf = apply_shadow(srf,18,96,shadow_color)
 
 	"""
 	offset = 2

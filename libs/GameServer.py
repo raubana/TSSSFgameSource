@@ -379,9 +379,9 @@ class GameServer(object):
 			else:
 				name = player.name
 			chat = message[len("CHAT:"):]
-			if chat.startswith("/dr "):
+			if chat.startswith("/d "):
 				if player.is_admin or player.is_dev:
-					self.server.sendall("ADD_CHAT:SERVER:"+chat[len("/dr "):]+ " drink!")
+					self.server.sendall("ADD_CHAT:SERVER:"+chat[len("/d "):]+ " drink!")
 					self.server.sendall("ALERT:drink_call")
 				else:
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't do drink calls. Sorry :/")
@@ -468,7 +468,7 @@ class GameServer(object):
 					if len(player.hand.cards) < MIN_CARDS_IN_HAND:
 						self.server.sendto(player.address, "ADD_CHAT:SERVER:PM:You need to draw up to "+str(MIN_CARDS_IN_HAND)+" before you can end your turn.")
 					else:
-						self.server.sendto(player.address, "ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
+						self.server.sendall("ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
 						self.nextPlayersTurn()
 				else:
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, dummy!")

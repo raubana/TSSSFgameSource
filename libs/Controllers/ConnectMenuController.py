@@ -319,7 +319,7 @@ class ConnectMenuController(Controller):
 		message = None
 		text = str(self.name_inputbox.text)
 		legal = True
-		if len(text) < 3:
+		if len(text) < 2:
 			message = "NAME: Name is too short."
 			legal = False
 		elif text[0] == " " or text[-1] == " ":
