@@ -47,7 +47,7 @@ def create_context_menu(main, element, pos, menu_list):
 	elif pos[1] + size[1] > main.screen_size[1]:
 		pos[1] = main.screen_size[1] - size[1]
 	#next we create our context menu element
-	cme = ContextMenuElement(main, element, pos, size, bg=(0,0,0,127))
+	cme = ContextMenuElement(main, element, pos, size, bg=(127,127,127,192))
 	cme.menu_list = menu_list
 	#finally we create our buttons to fill the context menu
 

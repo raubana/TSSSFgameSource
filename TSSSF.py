@@ -17,7 +17,13 @@ from libs.Sprite.ChatSprite import ChatSprite
 
 import math, random, time
 
-
+print " --- TSSSFgame ---"
+print "Created by Dylan J. Raub"
+print "Original card-game by Horrible People Games"
+print
+print "Client:  Version "+CLIENT_VERSION
+print " =================== "
+print
 
 class Main(object):
 	def __init__(self):

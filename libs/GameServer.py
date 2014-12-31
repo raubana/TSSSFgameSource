@@ -23,6 +23,14 @@ from encode import decode
 
 class GameServer(object):
 	def __init__(self, port=DEFAULT_PORT):
+		print " --- TSSSFgame ---"
+		print "Created by Dylan J. Raub"
+		print "Original card-game by Horrible People Games"
+		print
+		print "Server:  Version "+SERVER_VERSION
+		print " =================== "
+		print
+
 		print "= GameServer initializing..."
 		self.port = port
 		# First we need to load the deck
@@ -275,52 +283,56 @@ class GameServer(object):
 			else:
 				data = message[len("CONNECT:"):]
 				data = data.split(":")
-				if len(data) < 3:
+				if len(data) < 4:
 					self.server.kick(key,"You seem to be running an older version. Please go updated.")
 				else:
 					player_password = decode(data[0])
 					player_key = data[1]
 					name = data[2]
-					if name in self.__reserved_names and self.__reserved_names[name][0] != player_password:
-						self.server.kick(key,"This is a reserved name. Your password is incorrect.")
+					version = data[3]
+					if version != CLIENT_VERSION:
+						self.server.kick(key,"This server("+SERVER_VERSION+") expects a ("+CLIENT_VERSION+") client. If your version is newer, then this server needs to be updated.")
 					else:
-						if player == None:
-							for pl in self.players:
-								if pl.name == name and pl.player_key == player_key:
-									player = pl
-									break
-						if player != None:
-							#reconnect player
-							if not player.is_connected:
-								self.server.sendto(key,"CONNECTED:"+name)
-								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has reconnected.")
-								player.is_connected = True
-								player.address = key
-								if self.controller != None:
-									self.controller.triggerRejoinPlayer(player)
-								print "=Player '"+name+"'", key, "has rejoined the game."
-							else:
-								#we kick this one, since the player is already connected.
-								self.server.kick(key,"This player is already connected.")
+						if name in self.__reserved_names and self.__reserved_names[name][0] != player_password:
+							self.server.kick(key,"This is a reserved name. Your password is incorrect.")
 						else:
-							#if not self.game_started:
-							#connect new player
-							self.server.sendto(key,"CONNECTED:"+name)
-							self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
-							self.players.append(Player(key, name, player_key))
-							if name in self.__reserved_names and self.__reserved_names[name][0] == player_password:
-								if "admin" in self.__reserved_names[name][1]:
-									self.players[-1].is_admin = True
-								if "developer" in self.__reserved_names[name][1]:
-									self.players[-1].is_dev = True
-							if self.controller != None:
-								self.controller.triggerNewPlayer(self.players[-1])
-							print "=Player '"+name+"'", key, "has joined the game."
-							#else:
-							#	self.server.kick(key,"The game's already started. Please come back later.")
+							if player == None:
+								for pl in self.players:
+									if pl.name == name and pl.player_key == player_key:
+										player = pl
+										break
+							if player != None:
+								#reconnect player
+								if not player.is_connected:
+									self.server.sendto(key,"CONNECTED:"+name)
+									self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has reconnected.")
+									player.is_connected = True
+									player.address = key
+									if self.controller != None:
+										self.controller.triggerRejoinPlayer(player)
+									print "=Player '"+name+"'", key, "has rejoined the game."
+								else:
+									#we kick this one, since the player is already connected.
+									self.server.kick(key,"This player is already connected.")
+							else:
+								#if not self.game_started:
+								#connect new player
+								self.server.sendto(key,"CONNECTED:"+name)
+								self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+name+"' has connected.")
+								self.players.append(Player(key, name, player_key))
+								if name in self.__reserved_names and self.__reserved_names[name][0] == player_password:
+									if "admin" in self.__reserved_names[name][1]:
+										self.players[-1].is_admin = True
+									if "developer" in self.__reserved_names[name][1]:
+										self.players[-1].is_dev = True
+								if self.controller != None:
+									self.controller.triggerNewPlayer(self.players[-1])
+								print "=Player '"+name+"'", key, "has joined the game."
+								#else:
+								#	self.server.kick(key,"The game's already started. Please come back later.")
 
-						self.send_playerlist_all()
-						self.check_ready()
+							self.send_playerlist_all()
+							self.check_ready()
 			return True
 		return False
 	def _rm_disconnect(self, message, key, player):
