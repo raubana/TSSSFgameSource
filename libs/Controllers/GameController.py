@@ -303,10 +303,10 @@ class GameController(Controller):
 				if " - " in name:
 					i = name.index(" - ")
 					score = int(name[i + len(" - "):])
-					name = name[:i]
+					realname = name[:i]
 				else:
 					score = None
-				realname = str(name)
+					realname = str(name)
 				color = (0,0,0)
 				bg_color = None
 				tooltip = None
