@@ -336,7 +336,7 @@ class ConnectMenuController(Controller):
 					digit_count += 1
 				elif ch in " ":
 					space_count += 1
-			if alpha_count < 3:
+			if (len(text) >= 4 and alpha_count < 3) or (len(text) < 4 and alpha_count < len(text) - 1):
 				message = "NAME: Name needs more alphabet characters."
 				legal = False
 			elif digit_count > 3:
