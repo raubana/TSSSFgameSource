@@ -6,6 +6,7 @@ pygame.init()
 import math
 
 IMG_SHADOW_CORNER = pygame.image.load("imgs/misc/shadow/corner.png")
+IMG_SHADOW_INV_CORNER = pygame.image.load("imgs/misc/shadow/inv_corner.png")
 IMG_SHADOW_SIDE = pygame.image.load("imgs/misc/shadow/side.png")
 
 
@@ -18,14 +19,11 @@ def ceilint(x):
 def lerp(a, b, p):
 	return a + (b - a) * p
 
-
 def lerp_colors(a, b, p):
 	return (int(lerp(a[0], b[0], p)), int(lerp(a[1], b[1], p)), int(lerp(a[2], b[2], p)))
 
-
 def invlerp(a, b, x):
 	return (x - a) / (b - a)
-
 
 def apply_shadow(srf, size, alpha=127, color=(0,0,0)):
 	img = pygame.Surface((srf.get_width() + size * 2, srf.get_height() + size * 2), SRCALPHA)
@@ -56,3 +54,7 @@ def apply_shadow(srf, size, alpha=127, color=(0,0,0)):
 	img.blit(h_side, (size, size + srf.get_height()))
 
 	return img
+
+def apply_inv_shadow(srf, size, alpha=127, color=(0,0,0)):
+	#TODO: Finish this function.
+	return srf

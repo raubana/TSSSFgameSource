@@ -362,7 +362,7 @@ class Card(object):
 				image = self.pc_image.copy()
 			if image.get_size() != CARD_SIZE:
 				image = pygame.transform.smoothscale(image, CARD_SIZE)
-			#image = apply_shadow(image,5)
+			image = apply_shadow(image,6)
 		return image
 
 	def rerender(self):

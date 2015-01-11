@@ -18,7 +18,9 @@ class GameController(Controller):
 
 		self.main.client.throttled = True
 
-		self.render_card_frequency = 0.5
+		self.squees_enabled = True
+		self.render_card_frequency = 0.1
+		self.render_card_delay = 0.25 #This is how long to wait before resuming rendering the cards.
 		self.last_rendered_card = 0
 		self.all_cards_rendered = bool(CLIENT_PRERENDER_DECK)
 
@@ -33,9 +35,9 @@ class GameController(Controller):
 		#LEVEL 1
 		self.left_element = None#Element(self.main, self.main.main_element, None, (0,"100%"))
 		self.main.main_element.children.append(None)
-		self.top_element = Element(self.main, self.main.main_element, None, ("100%",75))
+		self.top_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.right_element = Element(self.main, self.main.main_element, None, (self.main.font.size(">("+("M"*(PLAYERNAME_MAX_LENGTH))+" - 00")[0]+4,"100%"))
-		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",100))
+		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",75))
 		self.table_element = TableElement(self.main, self.main.main_element, None, ("100%","100%"))
 
 		self.top_element.add_handler_keydown(self)
@@ -251,9 +253,9 @@ class GameController(Controller):
 			chat = message[len("ADD_CHAT:"):]
 			if len(self.chat_element.children) >= 25:
 				self.chat_element._remove_child(self.chat_element.children[0])
-			element = Element(self.main, self.chat_element, None, ("100%",self.main.font.get_height()))
 			color = (0,0,0,255)
 			bg_color = (255,255,255,127)
+			attach_img = None
 			if chat.startswith("SERVER:"):
 				chat = chat[len("SERVER:"):]
 				if chat.startswith("PM:"):
@@ -264,6 +266,8 @@ class GameController(Controller):
 					text = chat
 					color = (64,0,64,255)
 					bg_color = (255,127,255,127)
+					if chat.endswith(" drink!"):
+						attach_img = "imgs/misc/bp_drunk.png"
 			elif chat.startswith("PLAYER:"):
 				chat = chat[len("PLAYER:"):]
 				i = chat.find(":")
@@ -274,6 +278,20 @@ class GameController(Controller):
 					name = "?"
 					msg = chat
 				msg = msg.strip()
+				test_msg = str(msg)
+				legal_chars = string.letters + string.digits + " "
+				for i in xrange(len(test_msg)):
+					if test_msg[i] not in legal_chars:
+						test_msg = string.replace(test_msg,test_msg[i]," ")
+				if test_msg == self.main.name or test_msg.startswith(self.main.name+" ") or test_msg.endswith(" "+self.main.name) or test_msg.count(" "+self.main.name+" ") > 0:
+					#The user's name was mentioned, highlight the message and squee the user if it's enabled
+					bg_color = (255,255,0,127)
+					if self.squees_enabled:
+						self.main.play_sound("name_mentioned",True)
+						if self.main.trayicon != None and not pygame.key.get_focused():
+							self.main.trayicon.ShowBalloon(name+" says:",msg, 15*1000)
+							self.main.blink_trayicon = True
+
 				if msg.startswith("/me "):
 					msg = msg[len("/me "):]
 					text = name+" "+msg
@@ -287,9 +305,25 @@ class GameController(Controller):
 				self.main.play_sound("chat")
 			else:
 				text = chat
-			element.set_text(text)
-			element.set_text_color(color)
+			element = Element(self.main, self.chat_element, None, ("100%",self.main.font.get_height()))
 			element.set_bg(bg_color)
+			if not attach_img:
+				element.set_text(text)
+				element.set_text_color(color)
+			else:
+				img = pygame.image.load(attach_img)
+				padding = 3
+				size = (25,25)
+				element.set_size(("100%",(padding*2)+max(size[1],self.main.font.get_height())))
+				img_element = Element(self.main, element, None, size, bg=ScaleImage(img,False))
+				img_element.margin = (padding,padding,padding,padding)
+				text_element = Element(self.main, element, None, ("100%-"+str(padding*4+size[0])+"px","100%"), bg=None)
+				text_element.set_text(text)
+				text_element.set_text_align(ALIGN_MIDDLELEFT)
+				text_element.set_text_color(color)
+				text_element.margin = (padding,padding,padding,padding)
+
+
 			return True
 		return False
 	def _rm_playerlist(self, message):
@@ -352,15 +386,18 @@ class GameController(Controller):
 			if len(s) > 0:
 				hand = s.split(",")
 				hand.reverse()
-				scale = 0.425
+				scale = 0.5#0.425
 				size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 				for x in xrange(len(hand)):
-					s = hand[len(hand)-x-1]
+					s = hand[x]#len(hand)-x-1]
 					i = int(s)
 					card = self.main.master_deck.cards[i]
-					element = CardElement(self.main,self.player_hand_element,None,size)
+					element = CardElement(self.main,self.player_hand_element,((len(hand)-x-1)*(size[0]*0.75+3)+3,3),size)
+					if len(hand) == 1:
+						p = 0.5
+					else:
+						p = x/float(len(hand)-1)
 					element.set_card(card)
-					element.padding = (3,3,3,3)
 					if card.type == "pony":
 						element.menu_info = [("Play Card", self.play_card, tuple([i])),
 											 ("Action: Replace", self.replace_card, tuple([i])),
@@ -397,18 +434,17 @@ class GameController(Controller):
 			hand = message[len("PUBLICGOALS:"):].split(",")
 			self.public_goals_element.clear()
 			self.public_goals_element.layout = LAYOUT_VERTICAL
-			scale = 0.4
+			scale = 0.4#0.4
 			size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
 			if len(hand) == 0 or (len(hand) == 1 and hand[0] == ""):
 				pass
 			else:
 				for x in xrange(len(hand)):
-					s = hand[len(hand)-x-1]
+					s = hand[x]#len(hand)-x-1]
 					i = int(s)
 					card = self.main.master_deck.cards[i]
-					element = CardElement(self.main,self.public_goals_element,None,size)
-					element.set_card(card)
-					element.padding = (3,3,3,3)
+					element = CardElement(self.main,self.public_goals_element,(3-(size[0]*0.0),(x)*(size[1]*0.75+3)+3),size)
+					element.set_card(card,angle=2)
 					element.menu_info = [("Win Goal", self.win_goal, tuple([self.main.master_deck.cards.index(card)])),
 											("Discard", self.discard_goal, tuple([self.main.master_deck.cards.index(card)])),
 											("Action: New Goal", self.new_goal, tuple([i]))]
@@ -493,6 +529,7 @@ class GameController(Controller):
 				#we try to get the user's attention.
 				if self.main.trayicon != None:
 					self.main.trayicon.ShowBalloon("Uh oh!","You're almost out of time!", 15*1000)
+					self.main.blink_trayicon = True
 			else:
 				self.main.play_sound("players_turn")
 			return True
@@ -579,6 +616,13 @@ class GameController(Controller):
 	def update(self):
 		if not self.all_cards_rendered:
 			t = time.time()
+			reset_timer = False
+			for e in self.main.events:
+				if e.type in [KEYDOWN,KEYUP,MOUSEMOTION,MOUSEBUTTONDOWN,MOUSEBUTTONUP]:
+					reset_timer = True
+					break
+			if reset_timer:
+				self.last_rendered_card = t+self.render_card_delay
 			if t-self.last_rendered_card >= self.render_card_frequency:
 				self.last_rendered_card = t
 				match = None
@@ -632,4 +676,4 @@ class GameController(Controller):
 		if (not (self.chat_input_element == None)) and widget == self.chat_input_element:
 			self.main.main_element._remove_child(self.chat_input_element)
 			self.chat_input_element = None
-			self.top_element.set_size(("100%",75))
+			self.top_element.set_size(("100%",100))

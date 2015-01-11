@@ -59,6 +59,7 @@ class Main(object):
 		self.sounds["game_timer"] = pygame.mixer.Sound("snds/game/misc/game_timer.wav")
 
 		self.sounds["chat"] = pygame.mixer.Sound("snds/app/chat.wav")
+		self.sounds["name_mentioned"] = pygame.mixer.Sound("snds/app/squee1.wav")
 		self.sounds["player_ready"] = pygame.mixer.Sound("snds/app/player_ready.wav")
 		self.sounds["player_not_ready"] = pygame.mixer.Sound("snds/app/player_not_ready.wav")
 
@@ -111,6 +112,10 @@ class Main(object):
 		self.my_master_deck = MasterDeck()
 
 		self.setup_trayicon()
+
+		self.blink_trayicon = False
+		self.last_blinked_trayicon = 0
+		self.last_trayicon = False
 
 		self.reset()
 		self.run()
@@ -226,6 +231,21 @@ class Main(object):
 				self.main_element.flag_for_rerender()
 			i -= 1
 
+		if self.blink_trayicon:
+			if pygame.key.get_focused() or self.trayicon == None:
+				self.blink_trayicon = False
+				if self.trayicon != None:
+					self.trayicon.set_icon(self.trayicon.default_icon)
+			else:
+				if self.time >= self.last_blinked_trayicon+0.75:
+					self.last_blinked_trayicon = self.time
+					self.last_trayicon = not self.last_trayicon
+					if self.last_trayicon:
+						icon = self.trayicon.attention_icon
+					else:
+						icon = self.trayicon.default_icon
+					self.trayicon.set_icon(icon)
+
 	def set_tooltip(self, text):
 		if text != self.tooltip_text:
 			if type(text) in (str,unicode):
@@ -266,6 +286,7 @@ class Main(object):
 				self.tooltip_surface.blit(pygame.transform.smoothscale(self.tooltip_text.get_image(), size), (0,0))
 			else:
 				self.tooltip_surface.blit(self.tooltip_text.get_image(), (0,0))
+			pygame.draw.rect(self.tooltip_surface,c2,(0,0,size[0],size[1]),1)
 
 		self.main_element.flag_for_rerender()
 

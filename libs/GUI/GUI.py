@@ -759,6 +759,8 @@ class Element(object):
 				rect = img.get_rect(topleft = (0,0))
 			elif self.text_align == ALIGN_MIDDLE:
 				rect = img.get_rect(center = (self.size[0]/2,self.size[1]/2))
+			elif self.text_align == ALIGN_MIDDLELEFT:
+				rect = img.get_rect(midleft = (0,self.size[1]/2))
 			self.rendered_surface.blit(img, rect)
 	def rerender_foreground(self):
 		pass

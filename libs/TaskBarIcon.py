@@ -7,7 +7,10 @@ class TaskBarIcon(wx.TaskBarIcon):
 	def __init__(self):
 		self.app = wx.PySimpleApp()
 		super(TaskBarIcon, self).__init__()
-		self.set_icon("imgs/tiny_window_icon.png")
+
+		self.default_icon = wx.IconFromBitmap(wx.Bitmap("imgs/tiny_window_icon.png"))
+		self.attention_icon = wx.IconFromBitmap(wx.Bitmap("imgs/tiny_window_icon_attention.png"))
+		self.set_icon(self.default_icon)
 		self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.on_left_down)
 		self.run_thread()
 
@@ -27,9 +30,8 @@ class TaskBarIcon(wx.TaskBarIcon):
 		menu = wx.Menu()
 		return menu
 
-	def set_icon(self, path):
-		icon = wx.IconFromBitmap(wx.Bitmap(path))
-		self.SetIcon(icon, "TSSSFgame")
+	def set_icon(self, image):
+		self.SetIcon(image, "TSSSFgame")
 
 	def on_left_down(self, event):
 		pass
