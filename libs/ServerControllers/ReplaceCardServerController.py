@@ -51,7 +51,7 @@ class ReplaceCardServerController(ServerController):
 								player.hand.remove_card(self.selected_card)
 								self.gameserver.pony_discard.add_card_to_top(selected_card)
 								self.gameserver.card_table.pony_cards[location[1]][location[0]] = self.selected_card
-								self.gameserver.card_table.refactor() #Pointless, but I'm doing it anyways.
+								self.gameserver.last_card_table_offset = self.gameserver.card_table.refactor() #Pointless, but I'm doing it anyways.
 								self.gameserver.send_decks_all()
 								self.gameserver.send_cardtable_all()
 								self.gameserver.send_playerhand(player)

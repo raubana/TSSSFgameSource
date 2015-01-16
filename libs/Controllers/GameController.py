@@ -3,6 +3,7 @@ from Controller import*
 from ..GUI.GUI import *
 from ..GUI.DeckElement import *
 from ..GUI.CardElement import *
+from ..GUI.CardBackElement import *
 from ..GUI.TimerElement import *
 from ..GUI.TableElement import *
 from ..GUI.HistoryGUI import *
@@ -37,7 +38,7 @@ class GameController(Controller):
 		self.main.main_element.children.append(None)
 		self.top_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.right_element = Element(self.main, self.main.main_element, None, (self.main.font.size(">("+("M"*(PLAYERNAME_MAX_LENGTH))+" - 00")[0]+4,"100%"))
-		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",75))
+		self.bottom_element = Element(self.main, self.main.main_element, None, ("100%",100))
 		self.table_element = TableElement(self.main, self.main.main_element, None, ("100%","100%"))
 
 		self.top_element.add_handler_keydown(self)
@@ -58,7 +59,7 @@ class GameController(Controller):
 		self.chat_element = Element(self.main, self.top_element, None, ("100%","100%"))
 		self.player_list_element = Element(self.main, self.right_element, None, ("100%",10))
 		self.timer_element = TimerElement(self.main, self.right_element, None, ("100%", int(self.main.timer_font.get_height()*1.2)))
-		self.decks_element = Element(self.main, self.right_element, None, ("100%",90))
+		self.decks_element = Element(self.main, self.right_element, None, ("100%",95))
 		self.public_goals_element = Element(self.main, self.right_element, None, ("100%","100%"))
 		self.card_selection_element = Element(self.main, self.bottom_element, None, ("100%","0%"))
 		self.player_hand_element = Element(self.main, self.bottom_element, None, ("100%","100%"))
@@ -115,17 +116,26 @@ class GameController(Controller):
 		self.pony_discard_wrapper_element = Element(self.main, self.decks_element, None, ("33%","100%"), bg=None)
 		self.ship_discard_wrapper_element = Element(self.main, self.decks_element, None, ("50%","100%"), bg=None)
 
+		size = CARD_SIZE
+		self.pony_cardback_image = pygame.transform.smoothscale(pygame.image.load("imgs/cardbacks/cardback_pony.png"),size)
+		self.ship_cardback_image = pygame.transform.smoothscale(pygame.image.load("imgs/cardbacks/cardback_ship.png"),size)
+		self.goal_cardback_image = pygame.transform.smoothscale(pygame.image.load("imgs/cardbacks/cardback_goal.png"),size)
+
+		self.pony_cardback_image = apply_shadow(self.pony_cardback_image,6)
+		self.ship_cardback_image = apply_shadow(self.ship_cardback_image,6)
+		self.goal_cardback_image = apply_shadow(self.goal_cardback_image,6)
+
 		#LEVEL 4
 		self.pony_deck_element = DeckElement(self.main, self.pony_deck_wrapper_element, None, ("50%","100%"),
-										 	bg=ScaleImage(pygame.image.load("imgs/cardbacks/cardback_pony.png")))
+										 	bg=ScaleImage(self.pony_cardback_image))
 		self.pony_deck_count_element = Element(self.main, self.pony_deck_wrapper_element, None, ("100%","100%"),
 											bg=None, text_color=(255,255,255))
 		self.ship_deck_element = DeckElement(self.main, self.ship_deck_wrapper_element, None, ("50%","100%"),
-										 	bg=ScaleImage(pygame.image.load("imgs/cardbacks/cardback_ship.png")))
+										 	bg=ScaleImage(self.ship_cardback_image))
 		self.ship_deck_count_element = Element(self.main, self.ship_deck_wrapper_element, None, ("100%","100%"),
 											bg=None, text_color=(255,255,255))
 		self.goal_deck_element = DeckElement(self.main, self.goal_deck_wrapper_element, None, ("50%","100%"),
-										 	bg=ScaleImage(pygame.image.load("imgs/cardbacks/cardback_goal.png")))
+										 	bg=ScaleImage(self.goal_cardback_image))
 		self.goal_deck_count_element = Element(self.main, self.goal_deck_wrapper_element, None, ("100%","100%"),
 											bg=None, text_color=(255,255,255))
 		self.pony_discard_element = DeckElement(self.main, self.pony_discard_wrapper_element, None, ("50%","100%"),
@@ -228,6 +238,8 @@ class GameController(Controller):
 		self.main.client.send("KICK:"+args[0]+","+"No reason supplied.")
 	def hard_kick(self,args):
 		self.main.client.send("HARD_KICK:"+args[0]+","+"No reason supplied.")
+	def flip_cards(self):
+		self.main.client.send("FLIP_CARDS")
 
 	def read_message(self, message):
 		if self._rm_add_chat(message): pass
@@ -386,25 +398,35 @@ class GameController(Controller):
 			if len(s) > 0:
 				hand = s.split(",")
 				hand.reverse()
-				scale = 0.5#0.425
+				scale = 0.4#0.425
 				size = (int(CARD_SIZE[0]*scale),int(CARD_SIZE[1]*scale))
+				pos = 3
 				for x in xrange(len(hand)):
-					s = hand[x]#len(hand)-x-1]
-					i = int(s)
-					card = self.main.master_deck.cards[i]
-					element = CardElement(self.main,self.player_hand_element,((len(hand)-x-1)*(size[0]*0.75+3)+3,3),size)
-					if len(hand) == 1:
-						p = 0.5
+					s = hand[len(hand)-x-1]
+					if s.count(":") == 0:
+						i = int(s)
+						card = self.main.master_deck.cards[i]
+						element = CardElement(self.main,self.player_hand_element,(pos,3),size)
+						pos += size[0]+3
+						element.set_card(card)
+						if card.type == "pony":
+							element.menu_info = [("Play Card", self.play_card, tuple([i])),
+												 ("Action: Replace", self.replace_card, tuple([i])),
+												 ("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
+						elif card.type == "ship":
+							element.menu_info = [("Play Card", self.play_card, tuple([i])),
+												 ("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
 					else:
-						p = x/float(len(hand)-1)
-					element.set_card(card)
-					if card.type == "pony":
-						element.menu_info = [("Play Card", self.play_card, tuple([i])),
-											 ("Action: Replace", self.replace_card, tuple([i])),
-											 ("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
-					elif card.type == "ship":
-						element.menu_info = [("Play Card", self.play_card, tuple([i])),
-											 ("Discard", self.discard_card, tuple([self.main.master_deck.cards.index(card)]))]
+						#This means that this card isn't visible yet.
+						s_parts = s.split(":")
+						i = int(s_parts[0])
+						t = s_parts[1]
+						if t == "p": img = self.pony_cardback_image
+						elif t == "s": img = self.ship_cardback_image
+						else: img = self.goal_cardback_image
+						element = CardBackElement(self.main,self.player_hand_element,(pos,3),size,bg=ScaleImage(img))
+						pos += int(size[0]*.25)+3
+						element.menu_info = [("Flip", self.flip_cards)]
 			return True
 		return False
 	def _rm_cardselection(self, message):
@@ -446,15 +468,21 @@ class GameController(Controller):
 					element = CardElement(self.main,self.public_goals_element,(3-(size[0]*0.0),(x)*(size[1]*0.75+3)+3),size)
 					element.set_card(card,angle=2)
 					element.menu_info = [("Win Goal", self.win_goal, tuple([self.main.master_deck.cards.index(card)])),
-											("Discard", self.discard_goal, tuple([self.main.master_deck.cards.index(card)])),
-											("Action: New Goal", self.new_goal, tuple([i]))]
+											("Action: New Goal", self.new_goal, tuple([i])),
+											("Discard", self.discard_goal, tuple([self.main.master_deck.cards.index(card)]))]
 			return True
 		return False
 	def _rm_cardtable(self, message):
 		if message.startswith("CARDTABLE:"):
 			s = message[len("CARDTABLE:"):]
+			parts = s.split(":")
+			last = parts.pop()
+			s = string.join(parts,":")
+			parts = last.split(",")
+			x = int(parts[0])
+			y = int(parts[1])
 			self.main.card_table.parse_message(self.main.master_deck, s)
-			self.table_element.setup_grid()
+			self.table_element.setup_grid((x,y))
 			return True
 		return False
 	def _rm_decks(self, message):

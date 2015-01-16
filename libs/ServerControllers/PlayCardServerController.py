@@ -54,7 +54,7 @@ class PlayCardServerController(ServerController):
 								self.gameserver.send_full_history_all()
 								player.hand.remove_card(self.selected_card)
 								#we remove the card from the players hand and then add the card to the shipping grid.
-								self.gameserver.card_table.refactor()
+								self.gameserver.last_card_table_offset = self.gameserver.card_table.refactor()
 								self.gameserver.server.sendall("ALERT:add_card_to_table")
 								self.gameserver.setTimerDuration(SERVER_TURN_MAX_DURATION)
 								#finally, we send the player their new hand and we send all players the new table.

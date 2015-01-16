@@ -44,7 +44,7 @@ class Main(object):
 		self.still_freq = 1 / 10.0
 		self.last_still = time.time() - self.still_freq
 
-		self.font = pygame.font.Font("data/fonts/Ubahn-Light.ttf",14)
+		self.font = pygame.font.Font("data/fonts/Ubahn-Light.ttf",16)
 		self.font_bold = pygame.font.Font("data/fonts/Ubahn-Light.ttf",14)
 		self.font_bold.set_bold(True)
 		self.timer_font = pygame.font.Font("data/fonts/Barth_Regular.ttf",24)

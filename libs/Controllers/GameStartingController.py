@@ -19,7 +19,7 @@ class GameStartingController(Controller):
 
 		self.create_collage_surface()
 
-		self.card_size = (int(0.7*200),200)
+		self.card_size = (int(0.725*300),300)
 		self.card_img = pygame.Surface(self.card_size)
 		self.current_message = "REQUESTING DECK"
 

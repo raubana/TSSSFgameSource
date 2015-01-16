@@ -81,7 +81,13 @@ class Deck(object):
 		s = ""
 		i = 0
 		while i < len(self.cards):
-			s += str(master_deck.cards.index(self.cards[i]))
+			index = master_deck.cards.index(self.cards[i])
+			s += str(index)
+			if not self.cards[i].is_visible:
+				s += ":"
+				if self.cards[i].type == "pony": s += "p"
+				elif self.cards[i].type == "ship": s += "s"
+				else: s += "g"
 			i += 1
 			if i < len(self.cards):
 				s +=","
@@ -91,27 +97,43 @@ class Deck(object):
 		self.cards.sort(key=self._alphabatize_filter)
 
 	def _alphabatize_filter(self, card):
-		return card.printed_name
+		if card.is_visible:
+			return card.printed_name
+		return " "+card.type
 
 	def sort(self):
 		self.cards.sort(key=self._sort_filter)
 
 	def _sort_filter(self, card):
-		s = ""
-		if card.type == "pony":
-			s += "1"
-		elif card.type == "ship":
-			s += "2"
-			if len(card.keywords) > 0:
+		if card.is_visible:
+			s = ""
+			if card.type == "pony":
 				s += "1"
-			else:
+			elif card.type == "ship":
 				s += "2"
+				if len(card.keywords) > 0:
+					s += "1"
+				else:
+					s += "2"
+			else:
+				s += "3"
+			if len(card.keywords) > 0:
+				for key in card.keywords:
+					s += key.lower()
+			s += card.printed_name.lower()
 		else:
-			s += "3"
-		if len(card.keywords) > 0:
-			for key in card.keywords:
-				s += key.lower()
-		s += card.printed_name.lower()
+			s = ""
+			if card.type == "pony":
+				s += "1"
+			elif card.type == "ship":
+				s += "2"
+				if len(card.keywords) > 0:
+					s += "1"
+				else:
+					s += "2"
+			else:
+				s += "3"
+			s += " "
 		return s
 
 
@@ -201,6 +223,7 @@ class Card(object):
 		self.temp_card_being_imitated = None
 
 		self.is_modified = False
+		self.is_visible = True
 		self.must_transmit_modifications = True
 
 	def get_modified_transmit(self, master_deck):
@@ -362,7 +385,7 @@ class Card(object):
 				image = self.pc_image.copy()
 			if image.get_size() != CARD_SIZE:
 				image = pygame.transform.smoothscale(image, CARD_SIZE)
-			image = apply_shadow(image,6)
+			#image = apply_shadow(image,6)
 		return image
 
 	def rerender(self):

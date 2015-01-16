@@ -17,7 +17,7 @@ class TableElement(Element):
 
 		self.zoom = None
 
-		self.min_zoom = 0.1
+		self.min_zoom = 0.05
 		self.max_zoom = 0.6
 		self.zoom_ticks = 10
 		self.set_zoom(0)
@@ -181,7 +181,7 @@ class TableElement(Element):
 		self.realign_children()
 		super(TableElement,self).pack()
 
-	def setup_grid(self):
+	def setup_grid(self, offset = (0,0)):
 		#This function updates the children. Something may have been added, removed, or moved.
 		#This function only takes care of the new children and the removed children.
 		#This function also takes care of filling the element_table.
@@ -257,7 +257,10 @@ class TableElement(Element):
 
 		self.children = new_children_list
 
-		self.realign_children()
+		if offset != (0,0):
+			self.set_scroll([self.total_scroll[0]+self.tile_size[0]*offset[0],self.total_scroll[1]+self.tile_size[1]*offset[1]])
+		else:
+			self.realign_children()
 
 	def resize_children(self):
 		#This function is strictly for resizing existing elements.

@@ -1,5 +1,6 @@
 import pygame
 from ..GUI.GUI import *
+from ..common import apply_shadow
 
 class CardElement(Element):
 	def init(self):
@@ -11,6 +12,7 @@ class CardElement(Element):
 		self.card = card
 		self.tooltip = card
 		img = card.get_image().copy()
+		img = apply_shadow(img,6)
 		if alpha < 255:
 			img.fill((255,255,255,alpha),None,special_flags=BLEND_RGBA_MULT)
 			self.alpha = alpha

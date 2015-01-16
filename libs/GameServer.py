@@ -16,7 +16,7 @@ from ServerPlayer import Player
 import Deck
 import CustomDeck
 from PickledCard import open_pickledcard
-from CardTable import CardTable
+from CardTable import *
 from common import *
 from HistoryMachine import *
 from encode import decode
@@ -69,6 +69,8 @@ class GameServer(object):
 		self.public_goals = Deck.Deck()
 		self.card_table = CardTable()
 		self.game_started = False
+		self.last_card_table_offset = XY_Range()
+		self.last_card_table_offset.extend((0,0))
 
 		self.kicked_players_cards = Deck.Deck()
 
@@ -266,6 +268,7 @@ class GameServer(object):
 				elif self._rm_draw_from_discards(message, key, player): pass
 				elif self._rm_swap_pony_decks(message, key, player): pass
 				elif self._rm_swap_ship_decks(message, key, player): pass
+				elif self._rm_flip_cards(message, key, player): pass
 				else:
 					if self.controller != None:
 						attempt = self.controller.read_message(message, player)
@@ -535,6 +538,7 @@ class GameServer(object):
 							self.server.sendall("ALERT:draw_card_from_deck")
 							self.server.sendall("ALERT:add_card_to_hand")
 							card = self.pony_deck.draw()
+							card.is_visible = False
 							player.hand.add_card_to_top(card)
 							self.send_decks_all()
 							self.send_playerhand(player)
@@ -547,6 +551,7 @@ class GameServer(object):
 							self.server.sendall("ALERT:draw_card_from_deck")
 							self.server.sendall("ALERT:add_card_to_hand")
 							card = self.ship_deck.draw()
+							card.is_visible = False
 							player.hand.add_card_to_top(card)
 							self.send_decks_all()
 							self.send_playerhand(player)
@@ -643,7 +648,7 @@ class GameServer(object):
 											self.card_table.h_ship_cards[location[2]][location[1]] = None
 										elif location[0] == "v ship":
 											self.card_table.v_ship_cards[location[2]][location[1]] = None
-									self.card_table.refactor()
+									self.last_card_table_offset = self.card_table.refactor()
 									self.send_cardtable_all()
 								self.send_decks_all()
 								self.server.sendall("ALERT:add_card_to_deck")
@@ -1300,6 +1305,20 @@ class GameServer(object):
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't swap the Pony decks, the game hasn't started...")
 			return True
 		return False
+	def _rm_flip_cards(self, message, key, player):
+		if message == "FLIP_CARDS":
+			#we flip the players cards.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					for card in player.hand.cards:
+						card.is_visible = True
+					self.send_playerhand(player)
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't flips cards right now!")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't flip cards, the game hasn't started...")
+			return True
+		return False
 
 	#Other Stuff
 	def _check_player_status(self):
@@ -1393,7 +1412,7 @@ class GameServer(object):
 		#basic throttle control
 		throttle = True
 		for pl in self.players:
-			if pl.is_connected:
+			if pl.is_connected and not pl.is_loaded:
 				throttle = False
 				break
 		self.throttled = throttle
@@ -1430,6 +1449,8 @@ class GameServer(object):
 				self.current_players_turn = None
 	def nextPlayersTurn(self):
 		self.reset_modified_cards()
+		for player in self.players:
+			self.send_playerhand(player)
 		update_goals = False
 		while len(self.public_goals.cards) < 3 and len(self.goal_deck.cards) > 0:
 			self.public_goals.add_card_to_top(self.goal_deck.draw())
@@ -1468,6 +1489,7 @@ class GameServer(object):
 		pass
 	def reset_modified_cards(self):
 		for card in self.master_deck.cards:
+			card.is_visible = True
 			if card.is_modified:
 				card.reset()
 				if card.must_transmit_modifications:
@@ -1576,9 +1598,11 @@ class GameServer(object):
 		player.hand.sort()
 		self.server.sendto(player.address, "PLAYERHAND:"+player.hand.get_transmit(self.master_deck))
 	def send_cardtable_player(self, player):
-		self.server.sendto(player.address, "CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
+		self.server.sendto(player.address, "CARDTABLE:"+self.card_table.get_transmit(self.master_deck)+":"+str(self.last_card_table_offset.min_x)+","+str(self.last_card_table_offset.min_y))
 	def send_cardtable_all(self):
-		self.server.sendall("CARDTABLE:"+self.card_table.get_transmit(self.master_deck))
+		self.server.sendall("CARDTABLE:"+self.card_table.get_transmit(self.master_deck)+":"+str(self.last_card_table_offset.min_x)+","+str(self.last_card_table_offset.min_y))
+		self.last_card_table_offset = XY_Range()
+		self.last_card_table_offset.extend((0,0))
 	def send_decks_all(self):
 		self.server.sendall(self.get_decks_transmit())
 	def send_decks_player(self, player):
