@@ -4,6 +4,7 @@ from locals import *
 import thread
 import time
 import math
+import random
 
 from ServerControllers.PlayCardServerController import *
 from ServerControllers.ReplaceCardServerController import *
@@ -344,7 +345,7 @@ class GameServer(object):
 				self.server.kick(player.address,"See ya :)")
 				player.is_connected = False
 				player.is_ready = False
-				player.time_of_disconnect = time.time()-120
+				player.time_of_disconnect = time.time()-SERVER_HARDKICK_DELAY
 				self.server.sendall("ADD_CHAT:SERVER:"+"Player '"+player.name+"' has disconnected.")
 				if self.controller != None:
 					self.controller.triggerPlayerDisconnect(player)
@@ -376,7 +377,7 @@ class GameServer(object):
 							match.is_ready = False
 							if message.startswith("HARD_KICK:"):
 								self.server.kick(match.address,"YOU'VE BEEN HARD KICKED! Reason: "+reason)
-								match.time_of_disconnect = time.time()-120
+								match.time_of_disconnect = time.time()-SERVER_HARDKICK_DELAY
 							else:
 								self.server.kick(match.address,"YOU'VE BEEN KICKED! Reason: "+reason)
 								match.time_of_disconnect = time.time()
@@ -448,6 +449,13 @@ class GameServer(object):
 			self.check_ready()
 			if self.game_started:
 				self.give_fullupdate(player)
+			#self.server.sendto(player.address,"ADD_CHAT:PLAYER:The_Server: Hey, "+player.name+"! The server is going to go down from Jan 28th to Feb 2nd.")
+			#self.server.sendto(player.address,"ADD_CHAT:PLAYER:The_Server: Just thought you'd want to know. - DustyKorg")
+			"""L = ["Congratulations! You're the 1,000,000th visiter! Click here to claim your prize!",
+				 "Grow your horn 12\" in just 6 days with this one easy trick!",
+				 "Celestia believed Luna had turned good, until she found...",
+				 "Click here for the Top 10 Best Ways to keep your dragon obedient!"]
+			self.server.sendto(player.address,"ADD_CHAT:PLAYER:"+random.choice(L))"""
 			return True
 		return False
 	def _rm_ready(self, message, key, player):
@@ -1367,7 +1375,7 @@ class GameServer(object):
 					self.send_playerlist_all()
 					self.check_ready()
 			else:
-				if player.is_spectating or not self.game_started or t - player.time_of_disconnect >= 120:
+				if player.is_spectating or not self.game_started or t - player.time_of_disconnect >= SERVER_HARDKICK_DELAY:
 					for card in player.hand.cards:
 						self.kicked_players_cards.add_card_to_top(card)
 					active_player = False

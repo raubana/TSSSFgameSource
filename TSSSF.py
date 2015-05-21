@@ -326,6 +326,10 @@ class Main(object):
 			if self.client.connected:
 				if len(self.client.received_messages) > 0:
 					message = self.client.received_messages.pop(0)
+					if CLIENT_DEBUG_PRINT_STREAM:
+						if message != "PING" and message != "PONG" and not message.startswith("CARDFILE:") and not message.startswith("CARDFILE_ATTRIBUTES:") and not message.startswith("TIMER:"):
+							print "STARTSTREAM: "+message
+							print ":ENDSTREAM"
 					"""
 					elif message.startswith("ADD_CHAT:"):
 						chat = message[len("ADD_CHAT:"):]

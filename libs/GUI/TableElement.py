@@ -4,6 +4,8 @@ from ..GUI.CardElement import *
 from ..common import *
 from ..CardTable import xcoords_to_index, CardTable
 
+import time
+
 
 class TableElement(Element):
 	def init(self):
@@ -66,6 +68,39 @@ class TableElement(Element):
 			#self.setup_grid()
 			self.realign_children()
 			self.flag_for_rerender()
+
+	def triggerKeyDown(self, unicode, key):
+		if key == K_F12:
+			datetime = time.gmtime()
+			print "Saving screenshots..."
+			#first we need to determine the area and size we'll cover for our image.
+			target_area = pygame.Rect((0,0,0,0))
+			for element in self.children:
+				if type(element) == CardElement:
+					rect = pygame.Rect((element.pos[0],element.pos[1],element.size[0],element.size[1]))
+					target_area.union_ip(rect)
+			#next we determine how many separate files our screenshot will cover.
+			max_size = 1000
+			sections = (ceilint(target_area.width/float(max_size)),
+						ceilint(target_area.height/float(max_size)))
+			for X in xrange(sections[0]):
+				for Y in xrange(sections[1]):
+					srf_rect = pygame.Rect((X*max_size+target_area.x,Y*max_size+target_area.y,max_size,max_size))
+					srf_rect = srf_rect.clip(target_area)
+					if min(srf_rect.size) > 0:
+						srf = pygame.Surface(srf_rect.size,SRCALPHA)
+						srf.fill((0,0,0,0))
+						for element in self.children:
+							if type(element) == CardElement:
+								rect = pygame.Rect((element.pos[0],element.pos[1],element.size[0],element.size[1]))
+								rect.move_ip(-srf_rect.x,-srf_rect.y)
+								srf.blit(element.rendered_surface, rect)
+						#finally, we save our image
+						try:
+							pygame.image.save(srf,"screenshots/"+str(datetime)+" "+str(X)+"_"+str(Y)+".png")
+						except:
+							print " - Failed to save one of the images..."
+			print "Screenshots saved!"
 
 	def triggerMousePressed(self, mouse_pos, button):
 		if button == 1 and not self.being_dragged:
