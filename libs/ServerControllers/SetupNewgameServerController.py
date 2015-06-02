@@ -71,6 +71,8 @@ class SetupNewgameServerController(ServerController):
 	def Wait(self, args):
 		self.waiting = True
 		self.wait_duration = args[0]
+		if SERVER_DEBUG_QUICKSTART:
+			self.wait_duration = min(self.wait_duration,0.1)
 		self.wait_start_time = time.time()
 
 	def SetupDecks(self, args):

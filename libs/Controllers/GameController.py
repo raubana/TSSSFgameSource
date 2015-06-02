@@ -246,6 +246,7 @@ class GameController(Controller):
 		elif self._rm_playerlist(message): pass
 		elif self._rm_playerhand(message): pass
 		elif self._rm_cardselection(message): pass
+		elif self._rm_keyword_edit(message): pass
 		elif self._rm_publicgoals(message): pass
 		elif self._rm_cardtable(message): pass
 		elif self._rm_decks(message): pass
@@ -449,6 +450,33 @@ class GameController(Controller):
 				self.card_selection_element.set_size(("100%", "75%"))
 			else:
 				self.card_selection_element.set_size(("100%", "0%"))
+			return True
+		return False
+	def _rm_keyword_edit(self, message):
+		if message.startswith("KEYWORD_EDIT:"):
+			s = message[len("KEYWORD_EDIT:"):]
+			self.card_selection_element.clear()
+			self.card_selection_element.layout = LAYOUT_HORIZONTAL
+			#keywords = s.split(",")
+			#keywords.reverse()
+
+			self.element_keywordedit_submit = Button(self.main,self.card_selection_element,None,(self.main.font.size("SUBMIT")[0]+8,self.main.font.size("M")[1]+8),(0,255,0))
+			self.element_keywordedit_submit.set_text("SUBMIT")
+			self.element_keywordedit_submit.padding = (2,2,2,2)
+			self.element_keywordedit_submit.add_handler_submit(self)
+
+			self.element_keywordedit_input = InputBox(self.main,self.card_selection_element,None,("100%",self.main.font.size("M")[1]+8),(255,255,255))
+			self.element_keywordedit_input.padding = (2,2,2,2)
+			self.element_keywordedit_input.set_text(s)
+			self.element_keywordedit_input.legal_characters = string.ascii_letters+", "
+
+			self.card_selection_element.set_size(("100%", SCROLLBAR_WIDTH+self.main.font.size("M")[1]+8))
+			"""
+			for key in keywords:
+				element = Element(self.main,self.card_selection_element,None,(self.main.font.size(key)[0]+8,self.main.font.size(key)[1]+8),(255,0,0))
+				element.set_text(key)
+				element.padding = (2,2,2,2)
+			"""
 			return True
 		return False
 	def _rm_publicgoals(self, message):
@@ -699,6 +727,12 @@ class GameController(Controller):
 				else:
 					self.main.client.send("CHAT:"+self.chat_input_element.text)
 			self.bottom_element.give_focus()
+		elif (not (self.element_keywordedit_submit == None)) and widget == self.element_keywordedit_submit:
+			keywords = []
+			for child in self.card_selection_element.children:
+				if type(child) == Element:
+					keywords.append(child.text)
+			self.main.client.send("EDIT_KEYWORDS:"+self.element_keywordedit_input.text)
 
 	def handle_event_losefocus(self, widget):
 		if (not (self.chat_input_element == None)) and widget == self.chat_input_element:

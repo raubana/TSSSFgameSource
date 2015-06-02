@@ -12,6 +12,7 @@ from ServerControllers.SwapCardServerController import *
 from ServerControllers.MoveCardServerController import *
 from ServerControllers.ImitateCardServerController import *
 from ServerControllers.DrawFromDiscardsServerController import *
+from ServerControllers.ChangeCardKeywordsServerController import *
 
 from ServerPlayer import Player
 import Deck
@@ -257,6 +258,7 @@ class GameServer(object):
 				elif self._rm_swap_gender(message, key, player): pass
 				elif self._rm_change_race(message, key, player): pass
 				elif self._rm_add_keyword(message, key, player): pass
+				elif self._rm_change_keywords(message, key, player): pass
 				elif self._rm_win_goal(message, key, player): pass
 				elif self._rm_move_card(message, key, player): pass
 				elif self._rm_imitate_card(message, key, player): pass
@@ -952,6 +954,49 @@ class GameServer(object):
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't add a keyword.")
 			else:
 				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't add a keyword, the game hasn't started...")
+			return True
+		return False
+	def _rm_change_keywords(self, message, key, player):
+		if message.startswith("CHANGE_KEYWORDS:"):
+			#we play the selected card.
+			if self.game_started:
+				if self.players.index(player) == self.current_players_turn:
+					#we check if this card is in the player's hand.
+					try:
+						i = int(message[len("CHANGE_KEYWORDS:"):])
+						works = True
+					except:
+						works = False
+					if works:
+						selected_card = None
+						for y in xrange(self.card_table.size[1]):
+							for x in xrange(self.card_table.size[0]):
+								card = self.card_table.pony_cards[y][x]
+								if card != None:
+									if self.master_deck.cards.index(card) == i:
+										selected_card = card
+										break
+							if selected_card != None:
+								break
+						if selected_card != None:
+							if selected_card.type == "pony":
+								if selected_card.temp_keywords == None:
+									self.send_keyword_edit_player(player,selected_card.keywords)
+								else:
+									self.send_keyword_edit_player(player,selected_card.temp_keywords)
+								self.controller = ChangeCardKeywordsServerController(self)
+								self.controller.selected_card = selected_card
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Edit the keywords now.")
+							else:
+								self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...you can't even change that card's keywords!")
+						else:
+							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
+					else:
+						print "ERROR! Couldn't find card with this id."
+				else:
+					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:It's not your turn, you can't change card's keywords right now.")
+			else:
+				self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't change a card's keywords, the game hasn't started...")
 			return True
 		return False
 	def _rm_win_goal(self, message, key, player):
@@ -1671,6 +1716,8 @@ class GameServer(object):
 				self.server.sendto(player.address,card.get_modified_transmit(self.master_deck))
 	def send_card_selection_player(self, player, deck):
 		self.server.sendto(player.address,"CARDSELECTION:"+deck.get_transmit(self.master_deck))
+	def send_keyword_edit_player(self, player, keywords):
+		self.server.sendto(player.address,"KEYWORD_EDIT:"+string.join(keywords,","))
 
 	def give_fullupdate(self, player):
 		self.send_playerhand(player)

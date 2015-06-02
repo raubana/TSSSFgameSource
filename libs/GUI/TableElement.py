@@ -45,6 +45,8 @@ class TableElement(Element):
 		self.main.client.send("CHANGE_RACE:"+str(args[0])+","+args[1])
 	def make_princess(self, args):
 		self.main.client.send("ADD_KEYWORD:"+str(args[0])+",Princess")
+	def change_keywords(self, args):
+		self.main.client.send("CHANGE_KEYWORDS:"+str(args[0]))
 	def make_dfp(self, args):
 		self.main.client.send("ADD_KEYWORD:"+str(args[0])+",DFP")
 
@@ -72,7 +74,8 @@ class TableElement(Element):
 	def triggerKeyDown(self, unicode, key):
 		if key == K_F12:
 			datetime = time.gmtime()
-			print "Saving screenshots..."
+			datetime = str(datetime.tm_year)+"_"+str(datetime.tm_mon)+"_"+str(datetime.tm_mday)+"_"+str(datetime.tm_hour)+"_"+str(datetime.tm_min)+"_"+str(datetime.tm_sec)
+			print "Saving screenshots...",datetime
 			#first we need to determine the area and size we'll cover for our image.
 			target_area = pygame.Rect((0,0,0,0))
 			for element in self.children:
@@ -275,8 +278,9 @@ class TableElement(Element):
 											 ("Swap Card", self.swap_card, tuple([self.main.master_deck.cards.index(card)])),
 											 ("Move Card", self.move_card, tuple([self.main.master_deck.cards.index(card)])),
 											 ("Changeling: Imitate", self.imitate_card, tuple([self.main.master_deck.cards.index(card)])),
-											 ("Ship-Effect: Make Dystopian Future Pony", self.make_dfp, tuple([self.main.master_deck.cards.index(card)])),
-											 ("Ship-Effect: Make Princess", self.make_princess, tuple([self.main.master_deck.cards.index(card)])),
+											 #("Ship-Effect: Make Dystopian Future Pony", self.make_dfp, tuple([self.main.master_deck.cards.index(card)])),
+											 #("Ship-Effect: Make Princess", self.make_princess, tuple([self.main.master_deck.cards.index(card)])),
+											 ("Ship-Effect: Change Keywords", self.change_keywords, tuple([self.main.master_deck.cards.index(card)])),
 											 ("Ship-Effect: Swap Gender", self.swap_gender, tuple([self.main.master_deck.cards.index(card)]))]
 						for t in ("Earth","Unicorn","Pegasus","Alicorn"):
 							element.menu_info.append(("Ship-Effect: Change Race to "+t, self.change_race, (self.main.master_deck.cards.index(card), t.lower())))

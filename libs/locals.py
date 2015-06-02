@@ -1,8 +1,8 @@
 import os
 
 #VERSION INFO
-CLIENT_VERSION = "a8"
-SERVER_VERSION = "a3"
+CLIENT_VERSION = "a9"
+SERVER_VERSION = "a4"
 
 # GAME CONSTANTS
 CARD_SIZE = (394, 544)
@@ -61,12 +61,13 @@ PLAYERNAME_MAX_LENGTH = 12
 CLIENT_PRECACHE_DECK = True
 CLIENT_PRERENDER_DECK = True
 CLIENT_RERENDER_DECK_IN_BACKGROUND = True
-CLIENT_DEBUG_PRINT_STREAM = True
+CLIENT_DEBUG_PRINT_STREAM = False
 CLIENT_BERRYTUBE_DRINKCALLS = False
 
 #SERVER-SIDE
-SERVER_MAX_GAMES_BEFORE_SHUTDOWN = 10  #This is how many games a server will play before automatically closing down. Anything less than 1 is never.
-SERVER_GAMESTART_DELAY = 30
+SERVER_MAX_GAMES_BEFORE_SHUTDOWN = 15  #This is how many games a server will play before automatically closing down. Anything less than 1 is never.
+SERVER_GAMESTART_DELAY = 15
+SERVER_DEBUG_QUICKSTART = False
 SERVER_TURN_MAX_DURATION = 60 * 10.0  #This is the length of a player's turn once they've played their first card.
 SERVER_TURN_START_DURATION = 60 * 3.0  #This is the length of a player's before they've played their first card.
 SERVER_TURN_ALERT_DURATION = 60 * 1.0  #When the timer reaches this amount, the server will alert the player that their turn is almost over.
