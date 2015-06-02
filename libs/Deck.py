@@ -192,6 +192,7 @@ class Card(object):
 		self.keywords = []
 		self.power = None
 		self.attributes = ""
+		self.number_of_ponies = 1
 
 		self.flagged_for_rerender = True
 
@@ -367,6 +368,8 @@ class Card(object):
 				self.keywords.append(keyword.strip())
 		if "worth" in self.attributes:
 			self.worth = int(self.attributes["worth"])
+		if "number_of_ponies" in self.attributes:
+			self.number_of_ponies = int(self.attributes["number_of_ponies"])
 
 		self.pc_image = pygame.image.load(io.BytesIO(pc.img))
 		self.reset()

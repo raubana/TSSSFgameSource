@@ -49,6 +49,20 @@ class PlayCardServerController(ServerController):
 							if is_legal:
 								if self.selected_card.type == "pony":
 									self.gameserver.history.take_snapshot(SNAPSHOT_PLAY_PONY_CARD, player.name+" placed the card '"+self.selected_card.name+"' onto the shipping grid.")
+									if CLIENT_BERRYTUBE_DRINKCALLS:
+										if len(self.selected_card.keywords) > 0:
+											#DRINKCALL: Everyone drinks when a Derpy card is played.
+											if "derpy" in self.selected_card.keywords or "Derpy" in self.selected_card.keywords:
+												self.gameserver.do_drinkcall("OH SHIT IT'S DERPY!")
+											#DRINKCALL: When your Berrytube pony is played, take TWO drinks
+											if "OC" in self.selected_card.keywords and self.selected_card.keywords[0] == "Berrytube":
+												self.gameserver.do_drinkcall(self.selected_card.keywords[1]+": OC")
+										#DRINKCALL: Take a drink for every pony over your first two you play in one turn (cards that have multiple ponies on them count as that many).
+										prev_count = int(player.ponies_played)
+										player.ponies_played += self.selected_card.number_of_ponies
+										#if player.ponies_played > 2 and player.ponies_played-prev_count > 0:
+										#	self.gameserver.do_drinkcall(player.name+": Nopony can pony two ponies to pony", player.ponies_played-prev_count)
+
 								elif self.selected_card.type == "ship":
 									self.gameserver.history.take_snapshot(SNAPSHOT_PLAY_SHIP_CARD, player.name+" placed the card '"+self.selected_card.name+"' onto the shipping grid.")
 								self.gameserver.send_full_history_all()

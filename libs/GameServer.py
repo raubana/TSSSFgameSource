@@ -100,6 +100,9 @@ class GameServer(object):
 					self.server.kick(pl.address,"The server is shutting down. Thanks for playing :)")
 				self.shutdown_time = time.time() + 3
 
+		self.current_drinkcall_count = 0
+		self.current_drinkcall_total = 0
+
 	def load_custom_deck(self):
 		print "== loading the MasterDeck"
 		self.master_deck = Deck.MasterDeck()
@@ -399,16 +402,31 @@ class GameServer(object):
 			else:
 				name = player.name
 			chat = message[len("CHAT:"):]
-			if chat.startswith("/d "):
+			drinkcall = self.parse_drinkcall(chat)
+			if drinkcall != False:
 				if player.is_admin or player.is_dev:
-					self.server.sendall("ADD_CHAT:SERVER:"+chat[len("/d "):]+ " drink!")
-					self.server.sendall("ALERT:drink_call")
+					self.do_drinkcall(drinkcall[0],drinkcall[1])
 				else:
 					self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:You can't do drink calls. Sorry :/")
 			else:
 				self.server.sendall("ADD_CHAT:PLAYER:"+name+": "+chat)
 			return True
 		return False
+	def	parse_drinkcall(self,message):
+		if message.startswith("/d") and message != "/d":
+			number_of_drinks = 1
+			i = 1
+			if not message.startswith("/d "):
+				while i < len(message) - 2:
+					try:
+						number_of_drinks = int(message[2:i+2])
+					except:
+						i -= 1
+						break
+					i += 1
+			return (message[i+2:],number_of_drinks)
+		else:
+			return False
 	def _rm_request_deck(self, message, key, player):
 		if message == "REQUEST_DECK":
 			s = ""
@@ -493,7 +511,10 @@ class GameServer(object):
 				if self.players.index(player) == self.current_players_turn:
 					#We check if the player has the correct number of cards in their hand.
 					if len(player.hand.cards) < MIN_CARDS_IN_HAND:
-						self.server.sendto(player.address, "ADD_CHAT:SERVER:PM:You need to draw up to "+str(MIN_CARDS_IN_HAND)+" before you can end your turn.")
+						if not CLIENT_BERRYTUBE_DRINKCALLS:
+							self.server.sendto(player.address, "ADD_CHAT:SERVER:PM:You need to draw up to "+str(MIN_CARDS_IN_HAND)+" before you can end your turn.")
+						else:
+							self.do_drinkcall(player.name+": You need to draw "+str(MIN_CARDS_IN_HAND)+" first!")
 					else:
 						self.server.sendall("ADD_CHAT:SERVER:"+player.name+" has ended their turn.")
 						self.nextPlayersTurn()
@@ -961,6 +982,9 @@ class GameServer(object):
 							self.server.sendall("ALERT:add_card_to_deck")
 							self.send_playerlist_all()
 							self.send_public_goals_all()
+							if CLIENT_BERRYTUBE_DRINKCALLS:
+								if selected_card.worth > 0:
+									self.do_drinkcall("GOAL")#, selected_card.worth)
 						else:
 							self.server.sendto(player.address,"ADD_CHAT:SERVER:PM:Whatthe-...")
 					else:
@@ -1425,7 +1449,18 @@ class GameServer(object):
 				break
 		self.throttled = throttle
 		self.server.throttled = throttle
-
+	def do_drinkcall(self, message, number_of_drinks=1, custom_message=False):
+		self.current_drinkcall_count += 1
+		self.current_drinkcall_total += number_of_drinks
+		if custom_message:
+			s = "ADD_CHAT:SERVER:"+message
+		else:
+			s = "ADD_CHAT:SERVER:"+message
+			if number_of_drinks > 1:
+				s += " x" + str(number_of_drinks)
+			s += " drink!"
+		self.server.sendall(s)
+		self.server.sendall("ALERT:drink_call")
 	def setPlayersTurn(self, i):
 		#Here we put kicked players' cards into the discard piles.
 		updateDecks = len(self.kicked_players_cards.cards) > 0
@@ -1464,6 +1499,11 @@ class GameServer(object):
 			self.public_goals.add_card_to_top(self.goal_deck.draw())
 			update_goals = True
 		if update_goals: self.send_public_goals_all()
+		self.players[self.current_players_turn].reset_at_turns_end()
+		if CLIENT_BERRYTUBE_DRINKCALLS:
+			self.server.sendall("ADD_CHAT:SERVER:"+self.players[self.current_players_turn].name+" was responsible for "+str(self.current_drinkcall_count)+" drink calls totalling "+str(self.current_drinkcall_total)+" drinks!")
+		self.current_drinkcall_count = 0
+		self.current_drinkcall_total = 0
 		i = self.current_players_turn
 		while True:
 			i += 1

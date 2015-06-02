@@ -24,6 +24,11 @@ class Player(object):
 
 		self.is_spectating = True
 
+		self.reset_at_turns_end()
+
+	def reset_at_turns_end(self):
+		self.ponies_played = 0
+
 	def get_score(self):
 		score = 0
 		for card in self.won_goals.cards:
