@@ -468,7 +468,7 @@ class GameController(Controller):
 			self.element_keywordedit_input = InputBox(self.main,self.card_selection_element,None,("100%",self.main.font.size("M")[1]+8),(255,255,255))
 			self.element_keywordedit_input.padding = (2,2,2,2)
 			self.element_keywordedit_input.set_text(s)
-			self.element_keywordedit_input.legal_characters = string.ascii_letters+", "
+			self.element_keywordedit_input.legal_characters = string.ascii_letters+string.digits+", "
 
 			self.card_selection_element.set_size(("100%", SCROLLBAR_WIDTH+self.main.font.size("M")[1]+8))
 			"""
