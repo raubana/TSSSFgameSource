@@ -1,3 +1,9 @@
+THIS IS THE RAW SOURCE CODE FOR THIS PROJECT. IT IS BAD.
+I NEVER EXPECTED IT TO GO ANYWHERE, SO THE CODE IS A MESS.
+
+USE AT YOUR OWN RISK.
+
+
 butts
 
 Somethings to keep in mind - if my programs delete, mutate, or otherwise make some change
